@@ -27,14 +27,11 @@ window.onselect = function (e) {
     console.log(e);
 }
 
-var proto = EdiTable.prototype;
-
 var Stack = function () {
     this._data = [];
 };
 Stack.prototype.peek = function () {
     var len = this._data.length;
-
     return len > 0 ? this._data[len - 1] : null;
 };
 Stack.prototype.pop = function () {
@@ -52,5 +49,4 @@ var options = {
 };
 
 var testTable = new EdiTable(options);
-
 document.body.appendChild(testTable.table);
