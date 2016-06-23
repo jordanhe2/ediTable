@@ -1,52 +1,67 @@
 /**
- * Created by Jordan on 5/30/2016.
+ * <Class description here>
+ *
+ * @param{HTMLTable} -
+ * @param{Object} -
  */
-var EdiTable = function (options) {
-    this.table = document.createElement("table");
+var EdiTable = function (table, options) {
+    var Row = function () {
+        this.cells = [];
+    };
+    Row.prototype = {
+        select : function(optStart, optEnd){
+            // Normalize parameters
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
 
-    var tHead, tBody;
+            // ...
+        },
+        insert : function(optIndex, optValue){
+            // Normalize parameters
+            if (typeof optIndex == "undefined") optIndex = this.cells.length;
+            if (typeof optValue == "undefined") optValue = "";
 
-    tHead = this.table.createTHead();
-
-    for (var i = 0; options.numRows && i < options.numRows; i++) {
-        var row = this.table.insertRow(-1);
-
-        for (var j = 0; options.numCols && j < options.numCols; j++) {
-            var col = row.insertCell(-1);
-
-            col.contentEditable = true;
-
-            col.onselect = function (e) {
-                console.log("Row " + (i + 1) + " Column " + (j + 1) + " selected");
-            }
+            // ...
         }
     }
-};
 
-window.onselect = function (e) {
-    console.log(e);
-}
+    var Column = function () {
+        this.cells = [];
+    };
+    Column.prototype = {
+        select : function(optStart, optEnd){
+            // Normalize parameters
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
 
-var Stack = function () {
-    this._data = [];
-};
-Stack.prototype.peek = function () {
-    var len = this._data.length;
-    return len > 0 ? this._data[len - 1] : null;
-};
-Stack.prototype.pop = function () {
-    return this._data.pop();
-};
-Stack.prototype.push = function (element) {
-    return this._data.push(element);
-};
+            // ...
+        },
+        insert : function(optIndex, optValue){
+            // Normalize parameters
+            if (typeof optIndex == "undefined") optIndex = this.cells.length;
+            if (typeof optValue == "undefined") optValue = "";
 
+            // ...
+        }
+    };
 
-//TESTING
-var options = {
-    numRows: 2,
-    numCols: 2
+    var Cell = function () {
+        this.td;
+    };
+    Cell.prototype = {
+        select : function(){
+
+        }
+    };
+
+    this.rows = [];
+    this.cols = [];
 };
+EdiTable.prototype = {
+    select : function(/* parameters */){
 
-var testTable = new EdiTable(options);
-document.body.appendChild(testTable.table);
+    },
+    insert : function(/* parameters */){
+
+    }
+};
