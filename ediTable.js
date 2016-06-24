@@ -92,13 +92,17 @@ var EdiTable = function (table, options) {
     function pasteTest(event){
         //Use innerText of tr's found in the template to paste stuff.
 
-        var docFrag = document.createElement("template");
         var htmlText = event.clipboardData.getData("text/html");
 
-        console.log(htmlText);
-        docFrag.innerHTML = htmlText;
-        console.log(docFrag, docFrag.innerHTML);
+        //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
+        var writtenDoc = document.implementation.createHTMLDocument("");
 
+        writtenDoc.write(htmlText);
+        //DOMParser is more secure, but less widely supported.
+        var parser = new DOMParser();
+        var parsedDoc = parser.parseFromString(htmlText, "text/html");
+
+        console.log("Using DOMImplementation.createHTMLDocument\n", writtenDoc, "\nUsing DOMParser\n", parsedDoc);
 
         event.preventDefault();
     }
@@ -117,3 +121,15 @@ EdiTable.prototype = {
 
 
 var editable = new EdiTable(document.getElementById("table"), {});
+
+function HTMLParser(htmlString) {
+    var html = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null),
+        body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+    html.documentElement.appendChild(body);
+
+    body.appendChild(Components.classes["@mozilla.org/feed-unescapehtml;1"]
+        .getService(Components.interfaces.nsIScriptableUnescapeHTML)
+        .parseFragment(htmlString, false, null, body));
+
+    return body;
+}
