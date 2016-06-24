@@ -5,8 +5,31 @@
  * @param{Object} -
  */
 var EdiTable = function (table, options) {
-    var Vector = function (optCells) {
-        this.cells = optCells || [];
+    function nodeListToArray(nl){
+        return Array.prototype.slice.call(nl);
+    }
+
+    var Cell = function (td) {
+        this.td = td;
+        this.selected = false;
+    };
+    Cell.prototype = {
+        isEditable : function(){
+            return this.td.contenteditable;
+        },
+        select : function(){
+            this.selected = true;
+        },
+        deselect : function(){
+            this.selected = false;
+        },
+        getValue : function(){
+            return this.td.innerText;
+        }
+    };
+
+    var Vector = function (tr) {
+        this.cells = nodeListToArray(tr.childNodes);
     };
     Vector.prototype = {
         select : function(optStart, optEnd){
@@ -23,17 +46,14 @@ var EdiTable = function (table, options) {
                 }
             }
         },
-        add : function(optValues){
-            // Normalize parameters
-            if (typeof optValues == "undefined") optValues = [""];
-            if (!(optValues instanceof Array)) optValues = [optValues];
-
-            // Add optValues to this.cells
-            this.cells = this.cells.concat(optValues);
+        getSelection : function(){
+            return this.cells.filter(function(cell){
+                return cell.selected;
+            });
         },
-        insert : function(index, optValues){
+        /*insert : function(index, optValues){
             // Normalize parameters
-            if (typeof optValues == "undefined") optValues = [""];
+            if (typeof optValues == "undefined") optValues = [];
             if (!(optValues instanceof Array)) optValues = [optValues];
 
             // Insert optValues into this.cells
@@ -46,23 +66,7 @@ var EdiTable = function (table, options) {
             if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
 
             // ...
-        }
-    };
-
-    var Cell = function () {
-        this.td;
-        this.selected = false;
-    };
-    Cell.prototype = {
-        isEditable : function(){
-            return this.td.contenteditable;
-        },
-        select : function(){
-            // TODO
-        },
-        deselect : function(){
-            // TODO
-        }
+        }*/
     };
 
     var Selection = function(rowStart, rowEnd, colStart, colEnd){
@@ -75,6 +79,8 @@ var EdiTable = function (table, options) {
 
     };
 
+    // Acutal EdiTable properties and init begin here
+    this.table = table;
     this.rows = [];
     this.cols = [];
 
