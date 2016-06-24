@@ -23,15 +23,28 @@ var EdiTable = function (table, options) {
                 }
             }
         },
-        insert : function(optIndex, optValue){
+        add : function(optValues){
             // Normalize parameters
-            if (typeof optIndex == "undefined") optIndex = this.cells.length;
-            if (typeof optValue == "undefined") optValue = "";
+            if (typeof optValues == "undefined") optValues = [""];
+            if (!(optValues instanceof Array)) optValues = [optValues];
 
-            // Insert optValue into this.cells
-            this.cells.splice(optIndex, 0, optValue);
+            // Add optValues to this.cells
+            this.cells = this.cells.concat(optValues);
         },
-        remove : function() {
+        insert : function(index, optValues){
+            // Normalize parameters
+            if (typeof optValues == "undefined") optValues = [""];
+            if (!(optValues instanceof Array)) optValues = [optValues];
+
+            // Insert optValues into this.cells
+            var args = [index, 0].concat(optValues);
+            Array.prototype.splice.apply(this.cells, args);
+        },
+        remove : function(optStart, optEnd) {
+            // Normalize parameters
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
+
             // ...
         }
     };
@@ -101,3 +114,6 @@ EdiTable.prototype = {
         // TODO
     }
 };
+
+
+var editable = new EdiTable(document.getElementById("table"), {});
