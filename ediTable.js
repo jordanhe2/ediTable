@@ -52,11 +52,11 @@ var EdiTable = function (table, options) {
         }
     };
 
-    var Selection = function(rowFrom, rowTo, colFrom, colTo){
-        this.rowFrom = rowFrom;
-        this.rowTo = rowTo;
-        this.colFrom = colFrom;
-        this.colTo = colTo;
+    var Selection = function(rowStart, rowEnd, colStart, colEnd){
+        this.rowStart = rowStart;
+        this.rowEnd = rowEnd;
+        this.colStart = colStart;
+        this.colEnd = colEnd;
     };
     Selection.prototype = {
 
@@ -94,10 +94,10 @@ var EdiTable = function (table, options) {
     document.addEventListener("paste", pasteTest);
 };
 EdiTable.prototype = {
-    select : function(/* parameters */){
-
+    select : function(rowStart, rowEnd, colStart, colEnd){
+        // TODO
     },
     insert : function(/* parameters */){
-
+        // TODO
     }
 };
