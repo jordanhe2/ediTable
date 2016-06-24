@@ -5,10 +5,10 @@
  * @param{Object} -
  */
 var EdiTable = function (table, options) {
-    var Row = function () {
-        this.cells = [];
+    var Vector = function (optCells) {
+        this.cells = optCells || [];
     };
-    Row.prototype = {
+    Vector.prototype = {
         select : function(optStart, optEnd){
             // Normalize parameters
             if (typeof optStart == "undefined") optStart = 0;
@@ -19,7 +19,7 @@ var EdiTable = function (table, options) {
                 if (i >= optStart && i <= optEnd){
                     this.cells[i].select();
                 } else {
-                    // deselect
+                    this.cells[i].deselect();
                 }
             }
         },
@@ -28,30 +28,8 @@ var EdiTable = function (table, options) {
             if (typeof optIndex == "undefined") optIndex = this.cells.length;
             if (typeof optValue == "undefined") optValue = "";
 
-            // ...
-        },
-        remove : function() {
-            // ...
-        }
-    };
-
-    var Column = function () {
-        this.cells = [];
-    };
-    Column.prototype = {
-        select : function(optStart, optEnd){
-            // Normalize parameters
-            if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
-
-            // ...
-        },
-        insert : function(optIndex, optValue){
-            // Normalize parameters
-            if (typeof optIndex == "undefined") optIndex = this.cells.length;
-            if (typeof optValue == "undefined") optValue = "";
-
-            // ...
+            // Insert optValue into this.cells
+            this.cells.splice(optIndex, 0, optValue);
         },
         remove : function() {
             // ...
@@ -67,7 +45,10 @@ var EdiTable = function (table, options) {
             return this.td.contenteditable;
         },
         select : function(){
-
+            // TODO
+        },
+        deselect : function(){
+            // TODO
         }
     };
 
