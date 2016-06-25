@@ -14,6 +14,9 @@ var EdiTable = function (table, options) {
         this.selected = false;
     };
     Cell.prototype = {
+        setEditable : function(editable){
+            this.td.contentEditable = editable;
+        },
         isEditable : function(){
             return this.td.contenteditable;
         },
@@ -75,7 +78,7 @@ var EdiTable = function (table, options) {
 
             return values;
         },
-        getSelection : function(){
+        getSelectedCells : function(){
             return this.cells.filter(function(cell){
                 return cell.selected;
             });
