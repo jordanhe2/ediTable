@@ -5,10 +5,6 @@
  * @param{Object} -
  */
 var EdiTable = function (table, options) {
-    function nodeListToArray(nl){
-        return Array.prototype.slice.call(nl);
-    }
-
     var Cell = function (td) {
         this.td = td;
         this.selected = false;
@@ -19,9 +15,11 @@ var EdiTable = function (table, options) {
         },
         select : function(){
             this.selected = true;
+            $(this.td).addClass("ediTable-cell-selected");
         },
         deselect : function(){
             this.selected = false;
+            $(this.td).removeClass("ediTable-cell-selected");
         },
         getValue : function(){
             return this.td.innerText;
@@ -29,7 +27,10 @@ var EdiTable = function (table, options) {
     };
 
     var Vector = function (tr) {
-        this.cells = nodeListToArray(tr.childNodes);
+        this.tr = tr;
+        this.cells = $("td", this.tr).map(function(index, el){
+            return new Cell(el);
+        }).toArray();
     };
     Vector.prototype = {
         select : function(optStart, optEnd){
@@ -42,6 +43,18 @@ var EdiTable = function (table, options) {
                 if (i >= optStart && i <= optEnd){
                     this.cells[i].select();
                 } else {
+                    this.cells[i].deselect();
+                }
+            }
+        },
+        deselect : function(optStart, optEnd){
+            // Normalize parameters
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
+
+            // Loop this.cells and deselect
+            for (var i = 0; i < this.cells.length; i++) {
+                if (i >= optStart && i <= optEnd){
                     this.cells[i].deselect();
                 }
             }
@@ -83,6 +96,12 @@ var EdiTable = function (table, options) {
     this.table = table;
     this.rows = [];
     this.cols = [];
+
+    this.rows = $("tr", this.table).map(function(index, el){
+        return new Vector(el);
+    }).toArray();
+
+    // cols to come
 
 
     function copyTest(event) {
