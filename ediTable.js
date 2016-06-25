@@ -5,6 +5,10 @@
  * @param{Object} -
  */
 var EdiTable = function (table, options) {
+    function nodeListToArray(nl){
+        return Array.prototype.slice.call(nl);
+    }
+
     var Cell = function (td) {
         this.td = td;
         this.selected = false;
@@ -26,11 +30,8 @@ var EdiTable = function (table, options) {
         }
     };
 
-    var Vector = function (tr) {
-        this.tr = tr;
-        this.cells = $("td", this.tr).map(function(index, el){
-            return new Cell(el);
-        }).toArray();
+    var Vector = function (cells) {
+        this.cells = cells;
     };
     Vector.prototype = {
         select : function(optStart, optEnd){
@@ -59,11 +60,31 @@ var EdiTable = function (table, options) {
                 }
             }
         },
+        getValues : function(optStart, optEnd){
+            // Normalize parameters
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
+
+            // Loop this.cells and return values in an array
+            var values = [];
+            for (var i = 0; i < this.cells.length; i++) {
+                if (i >= optStart && i <= optEnd){
+                    values.push(this.cells[i].getValue());
+                }
+            }
+
+            return values;
+        },
         getSelection : function(){
             return this.cells.filter(function(cell){
                 return cell.selected;
             });
         },
+        getSelectedValues : function(){
+            return this.getSelection().map(function(cell){
+                return cell.getValue();
+            });
+        }
         /*insert : function(index, optValues){
             // Normalize parameters
             if (typeof optValues == "undefined") optValues = [];
@@ -97,11 +118,24 @@ var EdiTable = function (table, options) {
     this.rows = [];
     this.cols = [];
 
-    this.rows = $("tr", this.table).map(function(index, el){
-        return new Vector(el);
+    // Setup rows
+    this.rows = $("tr", this.table).map(function(index, tr){
+        var cells = $("td, th", tr).toArray().map(function(td){
+            return new Cell(td);
+        });
+        return new Vector(cells);
     }).toArray();
 
-    // cols to come
+    // Setup cols
+    if (this.rows.length > 0) {
+        for (var i = 0; i < this.rows[0].cells.length; i ++){
+            var cells = [];
+            for (var j = 0; j < this.rows.length; j ++){
+                cells.push(this.rows[j].cells[i]);
+            }
+            this.cols.push(new Vector(cells));
+        }
+    }
 
 
     function copyTest(event) {
