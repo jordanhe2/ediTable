@@ -101,7 +101,7 @@ var EdiTable = function (table, options) {
         var htmlText = event.clipboardData.getData("text/html");
 
         //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
-        var writtenDoc = document.implementation.createHTMLDocument("");
+        var writtenDoc = document.implementation.createHTMLDocument();
 
         writtenDoc.write(htmlText);
         //DOMParser is more secure, but less widely supported.
@@ -109,6 +109,34 @@ var EdiTable = function (table, options) {
         var parsedDoc = parser.parseFromString(htmlText, "text/html");
 
         console.log("Using DOMImplementation.createHTMLDocument\n", writtenDoc, "\nUsing DOMParser\n", parsedDoc);
+
+        //Whichever implementation we decide, we can refer to it as html.
+        var html = parsedDoc;
+
+        //Get data from table instead of searching for tr's because semantics.
+        var tables = html.getElementsByTagName("table");
+        //Use first table if there is more than one copied.
+        var table = tables.length > 0 ? tables[0] : null;
+
+        if (table) {
+            var rows = table.rows;
+            var data = [];
+
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var cells = row.cells;
+
+                data[i] = [];
+
+                for (var j = 0; j < cells.length; j++) {
+                    var cell = cells[j];
+
+                    data[i][j] = cell.textContent;
+                }
+            }
+
+            console.log("Data being pasted: ", data);
+        }
 
         event.preventDefault();
     }
@@ -127,15 +155,3 @@ EdiTable.prototype = {
 
 
 var editable = new EdiTable(document.getElementById("table"), {});
-
-function HTMLParser(htmlString) {
-    var html = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null),
-        body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
-    html.documentElement.appendChild(body);
-
-    body.appendChild(Components.classes["@mozilla.org/feed-unescapehtml;1"]
-        .getService(Components.interfaces.nsIScriptableUnescapeHTML)
-        .parseFragment(htmlString, false, null, body));
-
-    return body;
-}
