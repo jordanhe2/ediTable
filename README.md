@@ -1,2 +1,2 @@
 # ediTable
-An intuitive editable table.
+A simple excel-like table for HTML.
