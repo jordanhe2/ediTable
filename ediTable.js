@@ -8,6 +8,17 @@ var EdiTable = function (table, options) {
     function nodeListToArray(nl){
         return Array.prototype.slice.call(nl);
     }
+    function normalizeTable(table){
+        var rows = $("tr", table).toArray(),
+            max = Math.max.apply(null, rows);
+
+        for (var i = 0; i < rows.length; i ++){
+            var tds = $("td", rows[i]).toArray(),
+                ths = $("th", rows[i]).toArray(),
+                diff = max - (tds.length + ths.length);
+            // ...
+        }
+    }
 
     var Cell = function (td) {
         this.td = td;
