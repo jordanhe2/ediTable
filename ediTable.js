@@ -27,30 +27,62 @@ var EdiTable = function(table, options) {
         }
     }
 
-    var Cell = function (td) {
-        this.td = td;
+    var Cell = function (dom) {
+        this.dom = dom;
         this.selected = false;
     };
+    Cell.create = function(type, optInitValue){
+        // Prevent injection
+        if (!(type == "td" || type == "th")) throw new Error("Type must be either td or th");
+
+        // Create element
+        var element = document.createElement(type);
+        $(element).text(optInitValue || "");
+
+        // Construct new cell
+        return new Cell(element);
+    }
     Cell.prototype = {
-        setEditable : function(editable){
-            this.td.contenteditable = editable;
+        setEditable : function(edit){
+            $(this.dom).prop("contenteditable", edit.toString());
         },
         isEditable : function(){
-            return this.td.contenteditable;
+            return Boolean($(this.dom).prop("contenteditable"));
+        },
+        setHeader : function(header){
+            var type = (header ? "th" : "td"),
+                oldDom = this.dom,
+                children = $(oldDom).contents().detach(),
+                newDom = document.createElement(type);
+
+            // Transfer attributes
+            $.each(oldDom.attributes, function(index) {
+                $(newDom).attr(oldDom.attributes[index].name, oldDom.attributes[index].value);
+            });
+
+            // Append children
+            $(newDom).append(children);
+
+            // Replace oldDom with newDom
+            $(oldDom).replaceWith(newDom);
+            this.dom = newDom;
+        },
+        isHeader : function(){
+            return this.dom.tagName.toLowerCase() == "th";
         },
         select : function(){
             this.selected = true;
-            $(this.td).addClass("ediTable-cell-selected");
+            $(this.dom).addClass("ediTable-cell-selected");
         },
         deselect : function(){
             this.selected = false;
-            $(this.td).removeClass("ediTable-cell-selected");
+            $(this.dom).removeClass("ediTable-cell-selected");
         },
         clear : function(){
-            this.td.innerHTML = "";
+            this.dom.innerHTML = "";
         },
         getValue : function(){
-            return this.td.innerText;
+            return this.dom.innerText;
         }
     };
 
@@ -58,6 +90,28 @@ var EdiTable = function(table, options) {
         this.cells = cells;
     };
     Vector.prototype = {
+        setEditable : function(edit){
+            for (var i = 0; i < this.cells.length; i ++){
+                this.cells[i].setEditable(edit);
+            }
+        },
+        isEditable : function(){
+            for (var i = 0; i < this.cells.length; i ++){
+                if (this.cells[i].isEditable()) return true;
+            }
+            return false;
+        },
+        setHeader : function(header){
+            for (var i = 0; i < this.cells.length; i ++){
+                this.cells[i].setHeader(header);
+            }
+        },
+        isHeader : function(){
+            for (var i = 0; i < this.cells.length; i ++){
+                if (!this.cells[i].isHeader()) return false;
+            }
+            return true;
+        },
         select : function(optStart, optEnd){
             // Normalize parameters
             if (typeof optStart == "undefined") optStart = 0;
@@ -120,8 +174,8 @@ var EdiTable = function(table, options) {
         },
         hasSelection : function(){
             return this.getSelection().cells.length > 0;
-        },
-        insert : function(index, optValues){
+        }
+        /*insert : function(index, optValues){
             // Normalize parameters
             if (typeof optValues == "undefined") optValues = [];
             if (!(optValues instanceof Array)) optValues = [optValues];
@@ -136,7 +190,7 @@ var EdiTable = function(table, options) {
             if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
 
             // ...
-        }
+        }*/
     };
 
     // Actual EdiTable properties and init begin here
@@ -155,10 +209,10 @@ var EdiTable = function(table, options) {
     });
 
     // Setup cols
-    if (this.rows.length > 0) {
+    if (this.getRowCount() > 0) {
         for (var i = 0; i < this.rows[0].cells.length; i ++){
             var cells = [];
-            for (var j = 0; j < this.rows.length; j ++){
+            for (var j = 0; j < this.getRowCount(); j ++){
                 cells.push(this.rows[j].cells[i]);
             }
             this.cols.push(new Vector(cells));
@@ -227,15 +281,21 @@ var EdiTable = function(table, options) {
     document.addEventListener("paste", pasteTest);
 };
 EdiTable.prototype = {
+    getRowCount : function(){
+        return this.rows.length;
+    },
+    getColCount : function(){
+        return this.cols.length;
+    },
     select : function(rowStart, rowEnd, colStart, colEnd){
         // Normalize parameters
         if (typeof rowStart == "undefined") rowStart = 0;
-        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof rowEnd == "undefined") rowEnd = this.getRowCount() - 1;
         if (typeof colStart == "undefined") colStart = 0;
-        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+        if (typeof colEnd == "undefined") colEnd = this.getColCount() - 1;
 
         // Do selection
-        for (var i = 0; i < this.rows.length; i ++){
+        for (var i = 0; i < this.getRowCount(); i ++){
             if (i >= rowStart && i <= rowEnd){
                 this.rows[i].select(colStart, colEnd);
             } else {
@@ -246,9 +306,9 @@ EdiTable.prototype = {
     deselect : function(rowStart, rowEnd, colStart, colEnd){
         // Normalize parameters
         if (typeof rowStart == "undefined") rowStart = 0;
-        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof rowEnd == "undefined") rowEnd = this.getRowCount() - 1;
         if (typeof colStart == "undefined") colStart = 0;
-        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+        if (typeof colEnd == "undefined") colEnd = this.getColCount() - 1;
 
         // Do deselection
         for (var i = rowStart; i <= rowEnd; i ++){
@@ -260,9 +320,9 @@ EdiTable.prototype = {
     clear : function(rowStart, rowEnd, colStart, colEnd){
         // Normalize parameters
         if (typeof rowStart == "undefined") rowStart = 0;
-        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof rowEnd == "undefined") rowEnd = this.getRowCount() - 1;
         if (typeof colStart == "undefined") colStart = 0;
-        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+        if (typeof colEnd == "undefined") colEnd = this.getColCount() - 1;
 
         // Clear
         for (var i = rowStart; i <= rowEnd; i ++){
@@ -272,9 +332,9 @@ EdiTable.prototype = {
     getRowValues : function(rowStart, rowEnd, colStart, colEnd){
         // Normalize parameters
         if (typeof rowStart == "undefined") rowStart = 0;
-        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof rowEnd == "undefined") rowEnd = this.getRowCount() - 1;
         if (typeof colStart == "undefined") colStart = 0;
-        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+        if (typeof colEnd == "undefined") colEnd = this.getColCount() - 1;
 
         // Get values
         var rows = [];
@@ -287,9 +347,9 @@ EdiTable.prototype = {
     getColValues : function(rowStart, rowEnd, colStart, colEnd){
         // Normalize parameters
         if (typeof rowStart == "undefined") rowStart = 0;
-        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof rowEnd == "undefined") rowEnd = this.getRowCount() - 1;
         if (typeof colStart == "undefined") colStart = 0;
-        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+        if (typeof colEnd == "undefined") colEnd = this.getColCount() - 1;
 
         // Get values
         var cols = [];
@@ -301,7 +361,7 @@ EdiTable.prototype = {
     },
     getSelectedRows : function(){
         var rows = [];
-        for (var i = 0; i < this.rows.length; i ++){
+        for (var i = 0; i < this.getRowCount(); i ++){
             if (this.rows[i].hasSelection()){
                 rows.push(this.rows[i].getSelection());
             }
@@ -310,7 +370,7 @@ EdiTable.prototype = {
     },
     getSelectedCols : function(){
         var cols = [];
-        for (var i = 0; i < this.cols.length; i ++){
+        for (var i = 0; i < this.getColCount(); i ++){
             if (this.cols[i].hasSelection()){
                 cols.push(this.cols[i].getSelection());
             }
@@ -330,8 +390,15 @@ EdiTable.prototype = {
     hasSelection : function(){
         return this.getSelectedRows().length > 0;
     },
-    insert : function(/* parameters */){
-        // TODO
+    insertRow : function(index, optValues){
+        var tr = $("<tr></tr>");
+
+        for (var i = 0; i < this.getColCount(); i ++) {
+            var cell = $();
+        }
+    },
+    insertCol : function(index, optValues){
+
     }
 };
 
