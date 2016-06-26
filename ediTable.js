@@ -4,19 +4,26 @@
  * @param{HTMLTable} -
  * @param{Object} -
  */
-var EdiTable = function (table, options) {
-    function nodeListToArray(nl){
-        return Array.prototype.slice.call(nl);
-    }
+var EdiTable = function(table, options) {
     function normalizeTable(table){
         var rows = $("tr", table).toArray(),
-            max = Math.max.apply(null, rows);
+            lengths = rows.map(function(row){
+                return row.cells.length;
+            }),
+            max = Math.max.apply(null, lengths);
 
         for (var i = 0; i < rows.length; i ++){
-            var tds = $("td", rows[i]).toArray(),
-                ths = $("th", rows[i]).toArray(),
+            var row = rows[i],
+                tds = $("td", row).toArray(),
+                ths = $("th", row).toArray(),
                 diff = max - (tds.length + ths.length);
-            // ...
+
+            if (diff > 0){
+                var type = (tds.length == 0 ? "th" : "td");
+                for (var j = 0; j < diff; j ++){
+                    $(row).append(document.createElement(type));
+                }
+            }
         }
     }
 
@@ -38,6 +45,9 @@ var EdiTable = function (table, options) {
         deselect : function(){
             this.selected = false;
             $(this.td).removeClass("ediTable-cell-selected");
+        },
+        clear : function(){
+            this.td.innerHTML = "";
         },
         getValue : function(){
             return this.td.innerText;
@@ -74,6 +84,15 @@ var EdiTable = function (table, options) {
                 }
             }
         },
+        clear : function(optStart, optEnd){
+            // Normalize parameters
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
+
+            for (var i = optStart; i <= optEnd; i ++){
+                this.cells[i].clear();
+            }
+        },
         getValues : function(optStart, optEnd){
             // Normalize parameters
             if (typeof optStart == "undefined") optStart = 0;
@@ -81,10 +100,8 @@ var EdiTable = function (table, options) {
 
             // Loop this.cells and return values in an array
             var values = [];
-            for (var i = 0; i < this.cells.length; i++) {
-                if (i >= optStart && i <= optEnd){
-                    values.push(this.cells[i].getValue());
-                }
+            for (var i = optStart; i <= optEnd; i++) {
+                values.push(this.cells[i].getValue());
             }
 
             return values;
@@ -104,7 +121,7 @@ var EdiTable = function (table, options) {
         hasSelection : function(){
             return this.getSelection().cells.length > 0;
         },
-        /*insert : function(index, optValues){
+        insert : function(index, optValues){
             // Normalize parameters
             if (typeof optValues == "undefined") optValues = [];
             if (!(optValues instanceof Array)) optValues = [optValues];
@@ -119,7 +136,7 @@ var EdiTable = function (table, options) {
             if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
 
             // ...
-        }*/
+        }
     };
 
     // Actual EdiTable properties and init begin here
@@ -127,9 +144,11 @@ var EdiTable = function (table, options) {
     this.rows = [];
     this.cols = [];
 
+    normalizeTable(this.table);
+
     // Setup rows
     this.rows = $("tr", this.table).toArray().map(function(tr){
-        var cells = $("td, th", tr).toArray().map(function(td){
+        var cells = $(tr.cells).toArray().map(function(td){
             return new Cell(td);
         });
         return new Vector(cells);
@@ -232,10 +251,22 @@ EdiTable.prototype = {
         if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
 
         // Do deselection
-        for (var i = 0; i < this.rows.length; i ++){
+        for (var i = rowStart; i <= rowEnd; i ++){
             if (i >= rowStart && i <= rowEnd){
                 this.rows[i].deselect(colStart, colEnd);
             }
+        }
+    },
+    clear : function(rowStart, rowEnd, colStart, colEnd){
+        // Normalize parameters
+        if (typeof rowStart == "undefined") rowStart = 0;
+        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof colStart == "undefined") colStart = 0;
+        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+
+        // Clear
+        for (var i = rowStart; i <= rowEnd; i ++){
+            this.rows[i].clear(colStart, colEnd);
         }
     },
     getRowValues : function(rowStart, rowEnd, colStart, colEnd){
@@ -247,10 +278,8 @@ EdiTable.prototype = {
 
         // Get values
         var rows = [];
-        for (var i = 0; i < this.rows.length; i ++){
-            if (i >= rowStart && i <= rowEnd){
-                rows.push(this.rows[i].getValues(colStart, colEnd));
-            }
+        for (var i = rowStart; i <= rowEnd; i ++){
+            rows.push(this.rows[i].getValues(colStart, colEnd));
         }
 
         return rows;
@@ -264,10 +293,8 @@ EdiTable.prototype = {
 
         // Get values
         var cols = [];
-        for (var i = 0; i < this.cols.length; i ++){
-            if (i >= colStart && i <= colEnd){
-                cols.push(this.cols[i].getValues(rowStart, rowEnd));
-            }
+        for (var i = colStart; i <= colEnd; i ++){
+            cols.push(this.cols[i].getValues(rowStart, rowEnd));
         }
 
         return cols;
