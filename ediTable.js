@@ -122,7 +122,7 @@ var EdiTable = function (table, options) {
         }*/
     };
 
-    // Acutal EdiTable properties and init begin here
+    // Actual EdiTable properties and init begin here
     this.table = table;
     this.rows = [];
     this.cols = [];
@@ -155,7 +155,8 @@ var EdiTable = function (table, options) {
         event.preventDefault();
     }
     function cutTest(event){
-        // TODO
+        copyTest(event);
+        //TODO clear selected cells.
     }
     function pasteTest(event){
         //Use innerText of tr's found in the template to paste stuff.
