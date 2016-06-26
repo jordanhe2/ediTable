@@ -233,7 +233,9 @@ EdiTable.prototype = {
         // Get values
         var rows = [];
         for (var i = 0; i < this.rows.length; i ++){
-            rows.push(this.rows[i].getValues(colStart, colEnd));
+            if (i >= rowStart && i <= rowEnd){
+                rows.push(this.rows[i].getValues(colStart, colEnd));
+            }
         }
 
         return rows;
