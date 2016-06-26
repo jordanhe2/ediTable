@@ -108,16 +108,6 @@ var EdiTable = function (table, options) {
         }*/
     };
 
-    var Selection = function(rowStart, rowEnd, colStart, colEnd){
-        this.rowStart = rowStart;
-        this.rowEnd = rowEnd;
-        this.colStart = colStart;
-        this.colEnd = colEnd;
-    };
-    Selection.prototype = {
-
-    };
-
     // Acutal EdiTable properties and init begin here
     this.table = table;
     this.rows = [];
@@ -204,6 +194,57 @@ var EdiTable = function (table, options) {
 };
 EdiTable.prototype = {
     select : function(rowStart, rowEnd, colStart, colEnd){
+        // Normalize parameters
+        if (typeof rowStart == "undefined") rowStart = 0;
+        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof colStart == "undefined") colStart = 0;
+        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+
+        // Do selection
+        for (var i = 0; i < this.rows.length; i ++){
+            if (i >= rowStart && i <= rowEnd){
+                this.rows[i].select(colStart, colEnd);
+            } else {
+                this.rows[i].deselect();
+            }
+        }
+    },
+    deselect : function(rowStart, rowEnd, colStart, colEnd){
+        // Normalize parameters
+        if (typeof rowStart == "undefined") rowStart = 0;
+        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof colStart == "undefined") colStart = 0;
+        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+
+        // Do deselection
+        for (var i = 0; i < this.rows.length; i ++){
+            if (i >= rowStart && i <= rowEnd){
+                this.rows[i].deselect(colStart, colEnd);
+            }
+        }
+    },
+    getValues : function(rowStart, rowEnd, colStart, colEnd){
+        // Normalize parameters
+        if (typeof rowStart == "undefined") rowStart = 0;
+        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof colStart == "undefined") colStart = 0;
+        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+
+        // Get values
+        var rows = [];
+        for (var i = 0; i < this.rows.length; i ++){
+            rows.push(this.rows[i].getValues(colStart, colEnd));
+        }
+
+        return rows;
+    },
+    getSelectedRows : function(){
+        // TODO
+    },
+    getSelectedCols : function(){
+        // TODO
+    },
+    getSelectedValues : function(){
         // TODO
     },
     insert : function(/* parameters */){
