@@ -26,7 +26,7 @@ var EdiTable = function (table, options) {
     };
     Cell.prototype = {
         setEditable : function(editable){
-            this.td.contentEditable = editable;
+            this.td.contenteditable = editable;
         },
         isEditable : function(){
             return this.td.contenteditable;
@@ -89,7 +89,7 @@ var EdiTable = function (table, options) {
 
             return values;
         },
-        getSelectedVector : function(){
+        getSelection : function(){
             return new Vector(
                 this.cells.filter(function(cell){
                     return cell.selected;
@@ -97,12 +97,12 @@ var EdiTable = function (table, options) {
             );
         },
         getSelectedValues : function(){
-            return this.getSelectedVector().cells.map(function(cell){
+            return this.getSelection().cells.map(function(cell){
                 return cell.getValue();
             });
         },
         hasSelection : function(){
-            return this.getSelectedVector().cells.length > 0;
+            return this.getSelection().cells.length > 0;
         },
         /*insert : function(index, optValues){
             // Normalize parameters
@@ -128,12 +128,12 @@ var EdiTable = function (table, options) {
     this.cols = [];
 
     // Setup rows
-    this.rows = $("tr", this.table).map(function(index, tr){
+    this.rows = $("tr", this.table).toArray().map(function(tr){
         var cells = $("td, th", tr).toArray().map(function(td){
             return new Cell(td);
         });
         return new Vector(cells);
-    }).toArray();
+    });
 
     // Setup cols
     if (this.rows.length > 0) {
@@ -194,7 +194,7 @@ var EdiTable = function (table, options) {
                 for (var j = 0; j < cells.length; j++) {
                     var cell = cells[j];
 
-                    data[i][j] = cell.textContent;
+                    data[i][j] = cell.innerText;
                 }
             }
 
@@ -276,7 +276,7 @@ EdiTable.prototype = {
         var rows = [];
         for (var i = 0; i < this.rows.length; i ++){
             if (this.rows[i].hasSelection()){
-                rows.push(this.rows[i].getSelectedVector());
+                rows.push(this.rows[i].getSelection());
             }
         }
         return rows;
@@ -285,7 +285,7 @@ EdiTable.prototype = {
         var cols = [];
         for (var i = 0; i < this.cols.length; i ++){
             if (this.cols[i].hasSelection()){
-                cols.push(this.cols[i].getSelectedVector());
+                cols.push(this.cols[i].getSelection());
             }
         }
         return cols;
