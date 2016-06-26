@@ -86,10 +86,13 @@ var EdiTable = function (table, options) {
             );
         },
         getSelectedValues : function(){
-            return this.getSelection().map(function(cell){
+            return this.getSelectedVector().cells.map(function(cell){
                 return cell.getValue();
             });
-        }
+        },
+        hasSelection : function(){
+            return this.getSelectedVector().cells.length > 0;
+        },
         /*insert : function(index, optValues){
             // Normalize parameters
             if (typeof optValues == "undefined") optValues = [];
@@ -223,7 +226,7 @@ EdiTable.prototype = {
             }
         }
     },
-    getValues : function(rowStart, rowEnd, colStart, colEnd){
+    getRowValues : function(rowStart, rowEnd, colStart, colEnd){
         // Normalize parameters
         if (typeof rowStart == "undefined") rowStart = 0;
         if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
@@ -240,14 +243,53 @@ EdiTable.prototype = {
 
         return rows;
     },
+    getColValues : function(rowStart, rowEnd, colStart, colEnd){
+        // Normalize parameters
+        if (typeof rowStart == "undefined") rowStart = 0;
+        if (typeof rowEnd == "undefined") rowEnd = this.rows.length - 1;
+        if (typeof colStart == "undefined") colStart = 0;
+        if (typeof colEnd == "undefined") colEnd = this.cols.length - 1;
+
+        // Get values
+        var cols = [];
+        for (var i = 0; i < this.cols.length; i ++){
+            if (i >= colStart && i <= colEnd){
+                cols.push(this.cols[i].getValues(rowStart, rowEnd));
+            }
+        }
+
+        return cols;
+    },
     getSelectedRows : function(){
-        // TODO
+        var rows = [];
+        for (var i = 0; i < this.rows.length; i ++){
+            if (this.rows[i].hasSelection()){
+                rows.push(this.rows[i].getSelectedVector());
+            }
+        }
+        return rows;
     },
     getSelectedCols : function(){
-        // TODO
+        var cols = [];
+        for (var i = 0; i < this.cols.length; i ++){
+            if (this.cols[i].hasSelection()){
+                cols.push(this.cols[i].getSelectedVector());
+            }
+        }
+        return cols;
     },
-    getSelectedValues : function(){
-        // TODO
+    getSelectedRowValues : function(){
+        return this.getSelectedRows().map(function(row){
+            return row.getValues();
+        });
+    },
+    getSelectedColValues : function(){
+        return this.getSelectedCols().map(function(col){
+            return col.getValues();
+        });
+    },
+    hasSelection : function(){
+        return this.getSelectedRows().length > 0;
     },
     insert : function(/* parameters */){
         // TODO
