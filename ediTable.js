@@ -78,10 +78,12 @@ var EdiTable = function (table, options) {
 
             return values;
         },
-        getSelectedCells : function(){
-            return this.cells.filter(function(cell){
-                return cell.selected;
-            });
+        getSelectedVector : function(){
+            return new Vector(
+                this.cells.filter(function(cell){
+                    return cell.selected;
+                })
+            );
         },
         getSelectedValues : function(){
             return this.getSelection().map(function(cell){
