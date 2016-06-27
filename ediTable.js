@@ -44,7 +44,7 @@ var EdiTable = function(table, options) {
     }
     Cell.prototype = {
         setEditable : function(edit){
-            $(this.dom).prop("contenteditable", edit.toString());
+            $(this.dom).prop("contenteditable", edit);
         },
         isEditable : function(){
             return Boolean($(this.dom).prop("contenteditable"));
@@ -86,28 +86,32 @@ var EdiTable = function(table, options) {
         }
     };
 
-    var Vector = function (cells) {
+    var Vector = function (cells, type) {
         this.cells = cells;
+        this.type = type;
     };
     Vector.prototype = {
+        getCellCount : function(){
+            return this.cells.length;
+        },
         setEditable : function(edit){
-            for (var i = 0; i < this.cells.length; i ++){
+            for (var i = 0; i < this.getCellCount(); i ++){
                 this.cells[i].setEditable(edit);
             }
         },
         isEditable : function(){
-            for (var i = 0; i < this.cells.length; i ++){
+            for (var i = 0; i < this.getCellCount(); i ++){
                 if (this.cells[i].isEditable()) return true;
             }
             return false;
         },
         setHeader : function(header){
-            for (var i = 0; i < this.cells.length; i ++){
+            for (var i = 0; i < this.getCellCount(); i ++){
                 this.cells[i].setHeader(header);
             }
         },
         isHeader : function(){
-            for (var i = 0; i < this.cells.length; i ++){
+            for (var i = 0; i < this.getCellCount(); i ++){
                 if (!this.cells[i].isHeader()) return false;
             }
             return true;
@@ -115,10 +119,10 @@ var EdiTable = function(table, options) {
         select : function(optStart, optEnd){
             // Normalize parameters
             if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
 
             // Loop this.cells and select/deselect
-            for (var i = 0; i < this.cells.length; i++) {
+            for (var i = 0; i < this.getCellCount(); i++) {
                 if (i >= optStart && i <= optEnd){
                     this.cells[i].select();
                 } else {
@@ -129,10 +133,10 @@ var EdiTable = function(table, options) {
         deselect : function(optStart, optEnd){
             // Normalize parameters
             if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
 
             // Loop this.cells and deselect
-            for (var i = 0; i < this.cells.length; i++) {
+            for (var i = 0; i < this.getCellCount(); i++) {
                 if (i >= optStart && i <= optEnd){
                     this.cells[i].deselect();
                 }
@@ -141,7 +145,7 @@ var EdiTable = function(table, options) {
         clear : function(optStart, optEnd){
             // Normalize parameters
             if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
 
             for (var i = optStart; i <= optEnd; i ++){
                 this.cells[i].clear();
@@ -150,7 +154,7 @@ var EdiTable = function(table, options) {
         getValues : function(optStart, optEnd){
             // Normalize parameters
             if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
 
             // Loop this.cells and return values in an array
             var values = [];
@@ -164,7 +168,8 @@ var EdiTable = function(table, options) {
             return new Vector(
                 this.cells.filter(function(cell){
                     return cell.selected;
-                })
+                }),
+                this.type
             );
         },
         getSelectedValues : function(){
@@ -175,22 +180,6 @@ var EdiTable = function(table, options) {
         hasSelection : function(){
             return this.getSelection().cells.length > 0;
         }
-        /*insert : function(index, optValues){
-            // Normalize parameters
-            if (typeof optValues == "undefined") optValues = [];
-            if (!(optValues instanceof Array)) optValues = [optValues];
-
-            // Insert optValues into this.cells
-            var args = [index, 0].concat(optValues);
-            Array.prototype.splice.apply(this.cells, args);
-        },
-        remove : function(optStart, optEnd) {
-            // Normalize parameters
-            if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.cells.length - 1;
-
-            // ...
-        }*/
     };
 
     // Actual EdiTable properties and init begin here
@@ -205,7 +194,7 @@ var EdiTable = function(table, options) {
         var cells = $(tr.cells).toArray().map(function(td){
             return new Cell(td);
         });
-        return new Vector(cells);
+        return new Vector(cells, "row");
     });
 
     // Setup cols
@@ -215,7 +204,7 @@ var EdiTable = function(table, options) {
             for (var j = 0; j < this.getRowCount(); j ++){
                 cells.push(this.rows[j].cells[i]);
             }
-            this.cols.push(new Vector(cells));
+            this.cols.push(new Vector(cells, "col"));
         }
     }
 
@@ -392,10 +381,19 @@ EdiTable.prototype = {
     },
     insertRow : function(index, optValues){
         var tr = $("<tr></tr>");
+        var colCount = this.getColCount();
 
-        for (var i = 0; i < this.getColCount(); i ++) {
-            var cell = $();
+        for (var i = 0; i < colCount; i ++) {
+            var col = this.cols[i];
+            var type = col.isHeader() ? "th" : "td";
+            var editable = col.isEditable();
+            var cellDom = $(document.createElement(type));
+
+            cellDom
+                .appendTo(tr);
         }
+
+        tr.insertBefore($(this.table).find("tr").eq(index));
     },
     insertCol : function(index, optValues){
 
