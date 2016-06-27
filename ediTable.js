@@ -509,13 +509,6 @@ EdiTable.prototype = {
     hasSelection : function(){
         return this.getSelectedRows().length > 0;
     },
-    /*initSingleCell : function(optValue) {
-        var row = new Vector([], "row");
-
-        // TODO make remove
-        this.rows.push(row);
-        row.insertCell(0, optValue);
-    },*/
     insertRow : function(index, optValues){
         var colCount = this.getColCount();
 
@@ -531,7 +524,29 @@ EdiTable.prototype = {
                 col.setCell(index, optValues[i]);
             }
         } else {
-            // TODO: handle case where there is nothing
+            // Renormalize parameters
+            if (optValues.length == 0) optValues.push("");
+
+            // Create row and row dom
+            var rowDom = this.table.insertRow(0),
+                row = new Vector([], "row");
+            this.rows.push(row);
+
+            // Add row, and add column for each optValue
+            for (var i = 0; i < optValues.length; i ++){
+                var td = this.table.rows[0].insertCell(-1),
+                    cell = new Cell(td),
+                    col = new Vector([cell], "col");
+
+                // Set cell value
+                cell.setValue(optValues[i]);
+
+                // Add cell to row
+                row.cells.push(cell);
+
+                // Push col to cols
+                this.cols.push(col);
+            }
         }
     },
     insertCol : function(index, optValues){
@@ -549,7 +564,28 @@ EdiTable.prototype = {
                 row.setCell(index, optValues[i]);
             }
         } else {
-            // TODO: handle case where there is nothing
+            // Renormalize parameters
+            if (optValues.length == 0) optValues.push("");
+
+            // Create col
+            var col = new Vector([], "col");
+            this.cols.push(col);
+
+            for (var i = 0; i < optValues.length; i ++){
+                var rowDom = this.table.insertRow(-1),
+                    cellDom = rowDom.insertCell(-1),
+                    cell = new Cell(cellDom),
+                    row = new Vector([cell], "row");
+
+                // Set cell value
+                cell.setValue(optValues[i]);
+
+                // Add cell to col
+                col.cells.push(cell);
+
+                // Push row to rows
+                this.rows.push(row);
+            }
         }
     },
     removeRow : function(index){
