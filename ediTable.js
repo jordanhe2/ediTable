@@ -252,7 +252,35 @@ var EdiTable = function(table, options) {
             }
         },
         removeCell : function(index){
-            // TODO
+            // Remove from row
+            if (this.type == "row"){
+                // Remove cells from rows and dom
+                for (var i = 0; i < that.getRowCount(); i ++){
+                    that.table.rows[i].deleteCell(index);
+                    that.rows[i].cells.splice(index, 1);
+                }
+
+                // Remove col
+                that.cols.splice(index, 1);
+
+                // Remove all trs if no cols are left
+                if (that.cols.length == 0){
+                    while (that.table.rows.length > 0){
+                        that.table.deleteRow(0);
+                    }
+                }
+            }
+            // Remove from col
+            else {
+                // Remove cells from cols
+                for (var i = 0; i < that.getColCount(); i ++){
+                    that.cols[i].cells.splice(index, 1);
+                }
+
+                // Remove dom and row
+                that.table.deleteRow(index);
+                that.rows.splice(index, 1);
+            }
         },
         setCell : function(index, value){
             this.cells[index].setValue(value);
@@ -520,8 +548,13 @@ EdiTable.prototype = {
         } else {
             // TODO: handle case where there is nothing
         }
+    },
+    removeRow : function(index){
+        this.cols[0].removeCell(index);
+    },
+    removeCol : function(index){
+        this.rows[0].removeCell(index);
     }
 };
-
 
 var editable = new EdiTable(document.getElementById("table"), {});
