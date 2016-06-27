@@ -5,6 +5,7 @@
  * @param{Object} -
  */
 var EdiTable = function(table, options) {
+    // Utitilites
     function normalizeTable(table){
         var rows = $("tr", table).toArray(),
             lengths = rows.map(function(row){
@@ -27,11 +28,14 @@ var EdiTable = function(table, options) {
         }
     }
 
-    this.Cell = function (dom) {
+    // Context variable
+    var that = this;
+
+    Cell = function (dom) {
         this.dom = dom;
         this.selected = false;
     };
-    this.Cell.create = function(type, optInitValue){
+    Cell.create = function(type, optInitValue){
         // Prevent injection
         if (!(type == "td" || type == "th")) throw new Error("Type must be either td or th");
 
@@ -42,12 +46,12 @@ var EdiTable = function(table, options) {
         // Construct new cell
         return new Cell(element);
     }
-    this.Cell.prototype = {
+    Cell.prototype = {
         setEditable : function(edit){
             $(this.dom).prop("contenteditable", edit);
         },
         isEditable : function(){
-            return Boolean($(this.dom).prop("contenteditable"));
+            return $(this.dom).prop("contenteditable") == "true";
         },
         setHeader : function(header){
             var type = (header ? "th" : "td"),
@@ -85,12 +89,13 @@ var EdiTable = function(table, options) {
             return this.dom.innerText;
         }
     };
+    this.Cell = Cell;
 
-    this.Vector = function (cells, type) {
+    Vector = function (cells, type) {
         this.cells = cells;
-        this.type = type;
+        this.type = ((type == "row" || type == "col") ? type : "row");
     };
-    this.Vector.prototype = {
+    Vector.prototype = {
         getCellCount : function(){
             return this.cells.length;
         },
@@ -101,9 +106,9 @@ var EdiTable = function(table, options) {
         },
         isEditable : function(){
             for (var i = 0; i < this.getCellCount(); i ++){
-                if (this.cells[i].isEditable()) return true;
+                if (!this.cells[i].isEditable()) return false;
             }
-            return false;
+            return true;
         },
         setHeader : function(header){
             for (var i = 0; i < this.getCellCount(); i ++){
@@ -179,8 +184,62 @@ var EdiTable = function(table, options) {
         },
         hasSelection : function(){
             return this.getSelection().cells.length > 0;
+        },
+        insert : function(index, optValue){
+            // Normalize parameters
+            if (typeof optValue == "undefined") optValue = "";
+
+            // Insert into row
+            if (this.type == "row"){
+                // Create new col
+                var newCol = new Vector([], "col");
+                that.cols.splice(index, 0, newCol);
+
+                // Make cells, add them to rows and col
+                for (var i = 0; i < that.getRowCount(); i ++){
+                    var row = that.rows[i],
+                        rowDom = that.table.rows[i],
+                        edit = row.isEditable(),
+                        header = row.isHeader(),
+                        cellDom = rowDom.insertCell(index),
+                        cell = new Cell(cellDom);
+
+                    // Configure cell
+                    cell.setEditable(edit);
+                    cell.setHeader(header);
+
+                    // Add cell to rows and col
+                    row.cells.splice(index, 0, cell);
+                    newCol.cells.push(cell);
+                }
+            }
+            // Insert into col
+            else {
+                // Create new row
+                var newRow = new Vector([], "row"),
+                    rowDom = that.table.insertRow(index);
+                that.rows.splice(index, 0, newRow);
+
+                // Make cells, and them to cols and row
+                for (var i = 0; i < that.getColCount(); i ++){
+                    var col = that.cols[i],
+                        edit = col.isEditable(),
+                        header = col.isHeader(),
+                        cellDom = rowDom.insertCell(i),
+                        cell = new Cell(cellDom);
+
+                    // Configure cell
+                    cell.setEditable(edit);
+                    cell.setHeader(header);
+
+                    // Add cell to cols and row
+                    col.cells.splice(index, 0, cell);
+                    newRow.cells.push(cell);
+                }
+            }
         }
     };
+    this.Vector = Vector;
 
     // Actual EdiTable properties and init begin here
     this.table = table;
@@ -270,6 +329,7 @@ var EdiTable = function(table, options) {
     document.addEventListener("paste", pasteTest);
 };
 EdiTable.prototype = {
+
     getRowCount : function(){
         return this.rows.length;
     },
