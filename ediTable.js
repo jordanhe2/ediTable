@@ -27,11 +27,11 @@ var EdiTable = function(table, options) {
         }
     }
 
-    var Cell = function (dom) {
+    this.Cell = function (dom) {
         this.dom = dom;
         this.selected = false;
     };
-    Cell.create = function(type, optInitValue){
+    this.Cell.create = function(type, optInitValue){
         // Prevent injection
         if (!(type == "td" || type == "th")) throw new Error("Type must be either td or th");
 
@@ -42,7 +42,7 @@ var EdiTable = function(table, options) {
         // Construct new cell
         return new Cell(element);
     }
-    Cell.prototype = {
+    this.Cell.prototype = {
         setEditable : function(edit){
             $(this.dom).prop("contenteditable", edit);
         },
@@ -86,11 +86,11 @@ var EdiTable = function(table, options) {
         }
     };
 
-    var Vector = function (cells, type) {
+    this.Vector = function (cells, type) {
         this.cells = cells;
         this.type = type;
     };
-    Vector.prototype = {
+    this.Vector.prototype = {
         getCellCount : function(){
             return this.cells.length;
         },
