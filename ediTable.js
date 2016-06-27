@@ -265,9 +265,7 @@ var EdiTable = function(table, options) {
 
                 // Remove all trs if no cols are left
                 if (that.cols.length == 0){
-                    while (that.table.rows.length > 0){
-                        that.table.deleteRow(0);
-                    }
+                    (that.table.tBodies[0] || that.table).innerHTML = "";
                 }
             }
             // Remove from col
@@ -280,6 +278,11 @@ var EdiTable = function(table, options) {
                 // Remove dom and row
                 that.table.deleteRow(index);
                 that.rows.splice(index, 1);
+
+                // Remove all cols if no rows are left
+                if (that.rows.length == 0){
+                    that.cols = [];
+                }
             }
         },
         setCell : function(index, value){
