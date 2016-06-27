@@ -35,17 +35,6 @@ var EdiTable = function(table, options) {
         this.dom = dom;
         this.selected = false;
     };
-    Cell.create = function(type, optInitValue){
-        // Prevent injection
-        if (!(type == "td" || type == "th")) throw new Error("Type must be either td or th");
-
-        // Create element
-        var element = document.createElement(type);
-        $(element).text(optInitValue || "");
-
-        // Construct new cell
-        return new Cell(element);
-    }
     Cell.prototype = {
         setEditable : function(edit){
             $(this.dom).prop("contenteditable", edit);
