@@ -87,6 +87,12 @@ var EdiTable = function(table, options) {
         },
         getValue : function(){
             return this.dom.innerText;
+        },
+        setValue : function (value) {
+            $(this.dom).html(value);
+        },
+        appendValue : function (value) {
+            $(this.dom).append(value);
         }
     };
     this.Cell = Cell;
@@ -185,7 +191,7 @@ var EdiTable = function(table, options) {
         hasSelection : function(){
             return this.getSelection().cells.length > 0;
         },
-        insert : function(index, optValue){
+        insertCell : function(index, optValue){
             // Normalize parameters
             if (typeof optValue == "undefined") optValue = "";
 
@@ -207,6 +213,7 @@ var EdiTable = function(table, options) {
                     // Configure cell
                     cell.setEditable(edit);
                     cell.setHeader(header);
+                    if (row == this) cell.setValue(optValue);
 
                     // Add cell to rows and col
                     row.cells.splice(index, 0, cell);
@@ -231,12 +238,19 @@ var EdiTable = function(table, options) {
                     // Configure cell
                     cell.setEditable(edit);
                     cell.setHeader(header);
+                    if (col == this) cell.setValue(optValue);
 
                     // Add cell to cols and row
                     col.cells.splice(index, 0, cell);
                     newRow.cells.push(cell);
                 }
             }
+        },
+        setCell : function(index, value){
+            this.cells[index].setValue(value);
+        },
+        appendCell: function(index, value) {
+            this.cells[index].appendValue(value);
         }
     };
     this.Vector = Vector;
@@ -329,7 +343,6 @@ var EdiTable = function(table, options) {
     document.addEventListener("paste", pasteTest);
 };
 EdiTable.prototype = {
-
     getRowCount : function(){
         return this.rows.length;
     },
@@ -439,24 +452,48 @@ EdiTable.prototype = {
     hasSelection : function(){
         return this.getSelectedRows().length > 0;
     },
+    /*initSingleCell : function(optValue) {
+        var row = new Vector([], "row");
+
+        // TODO make remove
+        this.rows.push(row);
+        row.insertCell(0, optValue);
+    },*/
     insertRow : function(index, optValues){
-        var tr = $("<tr></tr>");
         var colCount = this.getColCount();
 
-        for (var i = 0; i < colCount; i ++) {
-            var col = this.cols[i];
-            var type = col.isHeader() ? "th" : "td";
-            var editable = col.isEditable();
-            var cellDom = $(document.createElement(type));
+        // Normalize parameters
+        if (typeof optValues == "undefined") optValues = [];
+        while (optValues.length < colCount) optValues.push("");
 
-            cellDom
-                .appendTo(tr);
+        // Insert row
+        if (colCount > 0) {
+            this.cols[0].insertCell(index, optValues[0]);
+            for (var i = 1; i < colCount; i++) {
+                var col = this.cols[i];
+                col.setCell(index, optValues[i]);
+            }
+        } else {
+            // TODO: handle case where there is nothing
         }
-
-        tr.insertBefore($(this.table).find("tr").eq(index));
     },
     insertCol : function(index, optValues){
+        var rowCount = this.getRowCount();
 
+        // Normalize parameters
+        if (typeof optValues == "undefined") optValues = [];
+        while (optValues.length < rowCount) optValues.push("");
+
+        // Insert row
+        if (rowCount > 0) {
+            this.rows[0].insertCell(index, optValues[0]);
+            for (var i = 1; i < rowCount; i++) {
+                var row = this.rows[i];
+                row.setCell(index, optValues[i]);
+            }
+        } else {
+            // TODO: handle case where there is nothing
+        }
     }
 };
 
