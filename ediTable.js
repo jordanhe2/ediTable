@@ -105,8 +105,13 @@ var EdiTable = function(table, options) {
         getCellCount : function(){
             return this.cells.length;
         },
-        setEditable : function(edit){
-            for (var i = 0; i < this.getCellCount(); i ++){
+        setEditable : function(edit, optStart, optEnd){
+            // Normalize parameters
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
+
+            // Set editable
+            for (var i = optStart; i <= optEnd; i ++){
                 this.cells[i].setEditable(edit);
             }
         },
@@ -246,6 +251,9 @@ var EdiTable = function(table, options) {
                 }
             }
         },
+        removeCell : function(index){
+            // TODO
+        },
         setCell : function(index, value){
             this.cells[index].setValue(value);
         },
@@ -348,6 +356,24 @@ EdiTable.prototype = {
     },
     getColCount : function(){
         return this.cols.length;
+    },
+    setEditable : function(edit, rowStart, rowEnd, colStart, colEnd){
+        // Normalize parameters
+        if (typeof rowStart == "undefined") rowStart = 0;
+        if (typeof rowEnd == "undefined") rowEnd = this.getRowCount() - 1;
+        if (typeof colStart == "undefined") colStart = 0;
+        if (typeof colEnd == "undefined") colEnd = this.getColCount() - 1;
+
+        // Set editable
+        for (var i = rowStart; i <= rowEnd; i ++){
+            this.rows[i].setEditable(edit, colStart, colEnd);
+        }
+    },
+    isEditable : function(){
+        for (var i = 0; i < this.getRowCount(); i ++){
+            if (!this.rows[i].isEditable()) return false;
+        }
+        return true;
     },
     select : function(rowStart, rowEnd, colStart, colEnd){
         // Normalize parameters
