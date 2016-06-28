@@ -4,7 +4,7 @@
  * @param{HTMLTable} -
  * @param{Object} -
  */
-var EdiTable = function(table, options) {
+var EdiTable = function(table, optOptions) {
     // Utitilites
     function normalizeTable(table){
         var rows = $("tr", table).toArray(),
@@ -26,6 +26,10 @@ var EdiTable = function(table, options) {
                 }
             }
         }
+    }
+    function normalizeOptions(options){
+        // if (typeof options.prop == "undefined") options.prop = value;
+        // ...
     }
 
     // Context variable
@@ -285,10 +289,12 @@ var EdiTable = function(table, options) {
 
     // Actual EdiTable properties and init begin here
     this.table = table;
+    this.options = optOptions || {};
     this.rows = [];
     this.cols = [];
 
     normalizeTable(this.table);
+    normalizeOptions(this.options);
 
     // Setup rows
     this.rows = $("tr", this.table).toArray().map(function(tr){
