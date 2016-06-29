@@ -105,8 +105,8 @@ var EdiTable = function(table, optOptions) {
         },
         setEditable : function(edit, optStart, optEnd){
             // Normalize parameters
-            optStart = optStart || 0;
-            optEnd = optEnd || (this.getCellCount() - 1);
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
             if (optStart > optEnd){
                 var temp = optStart;
                 optStart = optEnd;
@@ -137,8 +137,8 @@ var EdiTable = function(table, optOptions) {
         },
         select : function(optStart, optEnd){
             // Normalize parameters
-            optStart = optStart || 0;
-            optEnd = optEnd || (this.getCellCount() - 1);
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
             if (optStart > optEnd){
                 var temp = optStart;
                 optStart = optEnd;
@@ -156,8 +156,8 @@ var EdiTable = function(table, optOptions) {
         },
         deselect : function(optStart, optEnd){
             // Normalize parameters
-            optStart = optStart || 0;
-            optEnd = optEnd || (this.getCellCount() - 1);
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
             if (optStart > optEnd){
                 var temp = optStart;
                 optStart = optEnd;
@@ -173,8 +173,8 @@ var EdiTable = function(table, optOptions) {
         },
         clear : function(optStart, optEnd){
             // Normalize parameters
-            optStart = optStart || 0;
-            optEnd = optEnd || (this.getCellCount() - 1);
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
             if (optStart > optEnd){
                 var temp = optStart;
                 optStart = optEnd;
@@ -187,8 +187,8 @@ var EdiTable = function(table, optOptions) {
         },
         getValues : function(optStart, optEnd){
             // Normalize parameters
-            optStart = optStart || 0;
-            optEnd = optEnd || (this.getCellCount() - 1);
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
             if (optStart > optEnd){
                 var temp = optStart;
                 optStart = optEnd;
@@ -475,10 +475,10 @@ EdiTable.prototype = {
     },
     setEditable : function(edit, optRowStart, optRowEnd, optColStart, optColEnd){
         // Normalize parameters
-        optRowStart = optRowStart || 0;
-        optRowEnd = optRowEnd || (this.getRowCount() - 1);
-        optColStart = optColStart || 0;
-        optColEnd = optColEnd || (this.getColCount() - 1);
+        if (typeof optRowStart == "undefined") optRowStart = 0;
+        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
+        if (typeof optColStart == "undefined") optColStart = 0;
+        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
         if (optRowStart > optRowEnd){
             var temp = optRowStart;
             optRowStart = optRowEnd;
@@ -503,10 +503,10 @@ EdiTable.prototype = {
     },
     select : function(optRowStart, optRowEnd, optColStart, optColEnd){
         // Normalize parameters
-        optRowStart = optRowStart || 0;
-        optRowEnd = optRowEnd || (this.getRowCount() - 1);
-        optColStart = optColStart || 0;
-        optColEnd = optColEnd || (this.getColCount() - 1);
+        if (typeof optRowStart == "undefined") optRowStart = 0;
+        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
+        if (typeof optColStart == "undefined") optColStart = 0;
+        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
         if (optRowStart > optRowEnd){
             var temp = optRowStart;
             optRowStart = optRowEnd;
@@ -529,10 +529,10 @@ EdiTable.prototype = {
     },
     deselect : function(optRowStart, optRowEnd, optColStart, optColEnd){
         // Normalize parameters
-        optRowStart = optRowStart || 0;
-        optRowEnd = optRowEnd || (this.getRowCount() - 1);
-        optColStart = optColStart || 0;
-        optColEnd = optColEnd || (this.getColCount() - 1);
+        if (typeof optRowStart == "undefined") optRowStart = 0;
+        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
+        if (typeof optColStart == "undefined") optColStart = 0;
+        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
         if (optRowStart > optRowEnd){
             var temp = optRowStart;
             optRowStart = optRowEnd;
@@ -551,10 +551,10 @@ EdiTable.prototype = {
     },
     clear : function(optRowStart, optRowEnd, optColStart, optColEnd){
         // Normalize parameters
-        optRowStart = optRowStart || 0;
-        optRowEnd = optRowEnd || (this.getRowCount() - 1);
-        optColStart = optColStart || 0;
-        optColEnd = optColEnd || (this.getColCount() - 1);
+        if (typeof optRowStart == "undefined") optRowStart = 0;
+        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
+        if (typeof optColStart == "undefined") optColStart = 0;
+        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
         if (optRowStart > optRowEnd){
             var temp = optRowStart;
             optRowStart = optRowEnd;
@@ -573,10 +573,10 @@ EdiTable.prototype = {
     },
     getRowValues : function(optRowStart, optRowEnd, optColStart, optColEnd){
         // Normalize parameters
-        optRowStart = optRowStart || 0;
-        optRowEnd = optRowEnd || (this.getRowCount() - 1);
-        optColStart = optColStart || 0;
-        optColEnd = optColEnd || (this.getColCount() - 1);
+        if (typeof optRowStart == "undefined") optRowStart = 0;
+        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
+        if (typeof optColStart == "undefined") optColStart = 0;
+        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
         if (optRowStart > optRowEnd){
             var temp = optRowStart;
             optRowStart = optRowEnd;
@@ -598,10 +598,10 @@ EdiTable.prototype = {
     },
     getColValues : function(optRowStart, optRowEnd, optColStart, optColEnd){
         // Normalize parameters
-        optRowStart = optRowStart || 0;
-        optRowEnd = optRowEnd || (this.getRowCount() - 1);
-        optColStart = optColStart || 0;
-        optColEnd = optColEnd || (this.getColCount() - 1);
+        if (typeof optRowStart == "undefined") optRowStart = 0;
+        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
+        if (typeof optColStart == "undefined") optColStart = 0;
+        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
         if (optRowStart > optRowEnd){
             var temp = optRowStart;
             optRowStart = optRowEnd;
