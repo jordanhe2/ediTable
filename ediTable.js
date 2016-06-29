@@ -27,15 +27,20 @@ var EdiTable = function(table, optOptions) {
             }
         }
     }
-    function normalizeOptions(options){
-        // if (typeof options.prop == "undefined") options.prop = value;
-        // ...
+    function normalizeOptions(options) {
+        options.minRows = options.minRows || 1;
+        options.minCols = options.minCols || 1;
+        options.maxRows = options.maxRows || -1;
+        options.maxCols = options.maxCols || -1;
+        options.growRows = options.growRows || false;
+        options.growCols = options.growCols || false;
+        options.shrinkRows = options.shrinkRows || false;
+        options.shrinkCols = options.shrinkCols || false;
     }
-
     // Context variable
     var that = this;
 
-    Cell = function (dom) {
+    var Cell = function (dom) {
         this.dom = dom;
         this.selected = false;
     };
@@ -90,7 +95,7 @@ var EdiTable = function(table, optOptions) {
     };
     this.Cell = Cell;
 
-    Vector = function (cells, type) {
+    var Vector = function (cells, type) {
         this.cells = cells;
         this.type = ((type == "row" || type == "col") ? type : "row");
     };
@@ -287,6 +292,7 @@ var EdiTable = function(table, optOptions) {
     };
     this.Vector = Vector;
 
+
     // Actual EdiTable properties and init begin here
     this.table = table;
     this.options = optOptions || {};
@@ -295,6 +301,65 @@ var EdiTable = function(table, optOptions) {
 
     normalizeTable(this.table);
     normalizeOptions(this.options);
+
+    this.Selection = {
+        getCoords: function (element) {
+            var el = $(element);
+            var coords = null;
+            
+            if ($(that.table).find(el).length > 0) {
+                var cell = el.closest("tr > *");
+                var row = el.closest("tr");
+
+                var rowIndex = row.index();
+                var colIndex = cell.index();
+
+                coords = [rowIndex, colIndex];
+            }
+
+            return coords;
+        },
+        init: function () {
+            var selection = that.Selection;
+            var table = $(that.table);
+            var startCoords = [];
+            var handleMouseDown = function (e) {
+                var targetCoords = selection.getCoords(e.target);
+
+                startCoords = targetCoords;
+
+                if (targetCoords) {
+                    that.select(startCoords[0], targetCoords[0], startCoords[1], targetCoords[1]);
+                } else {
+                    that.deselect();
+                }
+
+                $(document)
+                    .on("mousemove", handleMouseMove);
+            };
+            var handleMouseUp = function (e) {
+                var targetCoords = selection.getCoords(e.target);
+
+                $(document)
+                    .unbind("mousemove", handleMouseMove);
+            };
+            var handleMouseMove = function (e) {
+                var targetCoords = selection.getCoords(e.target);
+
+                if (targetCoords) {
+                    that.select(startCoords[0], targetCoords[0], startCoords[1], targetCoords[1]);
+                }
+
+                e.preventDefault();
+            };
+
+            $(document)
+                .on("mousedown",handleMouseDown)
+                .on("mouseup", handleMouseUp);
+        }
+    };
+
+    this.Selection.init();
 
     // Setup rows
     this.rows = $("tr", this.table).toArray().map(function(tr){
@@ -591,4 +656,4 @@ EdiTable.prototype = {
     }
 };
 
-var editable = new EdiTable(document.getElementById("table"), {});
+var editable = new EdiTable(document.getElementById("table"), {growRows: true});
