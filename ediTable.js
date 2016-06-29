@@ -220,6 +220,16 @@ var EdiTable = function(table, optOptions) {
             return this.getSelection().cells.length > 0;
         },
         insertCell : function(index, optValue){
+            // Check that options allow for insertion
+            var ops = that.options;
+            if (this.type == "row"){
+                var maxCols = ops.maxCols;
+                if (maxCols != -1 && (this.getCellCount() >= maxCols)) return;
+            } else {
+                var maxRows = ops.maxRows;
+                if (maxRows != -1 && (this.getCellCount() >= maxRows)) return;
+            }
+
             // Normalize parameters
             optValue = optValue || "";
 
