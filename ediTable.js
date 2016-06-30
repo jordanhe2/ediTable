@@ -285,6 +285,16 @@ var EdiTable = function(table, optOptions) {
             }
         },
         removeCell : function(index){
+            // Check that options allow for removal
+            var ops = that.options;
+            if (this.type == "row"){
+                var minCols = ops.minCols;
+                if (minCols != -1 && (this.getCellCount() <= minCols)) return;
+            } else {
+                var minRows = ops.minRows;
+                if (minRows != -1 && (this.getCellCount() <= minRows)) return;
+            }
+
             // Remove from row
             if (this.type == "row"){
                 // Remove cells from rows and dom
