@@ -83,6 +83,9 @@ var EdiTable = function(table, optOptions) {
         clear : function(){
             this.dom.innerHTML = "";
         },
+        isClear : function(){
+            return this.dom.innerHTML == "";
+        },
         getValue : function(){
             return this.dom.innerText;
         },
@@ -181,9 +184,28 @@ var EdiTable = function(table, optOptions) {
                 optEnd = temp;
             }
 
+            // Clear cells
             for (var i = optStart; i <= optEnd; i ++){
                 this.cells[i].clear();
             }
+        },
+        isClear : function(optStart, optEnd){
+            // Normalize parameters
+            if (typeof optStart == "undefined") optStart = 0;
+            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
+            if (optStart > optEnd){
+                var temp = optStart;
+                optStart = optEnd;
+                optEnd = temp;
+            }
+
+            // Check cells
+            for (var i = optStart; i <= optEnd; i ++){
+                if (!this.cells[i].isClear()){
+                    return false;
+                }
+            }
+            return true;
         },
         getValues : function(optStart, optEnd){
             // Normalize parameters
@@ -590,6 +612,31 @@ EdiTable.prototype = {
         for (var i = optRowStart; i <= optRowEnd; i ++){
             this.rows[i].clear(optColStart, optColEnd);
         }
+    },
+    isClear : function(optRowStart, optRowEnd, optColStart, optColEnd){
+        // Normalize parameters
+        if (typeof optRowStart == "undefined") optRowStart = 0;
+        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
+        if (typeof optColStart == "undefined") optColStart = 0;
+        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
+        if (optRowStart > optRowEnd){
+            var temp = optRowStart;
+            optRowStart = optRowEnd;
+            optRowEnd = temp;
+        }
+        if (optColStart > optColEnd){
+            var temp = optColStart;
+            optColStart = optColEnd;
+            optColEnd = temp;
+        }
+
+        // Check rows
+        for (var i = optRowStart; i <= optRowEnd; i ++){
+            if (!this.rows[i].isClear(optColStart, optColEnd)){
+                return false;
+            }
+        }
+        return true;
     },
     getRowValues : function(optRowStart, optRowEnd, optColStart, optColEnd){
         // Normalize parameters
