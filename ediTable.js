@@ -1,3 +1,24 @@
+// GLOBAL UTILITIES
+function forEach(ops){
+    // Normalize ops
+    if (typeof ops == "undefined" ||
+        typeof ops.func == "undefined" ||
+        typeof ops.arr == "undefined") return;
+    if (typeof ops.start == "undefined") ops.start = 0;
+    if (typeof ops.end == "undefined") ops.end = ops.arr.length - 1;
+    if (typeof ops.dir == "undefined") ops.dir = (ops.end > ops.start) ? 1 : -1;
+    if (typeof ops.funcContext == "undefined") ops.funcContext = null;
+
+    // Loop through and run ops.func for each item in ops.arr
+    var min = Math.min(ops.start, ops.end),
+        max = Math.max(ops.start, ops.end),
+        i = (ops.dir > 0) ? min : max;
+    while (i >= min && i <= max){;
+        ops.func.apply(ops.funcContext, [ops.arr[i], i]);
+        i += ops.dir;
+    }
+}
+
 /**
  * <Class description here>
  *
@@ -103,20 +124,22 @@ var EdiTable = function(table, optOptions) {
         getCellCount : function(){
             return this.cells.length;
         },
-        setEditable : function(edit, optStart, optEnd){
+        setEditable : function(edit, ops){
             // Normalize parameters
-            if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
-            if (optStart > optEnd){
-                var temp = optStart;
-                optStart = optEnd;
-                optEnd = temp;
-            }
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.start == "undefined") ops.start = 0;
+            if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
 
             // Set editable
-            for (var i = optStart; i <= optEnd; i ++){
-                this.cells[i].setEditable(edit);
-            }
+            var cells = this.cells;
+            forEach({
+                arr: cells,
+                start: ops.start,
+                end: ops.end,
+                func: function(cell){
+                    cell.setEditable(edit);
+                }
+            });
         },
         isEditable : function(){
             for (var i = 0; i < this.getCellCount(); i ++){
@@ -135,90 +158,101 @@ var EdiTable = function(table, optOptions) {
             }
             return true;
         },
-        select : function(optStart, optEnd){
+        select : function(ops){
             // Normalize parameters
-            if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
-            if (optStart > optEnd){
-                var temp = optStart;
-                optStart = optEnd;
-                optEnd = temp;
-            }
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.start == "undefined") ops.start = 0;
+            if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
 
             // Loop this.cells and select/deselect
-            for (var i = 0; i < this.getCellCount(); i++) {
-                if (i >= optStart && i <= optEnd){
-                    this.cells[i].select();
-                } else {
-                    this.cells[i].deselect();
+            var dir = (ops.end - ops.start > 0) ? 1 : -1,
+                min = Math.min(ops.start, ops.end),
+                max = Math.max(ops.start, ops.end),
+                cells = this.cells;
+            forEach({
+                arr: cells,
+                start: 0,
+                end: cells.length - 1,
+                dir: dir,
+                func: function(cell, i){
+                    if (i >= min && i <= max){
+                        cell.select();
+                    } else {
+                        cell.deselect();
+                    }
                 }
-            }
+            });
         },
-        deselect : function(optStart, optEnd){
+        deselect : function(ops){
             // Normalize parameters
-            if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
-            if (optStart > optEnd){
-                var temp = optStart;
-                optStart = optEnd;
-                optEnd = temp;
-            }
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.start == "undefined") ops.start = 0;
+            if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
 
             // Loop this.cells and deselect
-            for (var i = 0; i < this.getCellCount(); i++) {
-                if (i >= optStart && i <= optEnd){
-                    this.cells[i].deselect();
+            var cells = this.cells;
+            forEach({
+                arr: cells,
+                start: ops.start,
+                end: ops.end,
+                func: function(cell){
+                    cell.deselect();
                 }
-            }
+            });
         },
-        clear : function(optStart, optEnd){
+        clear : function(ops){
             // Normalize parameters
-            if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
-            if (optStart > optEnd){
-                var temp = optStart;
-                optStart = optEnd;
-                optEnd = temp;
-            }
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.start == "undefined") ops.start = 0;
+            if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
 
             // Clear cells
-            for (var i = optStart; i <= optEnd; i ++){
-                this.cells[i].clear();
-            }
+            var cells = this.cells;
+            forEach({
+                arr: cells,
+                start: ops.start,
+                end: ops.end,
+                func: function(cell){
+                    cell.clear();
+                }
+            });
         },
-        isClear : function(optStart, optEnd){
+        isClear : function(ops){
             // Normalize parameters
-            if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
-            if (optStart > optEnd){
-                var temp = optStart;
-                optStart = optEnd;
-                optEnd = temp;
-            }
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.start == "undefined") ops.start = 0;
+            if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
 
             // Check cells
-            for (var i = optStart; i <= optEnd; i ++){
-                if (!this.cells[i].isClear()){
-                    return false;
+            var cells = this.cells,
+                clear = true;
+            forEach({
+                arr: cells,
+                start: ops.start,
+                end: ops.end,
+                func: function(cell){
+                    if (!cell.isClear()) clear = false;
                 }
-            }
-            return true;
+            })
+            return clear;
         },
-        getValues : function(optStart, optEnd){
+        getValues : function(ops){
             // Normalize parameters
-            if (typeof optStart == "undefined") optStart = 0;
-            if (typeof optEnd == "undefined") optEnd = this.getCellCount() - 1;
-            if (optStart > optEnd){
-                var temp = optStart;
-                optStart = optEnd;
-                optEnd = temp;
-            }
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.start == "undefined") ops.start = 0;
+            if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
 
             // Loop this.cells and return values in an array
-            var values = [];
-            for (var i = optStart; i <= optEnd; i++) {
-                values.push(this.cells[i].getValue());
-            }
+            var cells = this.cells,
+                values = [];
+            forEach({
+                arr: cells,
+                start: ops.start,
+                end: ops.end,
+                func: function(cell){
+                    values.push(cell.getValue());
+                }
+            });
 
             return values;
         },
@@ -520,27 +554,24 @@ EdiTable.prototype = {
     getColCount : function(){
         return this.cols.length;
     },
-    setEditable : function(edit, optRowStart, optRowEnd, optColStart, optColEnd){
+    setEditable : function(edit, ops){
         // Normalize parameters
-        if (typeof optRowStart == "undefined") optRowStart = 0;
-        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
-        if (typeof optColStart == "undefined") optColStart = 0;
-        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
-        if (optRowStart > optRowEnd){
-            var temp = optRowStart;
-            optRowStart = optRowEnd;
-            optRowEnd = temp;
-        }
-        if (optColStart > optColEnd){
-            var temp = optColStart;
-            optColStart = optColEnd;
-            optColEnd = temp;
-        }
+        if (typeof ops == "undefined") ops = {};
+        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+        if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+        if (typeof ops.colStart == "undefined") ops.colStart = 0;
+        if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
         // Set editable
-        for (var i = optRowStart; i <= optRowEnd; i ++){
-            this.rows[i].setEditable(edit, optColStart, optColEnd);
-        }
+        var rows = this.rows;
+        forEach({
+            arr: rows,
+            start: ops.rowStart,
+            end: ops.rowEnd,
+            func: function(row){
+                row.setEditable(edit, {start: ops.colStart, end: ops.colEnd});
+            }
+        })
     },
     isEditable : function(){
         for (var i = 0; i < this.getRowCount(); i ++){
@@ -548,150 +579,134 @@ EdiTable.prototype = {
         }
         return true;
     },
-    select : function(optRowStart, optRowEnd, optColStart, optColEnd){
+    select : function(ops){
         // Normalize parameters
-        if (typeof optRowStart == "undefined") optRowStart = 0;
-        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
-        if (typeof optColStart == "undefined") optColStart = 0;
-        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
-        if (optRowStart > optRowEnd){
-            var temp = optRowStart;
-            optRowStart = optRowEnd;
-            optRowEnd = temp;
-        }
-        if (optColStart > optColEnd){
-            var temp = optColStart;
-            optColStart = optColEnd;
-            optColEnd = temp;
-        }
+        if (typeof ops == "undefined") ops = {};
+        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+        if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+        if (typeof ops.colStart == "undefined") ops.colStart = 0;
+        if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
         // Do selection
-        for (var i = 0; i < this.getRowCount(); i ++){
-            if (i >= optRowStart && i <= optRowEnd){
-                this.rows[i].select(optColStart, optColEnd);
-            } else {
-                this.rows[i].deselect();
+        var rows = this.rows,
+            dir = (ops.rowEnd - ops.rowStart > 0) ? 1 : -1,
+            min = Math.min(ops.rowStart, ops.rowEnd),
+            max = Math.max(ops.rowStart, ops.rowEnd);
+        forEach({
+            arr: rows,
+            start: 0,
+            end: rows.length - 1,
+            func: function(row, i){
+                if (i >= min && i <= max){
+                    row.select({start: ops.colStart, end: ops.colEnd});
+                } else {
+                    row.deselect();
+                }
             }
-        }
+        });
     },
-    deselect : function(optRowStart, optRowEnd, optColStart, optColEnd){
+    deselect : function(ops){
         // Normalize parameters
-        if (typeof optRowStart == "undefined") optRowStart = 0;
-        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
-        if (typeof optColStart == "undefined") optColStart = 0;
-        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
-        if (optRowStart > optRowEnd){
-            var temp = optRowStart;
-            optRowStart = optRowEnd;
-            optRowEnd = temp;
-        }
-        if (optColStart > optColEnd){
-            var temp = optColStart;
-            optColStart = optColEnd;
-            optColEnd = temp;
-        }
+        if (typeof ops == "undefined") ops = {};
+        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+        if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+        if (typeof ops.colStart == "undefined") ops.colStart = 0;
+        if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
         // Do deselection
-        for (var i = optRowStart; i <= optRowEnd; i ++){
-            this.rows[i].deselect(optColStart, optColEnd);
-        }
+        var rows = this.rows;
+        forEach({
+            arr: rows,
+            start: ops.rowStart,
+            end: ops.rowEnd,
+            func: function(row){
+                row.deselect({start: ops.colStart, end: ops.colEnd});
+            }
+        });
     },
-    clear : function(optRowStart, optRowEnd, optColStart, optColEnd){
+    clear : function(ops){
         // Normalize parameters
-        if (typeof optRowStart == "undefined") optRowStart = 0;
-        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
-        if (typeof optColStart == "undefined") optColStart = 0;
-        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
-        if (optRowStart > optRowEnd){
-            var temp = optRowStart;
-            optRowStart = optRowEnd;
-            optRowEnd = temp;
-        }
-        if (optColStart > optColEnd){
-            var temp = optColStart;
-            optColStart = optColEnd;
-            optColEnd = temp;
-        }
+        if (typeof ops == "undefined") ops = {};
+        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+        if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+        if (typeof ops.colStart == "undefined") ops.colStart = 0;
+        if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
         // Clear
-        for (var i = optRowStart; i <= optRowEnd; i ++){
-            this.rows[i].clear(optColStart, optColEnd);
-        }
+        var rows = this.rows;
+        forEach({
+            arr: rows,
+            start: ops.rowStart,
+            end: ops.rowEnd,
+            func: function(row){
+                row.clear({start: ops.colStart, end: ops.colEnd});
+            }
+        });
     },
-    isClear : function(optRowStart, optRowEnd, optColStart, optColEnd){
+    isClear : function(ops){
         // Normalize parameters
-        if (typeof optRowStart == "undefined") optRowStart = 0;
-        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
-        if (typeof optColStart == "undefined") optColStart = 0;
-        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
-        if (optRowStart > optRowEnd){
-            var temp = optRowStart;
-            optRowStart = optRowEnd;
-            optRowEnd = temp;
-        }
-        if (optColStart > optColEnd){
-            var temp = optColStart;
-            optColStart = optColEnd;
-            optColEnd = temp;
-        }
+        if (typeof ops == "undefined") ops = {};
+        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+        if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+        if (typeof ops.colStart == "undefined") ops.colStart = 0;
+        if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
         // Check rows
-        for (var i = optRowStart; i <= optRowEnd; i ++){
-            if (!this.rows[i].isClear(optColStart, optColEnd)){
-                return false;
+        var rows = this.rows,
+            clear = true;
+        forEach({
+            arr: rows,
+            start: ops.rowStart,
+            end: ops.rowEnd,
+            func: function(row){
+                if (!row.isClear(ops.colStart, ops.colEnd)) clear = false;
             }
-        }
-        return true;
+        });
+        return clear;
     },
-    getRowValues : function(optRowStart, optRowEnd, optColStart, optColEnd){
+    getRowValues : function(ops){
         // Normalize parameters
-        if (typeof optRowStart == "undefined") optRowStart = 0;
-        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
-        if (typeof optColStart == "undefined") optColStart = 0;
-        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
-        if (optRowStart > optRowEnd){
-            var temp = optRowStart;
-            optRowStart = optRowEnd;
-            optRowEnd = temp;
-        }
-        if (optColStart > optColEnd){
-            var temp = optColStart;
-            optColStart = optColEnd;
-            optColEnd = temp;
-        }
+        if (typeof ops == "undefined") ops = {};
+        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+        if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+        if (typeof ops.colStart == "undefined") ops.colStart = 0;
+        if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
         // Get values
-        var rows = [];
-        for (var i = optRowStart; i <= optRowEnd; i ++){
-            rows.push(this.rows[i].getValues(optColStart, optColEnd));
-        }
+        var rows = this.rows,
+            rowVals = [];
+        forEach({
+            arr: rows,
+            start: ops.rowStart,
+            end: ops.rowEnd,
+            func: function(row){
+                rowVals.push(row.getValues({start: ops.colStart, end: ops.colEnd}));
+            }
+        });
 
-        return rows;
+        return rowVals;
     },
-    getColValues : function(optRowStart, optRowEnd, optColStart, optColEnd){
+    getColValues : function(ops){
         // Normalize parameters
-        if (typeof optRowStart == "undefined") optRowStart = 0;
-        if (typeof optRowEnd == "undefined") optRowEnd = (this.getRowCount() - 1);
-        if (typeof optColStart == "undefined") optColStart = 0;
-        if (typeof optColEnd == "undefined") optColEnd = (this.getColCount() - 1);
-        if (optRowStart > optRowEnd){
-            var temp = optRowStart;
-            optRowStart = optRowEnd;
-            optRowEnd = temp;
-        }
-        if (optColStart > optColEnd){
-            var temp = optColStart;
-            optColStart = optColEnd;
-            optColEnd = temp;
-        }
+        if (typeof ops == "undefined") ops = {};
+        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+        if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+        if (typeof ops.colStart == "undefined") ops.colStart = 0;
+        if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
         // Get values
-        var cols = [];
-        for (var i = optColStart; i <= optColEnd; i ++){
-            cols.push(this.cols[i].getValues(optRowStart, optRowEnd));
-        }
+        var cols = this.cols,
+            colVals = [];
+        forEach({
+            arr: cols,
+            start: ops.colStart,
+            end: ops.colEnd,
+            func: function(col){
+                colVals.push(col.getValues({start: ops.rowStart, end: ops.rowEnd}))
+            }
+        });
 
-        return cols;
+        return colVals;
     },
     getSelectedRows : function(){
         var rows = [];
