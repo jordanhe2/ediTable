@@ -425,7 +425,12 @@ var EdiTable = function(table, optOptions) {
                     startCoords = targetCoords;
 
                     if (targetCoords) {
-                        that.select(startCoords[0], targetCoords[0], startCoords[1], targetCoords[1]);
+                        that.select({
+                            rowStart: startCoords[0],
+                            rowEnd: targetCoords[0],
+                            colStart: startCoords[1],
+                            colEnd: targetCoords[1]
+                        });
                     } else {
                         that.deselect();
                     }
@@ -444,7 +449,12 @@ var EdiTable = function(table, optOptions) {
                 var targetCoords = selection.getCoords(e.target);
 
                 if (targetCoords) {
-                    that.select(startCoords[0], targetCoords[0], startCoords[1], targetCoords[1]);
+                    that.select({
+                        rowStart: startCoords[0],
+                        rowEnd: targetCoords[0],
+                        colStart: startCoords[1],
+                        colEnd: targetCoords[1]
+                    });
                 }
 
                 e.preventDefault();
