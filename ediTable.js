@@ -387,16 +387,18 @@ var EdiTable = function(table, optOptions) {
             var handleMouseDown = function (e) {
                 var targetCoords = selection.getCoords(e.target);
 
-                startCoords = targetCoords;
-
                 if (targetCoords) {
-                    that.select(startCoords[0], targetCoords[0], startCoords[1], targetCoords[1]);
-                } else {
-                    that.deselect();
-                }
+                    startCoords = targetCoords;
 
-                $(document)
-                    .on("mousemove", handleMouseMove);
+                    if (targetCoords) {
+                        that.select(startCoords[0], targetCoords[0], startCoords[1], targetCoords[1]);
+                    } else {
+                        that.deselect();
+                    }
+
+                    $(document)
+                        .on("mousemove", handleMouseMove);
+                }
             };
             var handleMouseUp = function (e) {
                 var targetCoords = selection.getCoords(e.target);
@@ -413,10 +415,19 @@ var EdiTable = function(table, optOptions) {
 
                 e.preventDefault();
             };
+            var handleKeyDown = function (e) {
+                console.log(e);
+
+                //TODO Check if table is in 'focus'
+                if (that.hasSelection()) {
+
+                }
+            };
 
             $(document)
                 .on("mousedown",handleMouseDown)
-                .on("mouseup", handleMouseUp);
+                .on("mouseup", handleMouseUp)
+                .on("keydown", handleKeyDown);
         }
     };
 
