@@ -80,9 +80,6 @@ var EdiTable = function(table, optOptions) {
             this.selected = false;
             $(this.dom).removeClass("ediTable-cell-selected");
         },
-        clear : function(){
-            this.dom.innerHTML = "";
-        },
         isClear : function(){
             return this.dom.innerHTML == "";
         },
@@ -92,8 +89,8 @@ var EdiTable = function(table, optOptions) {
         setValue : function (value) {
             $(this.dom).html(value);
         },
-        appendValue : function (value) {
-            $(this.dom).append(value);
+        clear : function(){
+            this.setValue("");
         }
     };
     this.Cell = Cell;
@@ -352,9 +349,6 @@ var EdiTable = function(table, optOptions) {
         },
         setCell : function(index, value){
             this.cells[index].setValue(value);
-        },
-        appendCell: function(index, value) {
-            this.cells[index].appendValue(value);
         }
     };
     this.Vector = Vector;
