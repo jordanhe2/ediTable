@@ -2,3 +2,7 @@
     color: #FFFFFF;
     background: #427be6;
 }
+
+.editable-cell-selected-blur {
+    background: #919191;
+}
