@@ -1,8 +1,22 @@
 .ediTable-cell-selected {
     color: #FFFFFF;
-    background: #427be6;
+    background-color: #78a1ed;
 }
 
 .ediTable-cell-selected-blur {
-    background: #919191;
+    background-color: #919191;
+    border-color: #656565;
+}
+
+.ediTable-cell-selected-left {
+    border-left: 4px solid #2e69d9;
+}
+.ediTable-cell-selected-right {
+    border-right: 4px solid #2e69d9;
+}
+.ediTable-cell-selected-top {
+    border-top: 4px solid #2e69d9;
+}
+.ediTable-cell-selected-bottom {
+    border-bottom: 4px solid #2e69d9;
 }

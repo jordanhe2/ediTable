@@ -107,11 +107,47 @@ var EdiTable = function(table, optOptions) {
             }
             if (ops.last){
                 that.Selection.terminalCell = this;
+
+                // Update border
+                var rows = that.getRowCount(),
+                    cols = that.getColCount();
+                function useClass(cell, className, use){
+                    if (use){
+                        $(cell.dom).addClass(className);
+                    } else {
+                        $(cell.dom).removeClass(className);
+                    }
+                }
+                for (var i = 0; i < rows; i ++){
+                    var row = that.rows[i];
+                    for (var j = 0; j < cols; j ++){
+                        var cell = row.cells[j];
+
+                        if (!cell.selected) continue;
+
+                        // Top border
+                        useClass(cell, "ediTable-cell-selected-top",
+                            (i == 0 || !that.rows[i - 1].cells[j].selected));
+                        // Bottom border
+                        useClass(cell, "ediTable-cell-selected-bottom",
+                            (i == (rows - 1) || !that.rows[i + 1].cells[j].selected));
+                        // Left border
+                        useClass(cell, "ediTable-cell-selected-left",
+                            (j == 0 || !row.cells[j - 1].selected));
+                        // Right border
+                        useClass(cell, "ediTable-cell-selected-right",
+                            (j == (cols - 1) || !row.cells[j + 1].selected));
+                    }
+                }
             }
         },
         deselect : function(){
             this.selected = false;
             $(this.dom).removeClass("ediTable-cell-selected");
+            $(this.dom).removeClass("ediTable-cell-selected-left");
+            $(this.dom).removeClass("ediTable-cell-selected-right");
+            $(this.dom).removeClass("ediTable-cell-selected-top");
+            $(this.dom).removeClass("ediTable-cell-selected-bottom");
         },
         isClear : function(){
             return this.dom.innerHTML == "";
