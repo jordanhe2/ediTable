@@ -93,9 +93,21 @@ var EdiTable = function(table, optOptions) {
         isHeader : function(){
             return this.dom.tagName.toLowerCase() == "th";
         },
-        select : function(){
+        select : function(ops){
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.first == "undefined") ops.first = true;
+            if (typeof ops.last == "undefined") ops.last = true;
+
             this.selected = true;
             $(this.dom).addClass("ediTable-cell-selected");
+
+            if (ops.first){
+                that.Selection.originCell = this;
+            }
+            if (ops.last){
+                that.Selection.terminalCell = this;
+            }
         },
         deselect : function(){
             this.selected = false;
@@ -163,6 +175,8 @@ var EdiTable = function(table, optOptions) {
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.start == "undefined") ops.start = 0;
             if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
+            if (typeof ops.first == "undefined") ops.first = true;
+            if (typeof ops.last == "undefined") ops.last = true;
 
             // Loop this.cells and select/deselect
             var dir = (ops.end - ops.start > 0) ? 1 : -1,
@@ -176,7 +190,18 @@ var EdiTable = function(table, optOptions) {
                 dir: dir,
                 func: function(cell, i){
                     if (i >= min && i <= max){
-                        cell.select();
+                        var cellOps = {first: false, last: false};
+                        if (ops.first){
+                            if ((dir == 1 && i == min) || (dir == -1 && i == max)){
+                                cellOps.first = true;
+                            }
+                        }
+                        if (ops.last){
+                            if ((dir == 1 && i == max) || (dir == -1 && i == min)){
+                                cellOps.last = true;
+                            }
+                        }
+                        cell.select(cellOps);
                     } else {
                         cell.deselect();
                     }
@@ -398,6 +423,8 @@ var EdiTable = function(table, optOptions) {
     normalizeOptions(this.options);
 
     this.Selection = {
+        originCell: null,
+        terminalCell: null,
         getCoords: function (element) {
             var el = $(element);
             var coords = null;
@@ -606,9 +633,24 @@ EdiTable.prototype = {
             arr: rows,
             start: 0,
             end: rows.length - 1,
+            dir: dir,
             func: function(row, i){
                 if (i >= min && i <= max){
-                    row.select({start: ops.colStart, end: ops.colEnd});
+                    var rowOps = {
+                        start: ops.colStart,
+                        end: ops.colEnd,
+                        first: false,
+                        last: false
+                    };
+
+                    if ((dir == 1 && i == min) || (dir == -1 && i == max)){
+                        rowOps.first = true;
+                    }
+                    if ((dir == 1 && i == max) || (dir == -1 && i == min)){
+                        rowOps.last = true;
+                    }
+
+                    row.select(rowOps);
                 } else {
                     row.deselect();
                 }
