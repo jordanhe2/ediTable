@@ -442,9 +442,10 @@ var EdiTable = function(table, optOptions) {
             return coords;
         },
         init: function () {
-            var selection = that.Selection;
-            var table = $(that.table);
-            var startCoords = [];
+            var selection = that.Selection,
+                table = $(that.table),
+                startCoords = [];
+
             var handleMouseDown = function (e) {
                 var targetCoords = selection.getCoords(e.target);
 
@@ -486,12 +487,84 @@ var EdiTable = function(table, optOptions) {
 
                 e.preventDefault();
             };
+
             var handleKeyDown = function (e) {
-                console.log(e);
+                // Prevent default if table has focus
+                if (true /* TODO */){
+                    e.preventDefault();
+                }
 
-                //TODO Check if table is in 'focus'
+                // Special case: select all
+                if (e.ctrlKey && e.keyCode == 65){
+                    if (e.shiftKey){
+                        that.deselect();
+                    } else {
+                        that.select();
+                    }
+                }
+
+                // Handle arrow keys
                 if (that.hasSelection()) {
+                    var moveOrigin = !e.shiftKey,
+                        jumpTerminal = !(e.shiftKey || e.ctrlKey),
+                        originCoords = selection.getCoords(selection.originCell.dom),
+                        terminalCoords = selection.getCoords(selection.terminalCell.dom);
 
+                    var deltaCoords = {
+                        x: 0,
+                        y: 0
+                    };
+
+                    switch (e.keyCode) {
+                        //LEFT
+                        case 37:
+                            deltaCoords.x = -1;
+                            break;
+                        //UP
+                        case 38:
+                            deltaCoords.y = -1;
+                            break;
+                        //RIGHT
+                        case 39:
+                            deltaCoords.x = 1;
+                            break;
+                        //DOWN
+                        case 40:
+                            deltaCoords.y = 1;
+                            break;
+                    }
+
+                    if (originCoords && terminalCoords) {
+                        function testCoords(coords){
+                            return !(
+                                coords[0] < 0 ||
+                                coords[0] >= that.getRowCount() ||
+                                coords[1] < 0 ||
+                                coords[1] >= that.getColCount()
+                            );
+                        }
+
+                        if (moveOrigin){
+                            originCoords[1] += deltaCoords.x;
+                            originCoords[0] += deltaCoords.y;
+                        }
+
+                        if (jumpTerminal) {
+                            terminalCoords = originCoords;
+                        } else {
+                            terminalCoords[1] += deltaCoords.x;
+                            terminalCoords[0] += deltaCoords.y;
+                        }
+
+                        if (testCoords(originCoords) && testCoords(terminalCoords)) {
+                            that.select({
+                                rowStart: originCoords[0],
+                                rowEnd: terminalCoords[0],
+                                colStart: originCoords[1],
+                                colEnd: terminalCoords[1]
+                            });
+                        }
+                    }
                 }
             };
 
