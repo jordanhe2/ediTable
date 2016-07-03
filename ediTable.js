@@ -1,5 +1,5 @@
 // GLOBAL UTILITIES
-function forEach(ops){
+function forEach(ops) {
     // Normalize ops
     if (typeof ops == "undefined" ||
         typeof ops.func == "undefined" ||
@@ -13,7 +13,8 @@ function forEach(ops){
     var min = Math.min(ops.start, ops.end),
         max = Math.max(ops.start, ops.end),
         i = (ops.dir > 0) ? min : max;
-    while (i >= min && i <= max){;
+    while (i >= min && i <= max) {
+        ;
         ops.func.apply(ops.funcContext, [ops.arr[i], i]);
         i += ops.dir;
     }
@@ -25,29 +26,30 @@ function forEach(ops){
  * @param{HTMLTable} -
  * @param{Object} -
  */
-var EdiTable = function(table, optOptions) {
+var EdiTable = function (table, optOptions) {
     // Utitilites
-    function normalizeTable(table){
+    function normalizeTable(table) {
         var rows = $("tr", table).toArray(),
-            lengths = rows.map(function(row){
+            lengths = rows.map(function (row) {
                 return row.cells.length;
             }),
             max = Math.max.apply(null, lengths);
 
-        for (var i = 0; i < rows.length; i ++){
+        for (var i = 0; i < rows.length; i++) {
             var row = rows[i],
                 tds = $("td", row).toArray(),
                 ths = $("th", row).toArray(),
                 diff = max - (tds.length + ths.length);
 
-            if (diff > 0){
+            if (diff > 0) {
                 var type = (tds.length == 0 ? "th" : "td");
-                for (var j = 0; j < diff; j ++){
+                for (var j = 0; j < diff; j++) {
                     $(row).append(document.createElement(type));
                 }
             }
         }
     }
+
     function normalizeOptions(options) {
         options.minRows = options.minRows || 1;
         options.minCols = options.minCols || 1;
@@ -58,6 +60,7 @@ var EdiTable = function(table, optOptions) {
         options.shrinkRows = options.shrinkRows || false;
         options.shrinkCols = options.shrinkCols || false;
     }
+
     // Context variable
     var that = this;
 
@@ -66,20 +69,20 @@ var EdiTable = function(table, optOptions) {
         this.selected = false;
     };
     Cell.prototype = {
-        setEditable : function(edit){
+        setEditable: function (edit) {
             $(this.dom).prop("contenteditable", edit);
         },
-        isEditable : function(){
+        isEditable: function () {
             return $(this.dom).prop("contenteditable") == "true";
         },
-        setHeader : function(header){
+        setHeader: function (header) {
             var type = (header ? "th" : "td"),
                 oldDom = this.dom,
                 children = $(oldDom).contents().detach(),
                 newDom = document.createElement(type);
 
             // Transfer attributes
-            $.each(oldDom.attributes, function(index) {
+            $.each(oldDom.attributes, function (index) {
                 $(newDom).attr(oldDom.attributes[index].name, oldDom.attributes[index].value);
             });
 
@@ -90,10 +93,10 @@ var EdiTable = function(table, optOptions) {
             $(oldDom).replaceWith(newDom);
             this.dom = newDom;
         },
-        isHeader : function(){
+        isHeader: function () {
             return this.dom.tagName.toLowerCase() == "th";
         },
-        select : function(ops){
+        select: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.first == "undefined") ops.first = true;
@@ -102,25 +105,27 @@ var EdiTable = function(table, optOptions) {
             this.selected = true;
             $(this.dom).addClass("ediTable-cell-selected");
 
-            if (ops.first){
+            if (ops.first) {
                 that.Selection.originCell = this;
             }
-            if (ops.last){
+            if (ops.last) {
                 that.Selection.terminalCell = this;
 
                 // Update border
                 var rows = that.getRowCount(),
                     cols = that.getColCount();
-                function useClass(cell, className, use){
-                    if (use){
+
+                function useClass(cell, className, use) {
+                    if (use) {
                         $(cell.dom).addClass(className);
                     } else {
                         $(cell.dom).removeClass(className);
                     }
                 }
-                for (var i = 0; i < rows; i ++){
+
+                for (var i = 0; i < rows; i++) {
                     var row = that.rows[i];
-                    for (var j = 0; j < cols; j ++){
+                    for (var j = 0; j < cols; j++) {
                         var cell = row.cells[j];
 
                         if (!cell.selected) continue;
@@ -141,7 +146,7 @@ var EdiTable = function(table, optOptions) {
                 }
             }
         },
-        deselect : function(){
+        deselect: function () {
             this.selected = false;
             $(this.dom).removeClass("ediTable-cell-selected");
             $(this.dom).removeClass("ediTable-cell-selected-left");
@@ -149,16 +154,16 @@ var EdiTable = function(table, optOptions) {
             $(this.dom).removeClass("ediTable-cell-selected-top");
             $(this.dom).removeClass("ediTable-cell-selected-bottom");
         },
-        isClear : function(){
+        isClear: function () {
             return this.dom.innerHTML == "";
         },
-        getValue : function(){
+        getValue: function () {
             return this.dom.innerText;
         },
-        setValue : function (value) {
+        setValue: function (value) {
             $(this.dom).html(value);
         },
-        clear : function(){
+        clear: function () {
             this.setValue("");
         }
     };
@@ -169,10 +174,10 @@ var EdiTable = function(table, optOptions) {
         this.type = ((type == "row" || type == "col") ? type : "row");
     };
     Vector.prototype = {
-        getCellCount : function(){
+        getCellCount: function () {
             return this.cells.length;
         },
-        setEditable : function(edit, ops){
+        setEditable: function (edit, ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.start == "undefined") ops.start = 0;
@@ -184,29 +189,29 @@ var EdiTable = function(table, optOptions) {
                 arr: cells,
                 start: ops.start,
                 end: ops.end,
-                func: function(cell){
+                func: function (cell) {
                     cell.setEditable(edit);
                 }
             });
         },
-        isEditable : function(){
-            for (var i = 0; i < this.getCellCount(); i ++){
+        isEditable: function () {
+            for (var i = 0; i < this.getCellCount(); i++) {
                 if (!this.cells[i].isEditable()) return false;
             }
             return true;
         },
-        setHeader : function(header){
-            for (var i = 0; i < this.getCellCount(); i ++){
+        setHeader: function (header) {
+            for (var i = 0; i < this.getCellCount(); i++) {
                 this.cells[i].setHeader(header);
             }
         },
-        isHeader : function(){
-            for (var i = 0; i < this.getCellCount(); i ++){
+        isHeader: function () {
+            for (var i = 0; i < this.getCellCount(); i++) {
                 if (!this.cells[i].isHeader()) return false;
             }
             return true;
         },
-        select : function(ops){
+        select: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.start == "undefined") ops.start = 0;
@@ -224,16 +229,16 @@ var EdiTable = function(table, optOptions) {
                 start: 0,
                 end: cells.length - 1,
                 dir: dir,
-                func: function(cell, i){
-                    if (i >= min && i <= max){
+                func: function (cell, i) {
+                    if (i >= min && i <= max) {
                         var cellOps = {first: false, last: false};
-                        if (ops.first){
-                            if ((dir == 1 && i == min) || (dir == -1 && i == max)){
+                        if (ops.first) {
+                            if ((dir == 1 && i == min) || (dir == -1 && i == max)) {
                                 cellOps.first = true;
                             }
                         }
-                        if (ops.last){
-                            if ((dir == 1 && i == max) || (dir == -1 && i == min)){
+                        if (ops.last) {
+                            if ((dir == 1 && i == max) || (dir == -1 && i == min)) {
                                 cellOps.last = true;
                             }
                         }
@@ -244,7 +249,7 @@ var EdiTable = function(table, optOptions) {
                 }
             });
         },
-        deselect : function(ops){
+        deselect: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.start == "undefined") ops.start = 0;
@@ -256,12 +261,12 @@ var EdiTable = function(table, optOptions) {
                 arr: cells,
                 start: ops.start,
                 end: ops.end,
-                func: function(cell){
+                func: function (cell) {
                     cell.deselect();
                 }
             });
         },
-        clear : function(ops){
+        clear: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.start == "undefined") ops.start = 0;
@@ -273,12 +278,12 @@ var EdiTable = function(table, optOptions) {
                 arr: cells,
                 start: ops.start,
                 end: ops.end,
-                func: function(cell){
+                func: function (cell) {
                     cell.clear();
                 }
             });
         },
-        isClear : function(ops){
+        isClear: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.start == "undefined") ops.start = 0;
@@ -291,13 +296,13 @@ var EdiTable = function(table, optOptions) {
                 arr: cells,
                 start: ops.start,
                 end: ops.end,
-                func: function(cell){
+                func: function (cell) {
                     if (!cell.isClear()) clear = false;
                 }
             })
             return clear;
         },
-        getValues : function(ops){
+        getValues: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.start == "undefined") ops.start = 0;
@@ -310,33 +315,33 @@ var EdiTable = function(table, optOptions) {
                 arr: cells,
                 start: ops.start,
                 end: ops.end,
-                func: function(cell){
+                func: function (cell) {
                     values.push(cell.getValue());
                 }
             });
 
             return values;
         },
-        getSelection : function(){
+        getSelection: function () {
             return new Vector(
-                this.cells.filter(function(cell){
+                this.cells.filter(function (cell) {
                     return cell.selected;
                 }),
                 this.type
             );
         },
-        getSelectedValues : function(){
-            return this.getSelection().cells.map(function(cell){
+        getSelectedValues: function () {
+            return this.getSelection().cells.map(function (cell) {
                 return cell.getValue();
             });
         },
-        hasSelection : function(){
+        hasSelection: function () {
             return this.getSelection().cells.length > 0;
         },
-        insertCell : function(index, optValue){
+        insertCell: function (index, optValue) {
             // Check that options allow for insertion
             var ops = that.options;
-            if (this.type == "row"){
+            if (this.type == "row") {
                 var maxCols = ops.maxCols;
                 if (maxCols != -1 && (this.getCellCount() >= maxCols)) return;
             } else {
@@ -348,13 +353,13 @@ var EdiTable = function(table, optOptions) {
             optValue = optValue || "";
 
             // Insert into row
-            if (this.type == "row"){
+            if (this.type == "row") {
                 // Create new col
                 var newCol = new Vector([], "col");
                 that.cols.splice(index, 0, newCol);
 
                 // Make cells, add them to rows and col
-                for (var i = 0; i < that.getRowCount(); i ++){
+                for (var i = 0; i < that.getRowCount(); i++) {
                     var row = that.rows[i],
                         rowDom = that.table.rows[i],
                         edit = row.isEditable(),
@@ -380,7 +385,7 @@ var EdiTable = function(table, optOptions) {
                 that.rows.splice(index, 0, newRow);
 
                 // Make cells, and them to cols and row
-                for (var i = 0; i < that.getColCount(); i ++){
+                for (var i = 0; i < that.getColCount(); i++) {
                     var col = that.cols[i],
                         edit = col.isEditable(),
                         header = col.isHeader(),
@@ -398,10 +403,10 @@ var EdiTable = function(table, optOptions) {
                 }
             }
         },
-        removeCell : function(index){
+        removeCell: function (index) {
             // Check that options allow for removal
             var ops = that.options;
-            if (this.type == "row"){
+            if (this.type == "row") {
                 var minCols = ops.minCols;
                 if (minCols != -1 && (this.getCellCount() <= minCols)) return;
             } else {
@@ -410,9 +415,9 @@ var EdiTable = function(table, optOptions) {
             }
 
             // Remove from row
-            if (this.type == "row"){
+            if (this.type == "row") {
                 // Remove cells from rows and dom
-                for (var i = 0; i < that.getRowCount(); i ++){
+                for (var i = 0; i < that.getRowCount(); i++) {
                     that.table.rows[i].deleteCell(index);
                     that.rows[i].cells.splice(index, 1);
                 }
@@ -421,14 +426,14 @@ var EdiTable = function(table, optOptions) {
                 that.cols.splice(index, 1);
 
                 // Remove all trs if no cols are left
-                if (that.cols.length == 0){
+                if (that.cols.length == 0) {
                     (that.table.tBodies[0] || that.table).innerHTML = "";
                 }
             }
             // Remove from col
             else {
                 // Remove cells from cols
-                for (var i = 0; i < that.getColCount(); i ++){
+                for (var i = 0; i < that.getColCount(); i++) {
                     that.cols[i].cells.splice(index, 1);
                 }
 
@@ -437,12 +442,12 @@ var EdiTable = function(table, optOptions) {
                 that.rows.splice(index, 1);
 
                 // Remove all cols if no rows are left
-                if (that.rows.length == 0){
+                if (that.rows.length == 0) {
                     that.cols = [];
                 }
             }
         },
-        setCell : function(index, value){
+        setCell: function (index, value) {
             this.cells[index].setValue(value);
         }
     };
@@ -464,7 +469,7 @@ var EdiTable = function(table, optOptions) {
         getCoords: function (element) {
             var el = $(element);
             var coords = null;
-            
+
             if ($(that.table).find(el).length > 0) {
                 var cell = el.closest("tr > *");
                 var row = el.closest("tr");
@@ -526,13 +531,13 @@ var EdiTable = function(table, optOptions) {
 
             var handleKeyDown = function (e) {
                 // Prevent default if table has focus
-                if (false /* TODO */){
+                if (false /* TODO */) {
                     e.preventDefault();
                 }
 
                 // Special case: select all
-                if (e.ctrlKey && e.keyCode == 65){
-                    if (e.shiftKey){
+                if (e.ctrlKey && e.keyCode == 65) {
+                    if (e.shiftKey) {
                         that.deselect();
                     } else {
                         that.select();
@@ -571,7 +576,7 @@ var EdiTable = function(table, optOptions) {
                     }
 
                     if (originCoords && terminalCoords) {
-                        function testCoords(coords){
+                        function testCoords(coords) {
                             return !(
                                 coords[0] < 0 ||
                                 coords[0] >= that.getRowCount() ||
@@ -580,7 +585,7 @@ var EdiTable = function(table, optOptions) {
                             );
                         }
 
-                        if (moveOrigin){
+                        if (moveOrigin) {
                             originCoords[1] += deltaCoords.x;
                             originCoords[0] += deltaCoords.y;
                         }
@@ -605,7 +610,7 @@ var EdiTable = function(table, optOptions) {
             };
 
             $(document)
-                .on("mousedown",handleMouseDown)
+                .on("mousedown", handleMouseDown)
                 .on("mouseup", handleMouseUp)
                 .on("keydown", handleKeyDown);
         }
@@ -614,8 +619,8 @@ var EdiTable = function(table, optOptions) {
     this.Selection.init();
 
     // Setup rows
-    this.rows = $("tr", this.table).toArray().map(function(tr){
-        var cells = $(tr.cells).toArray().map(function(td){
+    this.rows = $("tr", this.table).toArray().map(function (tr) {
+        var cells = $(tr.cells).toArray().map(function (td) {
             return new Cell(td);
         });
         return new Vector(cells, "row");
@@ -623,9 +628,9 @@ var EdiTable = function(table, optOptions) {
 
     // Setup cols
     if (this.getRowCount() > 0) {
-        for (var i = 0; i < this.rows[0].cells.length; i ++){
+        for (var i = 0; i < this.rows[0].cells.length; i++) {
             var cells = [];
-            for (var j = 0; j < this.getRowCount(); j ++){
+            for (var j = 0; j < this.getRowCount(); j++) {
                 cells.push(this.rows[j].cells[i]);
             }
             this.cols.push(new Vector(cells, "col"));
@@ -668,7 +673,6 @@ var EdiTable = function(table, optOptions) {
             }
 
             if (i != selectedValues.length - 1) {
-                console.log("you")
                 tableText += "\n";
             }
         }
@@ -679,67 +683,104 @@ var EdiTable = function(table, optOptions) {
         //TODO prevent default on table 'focus'.
         event.preventDefault();
     }
-    function cutTest(event){
+
+    function cutTest(event) {
         copyTest(event);
         //TODO clear selected cells.
     }
-    function pasteTest(event){
-        //Use innerText of tr's found in the template to paste stuff.
 
+    function pasteTest(event) {
+        var html, data = [];
         var htmlText = event.clipboardData.getData("text/html");
+        var plainText = event.clipboardData.getData("text/plain");
 
-        //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
-        var writtenDoc = document.implementation.createHTMLDocument();
+        var selectedRows = that.getSelectedRows();
 
-        writtenDoc.write(htmlText);
-        //DOMParser is more secure, but less widely supported.
-        var parser = new DOMParser();
-        var parsedDoc = parser.parseFromString(htmlText, "text/html");
+        if (htmlText && htmlText != "") {
+            if (window.DOMParser) {
+                //DOMParser is more secure, but less widely supported.
+                var parser = new DOMParser();
 
-        console.log("Using DOMImplementation.createHTMLDocument\n", writtenDoc, "\nUsing DOMParser\n", parsedDoc);
+                html = parser.parseFromString(htmlText, "text/html");
+            } else {
+                //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
+                html = document.implementation.createHTMLDocument();
 
-        //Whichever implementation we decide, we can refer to it as html.
-        var html = parsedDoc;
+                html.write(htmlText);
+            }
 
-        //Get data from table instead of searching for tr's because semantics.
-        var tables = html.getElementsByTagName("table");
-        //Use first table if there is more than one copied.
-        var table = tables.length > 0 ? tables[0] : null;
+            //Get data from table instead of searching for tr's because semantics.
+            var tables = html.getElementsByTagName("table");
+            //Use first table if there is more than one copied.
+            var table = tables.length > 0 ? tables[0] : null;
 
-        if (table) {
-            var rows = table.rows;
-            var data = [];
+            if (table) {
+                var rows = table.rows;
+
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i];
+                    var cells = row.cells;
+
+                    data[i] = [];
+
+                    for (var j = 0; j < cells.length; j++) {
+                        var cell = cells[j];
+
+                        data[i][j] = cell.innerText;
+                    }
+                }
+            }
+        } else if (plainText && plainText != "") {
+            //Parse text in the format of columns separated by tabs and rows separated by new lines.
+            var rows = plainText.split("\n");
 
             for (var i = 0; i < rows.length; i++) {
                 var row = rows[i];
-                var cells = row.cells;
+                var cols = row.split("\t");
 
                 data[i] = [];
 
-                for (var j = 0; j < cells.length; j++) {
-                    var cell = cells[j];
+                for (var j = 0; j < cols.length; j++) {
+                    var text = cols[j];
 
-                    data[i][j] = cell.innerText;
+                    data[i][j] = text;
                 }
             }
+        }
 
-            console.log("Data being pasted: ", data);
+        //If there is a selection
+        if (data.length > 0 && selectedRows.length > 0) {
+            //Set the values
+            var firstCellCoords = that.Selection.getCoords(selectedRows[0].getSelection().cells[0].dom);
+            var tableWidth = that.getColCount();
+            var tableHeight = that.getRowCount();
+
+            for (var i = 0; i < tableHeight - firstCellCoords[0] && i < data.length; i++) {
+                var row = that.rows[i + firstCellCoords[0]];
+
+                for (var j = 0; j < tableWidth - firstCellCoords[1] && j < data[i].length; j++) {
+                    var cell = row.cells[j + firstCellCoords[1]];
+
+                    cell.setValue(data[i][j]);
+                }
+            }
         }
 
         event.preventDefault();
     }
+
     document.addEventListener("copy", copyTest);
     document.addEventListener("cut", cutTest);
     document.addEventListener("paste", pasteTest);
 };
 EdiTable.prototype = {
-    getRowCount : function(){
+    getRowCount: function () {
         return this.rows.length;
     },
-    getColCount : function(){
+    getColCount: function () {
         return this.cols.length;
     },
-    setEditable : function(edit, ops){
+    setEditable: function (edit, ops) {
         // Normalize parameters
         if (typeof ops == "undefined") ops = {};
         if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -753,18 +794,18 @@ EdiTable.prototype = {
             arr: rows,
             start: ops.rowStart,
             end: ops.rowEnd,
-            func: function(row){
+            func: function (row) {
                 row.setEditable(edit, {start: ops.colStart, end: ops.colEnd});
             }
         })
     },
-    isEditable : function(){
-        for (var i = 0; i < this.getRowCount(); i ++){
+    isEditable: function () {
+        for (var i = 0; i < this.getRowCount(); i++) {
             if (!this.rows[i].isEditable()) return false;
         }
         return true;
     },
-    select : function(ops){
+    select: function (ops) {
         // Normalize parameters
         if (typeof ops == "undefined") ops = {};
         if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -782,8 +823,8 @@ EdiTable.prototype = {
             start: 0,
             end: rows.length - 1,
             dir: dir,
-            func: function(row, i){
-                if (i >= min && i <= max){
+            func: function (row, i) {
+                if (i >= min && i <= max) {
                     var rowOps = {
                         start: ops.colStart,
                         end: ops.colEnd,
@@ -791,10 +832,10 @@ EdiTable.prototype = {
                         last: false
                     };
 
-                    if ((dir == 1 && i == min) || (dir == -1 && i == max)){
+                    if ((dir == 1 && i == min) || (dir == -1 && i == max)) {
                         rowOps.first = true;
                     }
-                    if ((dir == 1 && i == max) || (dir == -1 && i == min)){
+                    if ((dir == 1 && i == max) || (dir == -1 && i == min)) {
                         rowOps.last = true;
                     }
 
@@ -805,7 +846,7 @@ EdiTable.prototype = {
             }
         });
     },
-    deselect : function(ops){
+    deselect: function (ops) {
         // Normalize parameters
         if (typeof ops == "undefined") ops = {};
         if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -819,12 +860,12 @@ EdiTable.prototype = {
             arr: rows,
             start: ops.rowStart,
             end: ops.rowEnd,
-            func: function(row){
+            func: function (row) {
                 row.deselect({start: ops.colStart, end: ops.colEnd});
             }
         });
     },
-    clear : function(ops){
+    clear: function (ops) {
         // Normalize parameters
         if (typeof ops == "undefined") ops = {};
         if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -838,12 +879,12 @@ EdiTable.prototype = {
             arr: rows,
             start: ops.rowStart,
             end: ops.rowEnd,
-            func: function(row){
+            func: function (row) {
                 row.clear({start: ops.colStart, end: ops.colEnd});
             }
         });
     },
-    isClear : function(ops){
+    isClear: function (ops) {
         // Normalize parameters
         if (typeof ops == "undefined") ops = {};
         if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -858,13 +899,13 @@ EdiTable.prototype = {
             arr: rows,
             start: ops.rowStart,
             end: ops.rowEnd,
-            func: function(row){
+            func: function (row) {
                 if (!row.isClear(ops.colStart, ops.colEnd)) clear = false;
             }
         });
         return clear;
     },
-    getRowValues : function(ops){
+    getRowValues: function (ops) {
         // Normalize parameters
         if (typeof ops == "undefined") ops = {};
         if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -879,14 +920,14 @@ EdiTable.prototype = {
             arr: rows,
             start: ops.rowStart,
             end: ops.rowEnd,
-            func: function(row){
+            func: function (row) {
                 rowVals.push(row.getValues({start: ops.colStart, end: ops.colEnd}));
             }
         });
 
         return rowVals;
     },
-    getColValues : function(ops){
+    getColValues: function (ops) {
         // Normalize parameters
         if (typeof ops == "undefined") ops = {};
         if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -901,45 +942,45 @@ EdiTable.prototype = {
             arr: cols,
             start: ops.colStart,
             end: ops.colEnd,
-            func: function(col){
+            func: function (col) {
                 colVals.push(col.getValues({start: ops.rowStart, end: ops.rowEnd}))
             }
         });
 
         return colVals;
     },
-    getSelectedRows : function(){
+    getSelectedRows: function () {
         var rows = [];
-        for (var i = 0; i < this.getRowCount(); i ++){
-            if (this.rows[i].hasSelection()){
+        for (var i = 0; i < this.getRowCount(); i++) {
+            if (this.rows[i].hasSelection()) {
                 rows.push(this.rows[i].getSelection());
             }
         }
         return rows;
     },
-    getSelectedCols : function(){
+    getSelectedCols: function () {
         var cols = [];
-        for (var i = 0; i < this.getColCount(); i ++){
-            if (this.cols[i].hasSelection()){
+        for (var i = 0; i < this.getColCount(); i++) {
+            if (this.cols[i].hasSelection()) {
                 cols.push(this.cols[i].getSelection());
             }
         }
         return cols;
     },
-    getSelectedRowValues : function(){
-        return this.getSelectedRows().map(function(row){
+    getSelectedRowValues: function () {
+        return this.getSelectedRows().map(function (row) {
             return row.getValues();
         });
     },
-    getSelectedColValues : function(){
-        return this.getSelectedCols().map(function(col){
+    getSelectedColValues: function () {
+        return this.getSelectedCols().map(function (col) {
             return col.getValues();
         });
     },
-    hasSelection : function(){
+    hasSelection: function () {
         return this.getSelectedRows().length > 0;
     },
-    insertRow : function(index, optValues){
+    insertRow: function (index, optValues) {
         var colCount = this.getColCount();
 
         // Normalize parameters
@@ -963,7 +1004,7 @@ EdiTable.prototype = {
             this.rows.push(row);
 
             // Add row, and add column for each optValue
-            for (var i = 0; i < optValues.length; i ++){
+            for (var i = 0; i < optValues.length; i++) {
                 var td = this.table.rows[0].insertCell(-1),
                     cell = new Cell(td),
                     col = new Vector([cell], "col");
@@ -979,7 +1020,7 @@ EdiTable.prototype = {
             }
         }
     },
-    insertCol : function(index, optValues){
+    insertCol: function (index, optValues) {
         var rowCount = this.getRowCount();
 
         // Normalize parameters
@@ -1001,7 +1042,7 @@ EdiTable.prototype = {
             var col = new Vector([], "col");
             this.cols.push(col);
 
-            for (var i = 0; i < optValues.length; i ++){
+            for (var i = 0; i < optValues.length; i++) {
                 var rowDom = this.table.insertRow(-1),
                     cellDom = rowDom.insertCell(-1),
                     cell = new Cell(cellDom),
@@ -1018,10 +1059,10 @@ EdiTable.prototype = {
             }
         }
     },
-    removeRow : function(index){
+    removeRow: function (index) {
         this.cols[0].removeCell(index);
     },
-    removeCol : function(index){
+    removeCol: function (index) {
         this.rows[0].removeCell(index);
     }
 };
