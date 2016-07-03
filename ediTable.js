@@ -687,6 +687,18 @@ var EdiTable = function (table, optOptions) {
     function cutTest(event) {
         copyTest(event);
         //TODO clear selected cells.
+        var selectedRows = that.getSelectedRows();
+
+        for (var i = 0; i < selectedRows.length; i++) {
+            var row = selectedRows[i];
+            var selection = row.getSelection();
+
+            for (var j = 0; j < selection.getCellCount(); j++) {
+                var cell = selection.cells[j];
+
+                cell.clear();
+            }
+        }
     }
 
     function pasteTest(event) {
