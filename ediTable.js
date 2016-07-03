@@ -526,7 +526,7 @@ var EdiTable = function(table, optOptions) {
 
             var handleKeyDown = function (e) {
                 // Prevent default if table has focus
-                if (true /* TODO */){
+                if (false /* TODO */){
                     e.preventDefault();
                 }
 
@@ -634,10 +634,49 @@ var EdiTable = function(table, optOptions) {
 
 
     function copyTest(event) {
-        console.log(event, event.clipboardData);
+        //Get html of selected.
+        var rows = that.getSelectedRows();
+        var table = document.createElement("table");
 
-        event.clipboardData.setData("text/plain", "oiewfj");
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var selection = row.getSelection();
+            var rowDom = document.createElement("tr");
 
+            for (var j = 0; j < selection.getCellCount(); j++) {
+                var cell = selection.cells[j];
+                var cellDom = cell.dom;
+
+                rowDom.appendChild($(cellDom).clone()[0]);
+            }
+
+            table.appendChild(rowDom);
+        }
+
+        var tableText = "";
+        var selectedValues = that.getSelectedRowValues();
+
+        for (var i = 0; i < selectedValues.length; i++) {
+            var rowValues = selectedValues[i];
+
+            for (var j = 0; j < rowValues.length; j++) {
+                var value = rowValues[j];
+
+                tableText += value;
+
+                if (j != rowValues.length - 1) tableText += "\t";
+            }
+
+            if (i != selectedValues.length - 1) {
+                console.log("you")
+                tableText += "\n";
+            }
+        }
+
+        event.clipboardData.setData("text/html", table.outerHTML);
+        event.clipboardData.setData("text/plain", tableText);
+
+        //TODO prevent default on table 'focus'.
         event.preventDefault();
     }
     function cutTest(event){
