@@ -1,22 +1,42 @@
+/* ====================================================== */
+/* ============= POSITIONING - DO NOT ALTER ============= */
+/* ====================================================== */
+
 .ediTable-cell-selected {
-    color: #FFFFFF;
-    background-color: #78a1ed;
+    position: relative;
+}
+.ediTable-cell-selected:before{
+    content: "";
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+.ediTable-cell-selected-left:before {
+    border-left-style: solid;
+}
+.ediTable-cell-selected-right:before {
+    border-right-style: solid;
+}
+.ediTable-cell-selected-top:before {
+    border-top-style: solid;
+}
+.ediTable-cell-selected-bottom:before {
+    border-bottom-style: solid;
 }
 
-.ediTable-cell-selected-blur {
-    background-color: #919191;
-    border-color: #656565;
-}
 
-.ediTable-cell-selected-left {
-    border-left: 4px solid #2e69d9;
-}
-.ediTable-cell-selected-right {
-    border-right: 4px solid #2e69d9;
-}
-.ediTable-cell-selected-top {
-    border-top: 4px solid #2e69d9;
-}
-.ediTable-cell-selected-bottom {
-    border-bottom: 4px solid #2e69d9;
+
+/* ====================================================== */
+/* ================= USER CUSTOMIZATIONS ================ */
+/* ====================================================== */
+
+/* Selection Box */
+.ediTable-cell-selected:before {
+    border-width: 3px;
+    border-color: #2e69d9;
+    background-color: rgba(120, 161, 237, 0.5);
 }
