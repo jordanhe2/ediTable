@@ -38,5 +38,5 @@
 .ediTable-cell-selected:before {
     border-width: 3px;
     border-color: #2e69d9;
-    background-color: rgba(120, 161, 237, 0.5);
+    background-color: rgba(120, 161, 237, 0.3);
 }
