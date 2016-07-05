@@ -163,8 +163,18 @@
             getValue: function () {
                 return this.dom.innerText;
             },
-            setValue: function (value) {
+            setValue: function (value, ops) {
+                // Normalize parameters
+                if (typeof ops == "undefined") ops = {};
+                if (typeof ops.last == "undefined") ops.last = true;
+
+                // Set value
                 $(this.dom).html(value);
+
+                // Perform updates
+                if (ops.last){
+                    that.updateRowColCount();
+                }
             },
             clear: function () {
                 this.setValue("");
@@ -269,13 +279,21 @@
                     }
                 });
             },
-            setValues: function(values, optOffset){
+            setValues: function(values, ops){
                 // Normalize parameters
-                if (typeof optOffset == "undefined") optOffset = 0;
+                if (typeof ops == "undefined") ops = {};
+                if (typeof ops.offset == "undefined") ops.offset = 0;
+                if (typeof ops.last == "undefined") ops.last = true;
 
                 // Set values
                 for (var i = 0; i < values.length && i < this.cells.length; i ++){
-                    this.cells[i + optOffset].setValue(values[i]);
+                    var cellOps = {
+                        last: false
+                    };
+                    if (ops.last /*&& somethingElse */){
+                        cellOps.last = true;
+                    }
+                    this.cells[i + ops.offset].setValue(values[i], cellOps);
                 }
             },
             clear: function (ops) {
@@ -889,6 +907,12 @@
                 }
             });
         },
+        setRowValues : function(values){
+            // TODO
+        },
+        setColValues : function(values){
+            // TODO
+        },
         clear: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
@@ -1088,10 +1112,35 @@
         },
         removeCol: function (index) {
             this.rows[0].removeCell(index);
+        },
+        updateRowColCount: function(){
+            var options = this.options,
+                rowCount = this.getRowCount(),
+                colCount = this.getColCount(),
+                lastRowClear = this.rows[rowCount - 1].isClear(),
+                lastColClear = this.cols[colCount - 1].isClear(),
+                secondLastRowClear = this.rows[rowCount - 2].isClear(),
+                secondLastColClear = this.cols[colCount - 2].isClear();
+
+            // Grow rows
+            if (options.growRows){
+                // TODO
+            }
+            // Grow cols
+            if (options.growCols){
+                // YOLO
+            }
+            // Shrink rows
+            if (options.shrinkRows){
+                // TODO
+            }
+            // Shrink cols
+            if (options.shrinkCols){
+                // TODO
+            }
         }
     };
     window.EdiTable = EdiTable;
-
 })();
 
 
