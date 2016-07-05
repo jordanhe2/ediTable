@@ -22,10 +22,10 @@
     }
 
     /**
-     * <Class description here>
+     * Represents a table by wrapping around an HTML table.
      *
-     * @param{HTMLTable} -
-     * @param{Object} -
+     * @param{HTMLTableElement} - HTML table for the new EdiTable to wrap around
+     * @param{Object} - contains various options for the new EdiTable
      */
     var EdiTable = function (table, optOptions) {
         // Utitilites
@@ -65,6 +65,11 @@
         // Context variable
         var that = this;
 
+        /**
+         * Represents an individual cell of a table by wrapping around a <td> or <th>.
+         *
+         * @param{HTMLTableDataCellElement|HTMLTableHeaderCellElement} - element to wrap around
+         */
         var Cell = function (dom) {
             this.dom = dom;
             this.selected = false;
@@ -182,6 +187,13 @@
         };
         this.Cell = Cell;
 
+        /**
+         * Represents a single row or column of a table.  Note that no DOM objects are wrapped
+         * because HTML tables only store data in rows, not both.
+         *
+         * @param{Array<Cell>} - collection of Cell objects to be in the new Vector
+         * @param{String} - either "row" or "col", whichever is applicable
+         */
         var Vector = function (cells, type) {
             this.cells = cells;
             this.type = ((type == "row" || type == "col") ? type : "row");
