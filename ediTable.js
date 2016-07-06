@@ -103,7 +103,7 @@
             }
 
             var lastRowClear = that.rows[that.getRowCount() - 1].isClear(),
-                lastRowClear = that.cols[that.getColCount() - 1].isClear();
+                lastColClear = that.cols[that.getColCount() - 1].isClear();
 
             // Grow rows
             if (ops.growRows){
@@ -1178,4 +1178,6 @@
 var editable = new EdiTable(document.getElementById("table"), {
     growRows: true
 });
+
+editable.insertRow(editable.getRowCount());
 
