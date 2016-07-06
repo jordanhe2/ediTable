@@ -4,7 +4,8 @@
         // Normalize ops
         if (typeof ops == "undefined" ||
             typeof ops.func == "undefined" ||
-            typeof ops.arr == "undefined") return;
+            typeof ops.arr == "undefined" ||
+            ops.arr.length == 0) return;
         if (typeof ops.start == "undefined") ops.start = 0;
         if (typeof ops.end == "undefined") ops.end = ops.arr.length - 1;
         if (typeof ops.dir == "undefined") ops.dir = (ops.end > ops.start) ? 1 : -1;
