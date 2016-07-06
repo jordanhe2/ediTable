@@ -1,4 +1,4 @@
-(function(){
+//(function(){
     // UTILITIES
     function forEach(ops) {
         // Normalize ops
@@ -113,7 +113,9 @@
             }
             // Grow cols
             if (ops.growCols){
-                // YOLO
+                if (!lastColClear && (ops.maxCols == -1 || that.getColCount() < ops.maxCols)){
+                    that.insertCol(that.getColCount(), insertOps);
+                }
             }
             // Shrink rows
             if (ops.shrinkRows){
@@ -1171,13 +1173,12 @@
         }
     };
     window.EdiTable = EdiTable;
-})();
+//})();
 
 
 // Testing
 var editable = new EdiTable(document.getElementById("table"), {
-    growRows: true
+    growRows: true,
+    growCols: true
 });
-
-editable.insertRow(editable.getRowCount());
 
