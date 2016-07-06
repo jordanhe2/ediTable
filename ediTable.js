@@ -245,32 +245,28 @@
                 if (typeof ops.last == "undefined") ops.last = true;
 
                 // Loop this.cells and select/deselect
+                this.deselect();
                 var dir = (ops.end - ops.start > 0) ? 1 : -1,
                     min = Math.min(ops.start, ops.end),
                     max = Math.max(ops.start, ops.end),
                     cells = this.cells;
                 forEach({
                     arr: cells,
-                    start: 0,
-                    end: cells.length - 1,
-                    dir: dir,
+                    start: ops.start,
+                    end: ops.end,
                     func: function (cell, i) {
-                        if (i >= min && i <= max) {
-                            var cellOps = {first: false, last: false};
-                            if (ops.first) {
-                                if ((dir == 1 && i == min) || (dir == -1 && i == max)) {
-                                    cellOps.first = true;
-                                }
+                        var cellOps = {first: false, last: false};
+                        if (ops.first) {
+                            if ((dir == 1 && i == min) || (dir == -1 && i == max)) {
+                                cellOps.first = true;
                             }
-                            if (ops.last) {
-                                if ((dir == 1 && i == max) || (dir == -1 && i == min)) {
-                                    cellOps.last = true;
-                                }
-                            }
-                            cell.select(cellOps);
-                        } else {
-                            cell.deselect();
                         }
+                        if (ops.last) {
+                            if ((dir == 1 && i == max) || (dir == -1 && i == min)) {
+                                cellOps.last = true;
+                            }
+                        }
+                        cell.select(cellOps);
                     }
                 });
             },
@@ -868,35 +864,31 @@
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Do selection
+            this.deselect();
             var rows = this.rows,
                 dir = (ops.rowEnd - ops.rowStart > 0) ? 1 : -1,
                 min = Math.min(ops.rowStart, ops.rowEnd),
                 max = Math.max(ops.rowStart, ops.rowEnd);
             forEach({
                 arr: rows,
-                start: 0,
-                end: rows.length - 1,
-                dir: dir,
+                start: ops.rowStart,
+                end: ops.rowEnd,
                 func: function (row, i) {
-                    if (i >= min && i <= max) {
-                        var rowOps = {
-                            start: ops.colStart,
-                            end: ops.colEnd,
-                            first: false,
-                            last: false
-                        };
+                    var rowOps = {
+                        start: ops.colStart,
+                        end: ops.colEnd,
+                        first: false,
+                        last: false
+                    };
 
-                        if ((dir == 1 && i == min) || (dir == -1 && i == max)) {
-                            rowOps.first = true;
-                        }
-                        if ((dir == 1 && i == max) || (dir == -1 && i == min)) {
-                            rowOps.last = true;
-                        }
-
-                        row.select(rowOps);
-                    } else {
-                        row.deselect();
+                    if ((dir == 1 && i == min) || (dir == -1 && i == max)) {
+                        rowOps.first = true;
                     }
+                    if ((dir == 1 && i == max) || (dir == -1 && i == min)) {
+                        rowOps.last = true;
+                    }
+
+                    row.select(rowOps);
                 }
             });
         },
