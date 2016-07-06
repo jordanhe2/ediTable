@@ -29,7 +29,7 @@
      */
     var EdiTable = function (table, optOptions) {
         // Utitilites
-        function normalizeTable (table) {
+        function normalizeTable(table) {
             var rows = $("tr", table).toArray(),
                 lengths = rows.map(function (row) {
                     return row.cells.length;
@@ -50,7 +50,8 @@
                 }
             }
         }
-        function updateSelectionBorder(){
+
+        function updateSelectionBorder() {
             // Update border
             var rows = that.getRowCount(),
                 cols = that.getColCount();
@@ -78,27 +79,28 @@
                 }
             }
         }
+
         function updateRowColCount() {
             var ops = that.options,
                 insertOps = {noUpdate: true};
 
             // Ensure maxes are good
-            if (ops.maxRows > -1){
-                while(that.getRowCount() > ops.maxRows){
+            if (ops.maxRows > -1) {
+                while (that.getRowCount() > ops.maxRows) {
                     that.removeRow(that.getRowCount() - 1);
                 }
             }
-            if (ops.maxCols > -1){
-                while(that.getColCount() > ops.maxCols){
+            if (ops.maxCols > -1) {
+                while (that.getColCount() > ops.maxCols) {
                     that.removeCol(that.getColCount() - 1);
                 }
             }
 
             // Ensure mins are good
-            while(that.getRowCount() < ops.minRows){
+            while (that.getRowCount() < ops.minRows) {
                 that.insertRow(that.getRowCount(), insertOps);
             }
-            while(that.getColCount() < ops.minCols){
+            while (that.getColCount() < ops.minCols) {
                 that.insertCol(that.getColCount(), insertOps);
             }
 
@@ -106,8 +108,8 @@
                 lastColClear = that.cols[that.getColCount() - 1].isClear();
 
             // Grow rows
-            if (ops.growRows){
-                if (!lastRowClear && (ops.maxRows == -1 || that.getRowCount() < ops.maxRows)){
+            if (ops.growRows) {
+                if (!lastRowClear && (ops.maxRows == -1 || that.getRowCount() < ops.maxRows)) {
                     that.insertRow(that.getRowCount(), insertOps);
                 }
             }
@@ -118,11 +120,11 @@
                 }
             }
             // Shrink rows
-            if (ops.shrinkRows){
+            if (ops.shrinkRows) {
                 // TODO
             }
             // Shrink cols
-            if (ops.shrinkCols){
+            if (ops.shrinkCols) {
                 // TODO
             }
         }
@@ -336,13 +338,13 @@
                     }
                 });
             },
-            setValues: function(values, ops){
+            setValues: function (values, ops) {
                 // Normalize parameters
                 if (typeof ops == "undefined") ops = {};
                 if (typeof ops.offset == "undefined") ops.offset = 0;
 
                 // Set values
-                for (var i = 0; i < values.length && i < this.cells.length; i ++){
+                for (var i = 0; i < values.length && i < this.cells.length; i++) {
                     this.cells[i + ops.offset].setValue(values[i]);
                 }
             },
@@ -575,31 +577,35 @@
                     startCoords = [];
 
                 var handleMouseDown = function (e) {
-                    var targetCoords = selection.getCoords(e.target);
-
-                    if (targetCoords) {
-                        startCoords = targetCoords;
+                    if (that.hasFocus()) {
+                        var targetCoords = selection.getCoords(e.target);
 
                         if (targetCoords) {
-                            that.select({
-                                rowStart: startCoords[0],
-                                rowEnd: targetCoords[0],
-                                colStart: startCoords[1],
-                                colEnd: targetCoords[1]
-                            });
-                        } else {
-                            that.deselect();
-                        }
+                            startCoords = targetCoords;
 
-                        $(document)
-                            .on("mousemove", handleMouseMove);
+                            if (targetCoords) {
+                                that.select({
+                                    rowStart: startCoords[0],
+                                    rowEnd: targetCoords[0],
+                                    colStart: startCoords[1],
+                                    colEnd: targetCoords[1]
+                                });
+                            } else {
+                                that.deselect();
+                            }
+
+                            $(document)
+                                .on("mousemove", handleMouseMove);
+                        }
                     }
                 };
                 var handleMouseUp = function (e) {
-                    var targetCoords = selection.getCoords(e.target);
+                    if (that.hasFocus()) {
+                        var targetCoords = selection.getCoords(e.target);
 
-                    $(document)
-                        .unbind("mousemove", handleMouseMove);
+                        $(document)
+                            .unbind("mousemove", handleMouseMove);
+                    }
                 };
                 var handleMouseMove = function (e) {
                     var targetCoords = selection.getCoords(e.target);
@@ -726,148 +732,165 @@
 
 
         function copyTest(event) {
-            //Get html of selected.
-            var rows = that.getSelectedRows();
-            var table = document.createElement("table");
+            if (that.hasFocus()) {
+                //Get html of selected.
+                var rows = that.getSelectedRows();
+                var table = document.createElement("table");
 
-            for (var i = 0; i < rows.length; i++) {
-                var row = rows[i];
-                var selection = row.getSelection();
-                var rowDom = document.createElement("tr");
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i];
+                    var selection = row.getSelection();
+                    var rowDom = document.createElement("tr");
 
-                for (var j = 0; j < selection.getCellCount(); j++) {
-                    var cell = selection.cells[j];
-                    var cellDom = cell.dom;
+                    for (var j = 0; j < selection.getCellCount(); j++) {
+                        var cell = selection.cells[j];
+                        var cellDom = cell.dom;
 
-                    rowDom.appendChild($(cellDom).clone()[0]);
+                        rowDom.appendChild($(cellDom).clone()[0]);
+                    }
+
+                    table.appendChild(rowDom);
                 }
 
-                table.appendChild(rowDom);
+                var tableText = "";
+                var selectedValues = that.getSelectedRowValues();
+
+                for (var i = 0; i < selectedValues.length; i++) {
+                    var rowValues = selectedValues[i];
+
+                    for (var j = 0; j < rowValues.length; j++) {
+                        var value = rowValues[j];
+
+                        tableText += value;
+
+                        if (j != rowValues.length - 1) tableText += "\t";
+                    }
+
+                    if (i != selectedValues.length - 1) {
+                        tableText += "\n";
+                    }
+                }
+
+                event.clipboardData.setData("text/html", table.outerHTML);
+                event.clipboardData.setData("text/plain", tableText);
+
+                console.log("COPYING");
+
+                //TODO prevent default on table 'focus'.
+                event.preventDefault();
             }
-
-            var tableText = "";
-            var selectedValues = that.getSelectedRowValues();
-
-            for (var i = 0; i < selectedValues.length; i++) {
-                var rowValues = selectedValues[i];
-
-                for (var j = 0; j < rowValues.length; j++) {
-                    var value = rowValues[j];
-
-                    tableText += value;
-
-                    if (j != rowValues.length - 1) tableText += "\t";
-                }
-
-                if (i != selectedValues.length - 1) {
-                    tableText += "\n";
-                }
-            }
-
-            event.clipboardData.setData("text/html", table.outerHTML);
-            event.clipboardData.setData("text/plain", tableText);
-
-            //TODO prevent default on table 'focus'.
-            event.preventDefault();
         }
 
         function cutTest(event) {
-            copyTest(event);
-            //TODO clear selected cells.
-            var selectedRows = that.getSelectedRows();
+            if (that.hasFocus()) {
+                copyTest(event);
+                //TODO clear selected cells.
+                var selectedRows = that.getSelectedRows();
 
-            for (var i = 0; i < selectedRows.length; i++) {
-                var row = selectedRows[i];
-                var selection = row.getSelection();
+                for (var i = 0; i < selectedRows.length; i++) {
+                    var row = selectedRows[i];
+                    var selection = row.getSelection();
 
-                for (var j = 0; j < selection.getCellCount(); j++) {
-                    var cell = selection.cells[j];
+                    for (var j = 0; j < selection.getCellCount(); j++) {
+                        var cell = selection.cells[j];
 
-                    cell.clear();
+                        cell.clear();
+                    }
                 }
             }
         }
 
         function pasteTest(event) {
-            var html, data = [];
-            var htmlText = event.clipboardData.getData("text/html");
-            var plainText = event.clipboardData.getData("text/plain");
+            if (that.hasFocus()) {
+                var html, data = [];
+                var htmlText = event.clipboardData.getData("text/html");
+                var plainText = event.clipboardData.getData("text/plain");
 
-            var selectedRows = that.getSelectedRows();
+                var selectedRows = that.getSelectedRows();
 
-            if (htmlText && htmlText != "") {
-                if (window.DOMParser) {
-                    //DOMParser is more secure, but less widely supported.
-                    var parser = new DOMParser();
+                if (htmlText && htmlText != "") {
+                    if (window.DOMParser) {
+                        //DOMParser is more secure, but less widely supported.
+                        var parser = new DOMParser();
 
-                    html = parser.parseFromString(htmlText, "text/html");
-                } else {
-                    //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
-                    html = document.implementation.createHTMLDocument();
+                        html = parser.parseFromString(htmlText, "text/html");
+                    } else {
+                        //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
+                        html = document.implementation.createHTMLDocument();
 
-                    html.write(htmlText);
-                }
+                        html.write(htmlText);
+                    }
 
-                //Get data from table instead of searching for tr's because semantics.
-                var tables = html.getElementsByTagName("table");
-                //Use first table if there is more than one copied.
-                var table = tables.length > 0 ? tables[0] : null;
+                    //Get data from table instead of searching for tr's because semantics.
+                    var tables = html.getElementsByTagName("table");
+                    //Use first table if there is more than one copied.
+                    var table = tables.length > 0 ? tables[0] : null;
 
-                if (table) {
-                    var rows = table.rows;
+                    if (table) {
+                        var rows = table.rows;
+
+                        for (var i = 0; i < rows.length; i++) {
+                            var row = rows[i];
+                            var cells = row.cells;
+
+                            data[i] = [];
+
+                            for (var j = 0; j < cells.length; j++) {
+                                var cell = cells[j];
+
+                                data[i][j] = cell.innerText;
+                            }
+                        }
+                    }
+                } else if (plainText && plainText != "") {
+                    //Parse text in the format of columns separated by tabs and rows separated by new lines.
+                    var rows = plainText.split("\n");
 
                     for (var i = 0; i < rows.length; i++) {
                         var row = rows[i];
-                        var cells = row.cells;
+                        var cols = row.split("\t");
 
                         data[i] = [];
 
-                        for (var j = 0; j < cells.length; j++) {
-                            var cell = cells[j];
+                        for (var j = 0; j < cols.length; j++) {
+                            var text = cols[j];
 
-                            data[i][j] = cell.innerText;
+                            data[i][j] = text;
                         }
                     }
                 }
-            } else if (plainText && plainText != "") {
-                //Parse text in the format of columns separated by tabs and rows separated by new lines.
-                var rows = plainText.split("\n");
 
-                for (var i = 0; i < rows.length; i++) {
-                    var row = rows[i];
-                    var cols = row.split("\t");
+                //If there is a selection
+                if (data.length > 0 && selectedRows.length > 0) {
+                    //Set the values
+                    var firstCellCoords = that.Selection.getCoords(selectedRows[0].getSelection().cells[0].dom);
+                    var tableWidth = that.getColCount();
+                    var tableHeight = that.getRowCount();
 
-                    data[i] = [];
+                    for (var i = 0; i < tableHeight - firstCellCoords[0] && i < data.length; i++) {
+                        var row = that.rows[i + firstCellCoords[0]];
 
-                    for (var j = 0; j < cols.length; j++) {
-                        var text = cols[j];
+                        for (var j = 0; j < tableWidth - firstCellCoords[1] && j < data[i].length; j++) {
+                            var cell = row.cells[j + firstCellCoords[1]];
 
-                        data[i][j] = text;
+                            cell.setValue(data[i][j]);
+                        }
                     }
                 }
+
+                event.preventDefault();
             }
-
-            //If there is a selection
-            if (data.length > 0 && selectedRows.length > 0) {
-                //Set the values
-                var firstCellCoords = that.Selection.getCoords(selectedRows[0].getSelection().cells[0].dom);
-                var tableWidth = that.getColCount();
-                var tableHeight = that.getRowCount();
-
-                for (var i = 0; i < tableHeight - firstCellCoords[0] && i < data.length; i++) {
-                    var row = that.rows[i + firstCellCoords[0]];
-
-                    for (var j = 0; j < tableWidth - firstCellCoords[1] && j < data[i].length; j++) {
-                        var cell = row.cells[j + firstCellCoords[1]];
-
-                        cell.setValue(data[i][j]);
-                    }
-                }
-            }
-
-            event.preventDefault();
         }
 
+        this.lastClicked = null;
+
+        function focusTracker(e) {
+            that.lastClicked = e.target;
+
+            if (that.hasFocus()) e.preventDefault();
+        }
+
+        document.addEventListener("click", focusTracker)
         document.addEventListener("copy", copyTest);
         document.addEventListener("cut", cutTest);
         document.addEventListener("paste", pasteTest);
@@ -960,10 +983,10 @@
                 }
             });
         },
-        setRowValues : function(values){
+        setRowValues: function (values) {
             // TODO
         },
-        setColValues : function(values){
+        setColValues: function (values) {
             // TODO
         },
         clear: function (ops) {
@@ -1077,6 +1100,12 @@
             return this.getSelectedCols().map(function (col) {
                 return col.getValues();
             });
+        },
+        hasFocus: function () {
+            var activeElement = document.activeElement;
+            var lastClicked = this.lastClicked;
+
+            return $(activeElement).closest(this.table).length == 1 || $(lastClicked).closest(this.table).length == 1;
         },
         hasSelection: function () {
             return this.getSelectedRows().length > 0;
