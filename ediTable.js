@@ -78,45 +78,48 @@
             }
         }
         function updateRowColCount() {
-            var options = that.options,
-                rowCount = that.getRowCount(),
-                colCount = that.getColCount();
+            var ops = that.options,
+                insertOps = {noUpdate: true};
 
             // Ensure maxes are good
-            if (options.maxRows > -1){
-                while(that.getRowCount() > options.maxRows){
+            if (ops.maxRows > -1){
+                while(that.getRowCount() > ops.maxRows){
                     that.removeRow(that.getRowCount() - 1);
                 }
             }
-            if (options.maxCols > -1){
-                while(that.getColCount() > options.maxCols){
+            if (ops.maxCols > -1){
+                while(that.getColCount() > ops.maxCols){
                     that.removeCol(that.getColCount() - 1);
                 }
             }
 
             // Ensure mins are good
-            var insertOps = {noUpdate: true};
-            while(that.getRowCount() < options.minRows){
+            while(that.getRowCount() < ops.minRows){
                 that.insertRow(that.getRowCount(), insertOps);
             }
-            while(that.getColCount() < options.minCols){
+            while(that.getColCount() < ops.minCols){
                 that.insertCol(that.getColCount(), insertOps);
             }
 
+            var lastRowClear = that.rows[that.getRowCount() - 1].isClear(),
+                lastRowClear = that.cols[that.getColCount() - 1].isClear();
+
             // Grow rows
-            if (options.growRows){
-                // TODO
+            if (ops.growRows){
+                if (!lastRowClear && (ops.maxRows == -1 || that.getRowCount() < ops.maxRows)){
+                    that.insertRow(that.getRowCount(), insertOps);
+                }
             }
             // Grow cols
-            if (options.growCols){
+            if (ops.growCols){
                 // YOLO
             }
             // Shrink rows
-            if (options.shrinkRows){
+            if (ops.shrinkRows){
                 // TODO
             }
             // Shrink cols
-            if (options.shrinkCols){
+            if (ops.shrinkCols){
                 // TODO
             }
         }
@@ -1172,8 +1175,6 @@
 
 // Testing
 var editable = new EdiTable(document.getElementById("table"), {
-    growRows: true,
-    minRows: 10,
-    minCols: 10
+    growRows: true
 });
 
