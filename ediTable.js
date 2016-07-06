@@ -95,14 +95,13 @@
             }
 
             // Ensure mins are good
-            /*while(that.getRowCount() < options.minRows){
-                console.log("adding row");
-                that.insertRow(that.getRowCount());
+            var insertOps = {noUpdate: true};
+            while(that.getRowCount() < options.minRows){
+                that.insertRow(that.getRowCount(), insertOps);
             }
             while(that.getColCount() < options.minCols){
-                console.log("adding col");
-                that.insertCol(that.getColCount());
-            }*/
+                that.insertCol(that.getColCount(), insertOps);
+            }
 
             // Grow rows
             if (options.growRows){
@@ -122,18 +121,25 @@
             }
         }
 
-        function normalizeOptions(options) {
-            if (typeof options.initialCellValue == "undefined") options.initialCellValue = "";
-            if (typeof options.minRows == "undefined") options.minRows = 1;
-            if (typeof options.minCols == "undefined") options.minCols = 1;
-            if (typeof options.maxRows == "undefined") options.maxRows = -1;
-            if (typeof options.maxCols == "undefined") options.maxCols = -1;
-            if (typeof options.growRows == "undefined") options.growRows = false;
-            if (typeof options.growCols == "undefined") options.growCols = false;
-            if (typeof options.shrinkRows == "undefined") options.shrinkRows = false;
-            if (typeof options.shrinkCols == "undefined") options.shrinkCols = false;
-            if (typeof options.rowsAllowMiddleShrink == "undefined") options.rowsAllowMiddleShrink = false;
-            if (typeof options.colsAllowMiddleShrink == "undefined") options.colsAllowMiddleShrink = false;
+        function normalizeOptions(ops) {
+            // Define the undefined
+            if (typeof ops.initialCellValue == "undefined") ops.initialCellValue = "";
+            if (typeof ops.minRows == "undefined") ops.minRows = 1;
+            if (typeof ops.minCols == "undefined") ops.minCols = 1;
+            if (typeof ops.maxRows == "undefined") ops.maxRows = -1;
+            if (typeof ops.maxCols == "undefined") ops.maxCols = -1;
+            if (typeof ops.growRows == "undefined") ops.growRows = false;
+            if (typeof ops.growCols == "undefined") ops.growCols = false;
+            if (typeof ops.shrinkRows == "undefined") ops.shrinkRows = false;
+            if (typeof ops.shrinkCols == "undefined") ops.shrinkCols = false;
+            if (typeof ops.rowsAllowMiddleShrink == "undefined") ops.rowsAllowMiddleShrink = false;
+            if (typeof ops.colsAllowMiddleShrink == "undefined") ops.colsAllowMiddleShrink = false;
+
+            // Correct logical errors
+            if (ops.minRows < 0) ops.minRows = 0;
+            if (ops.minCols < 0) ops.minCols = 0;
+            if (ops.maxRows != -1 && ops.minRows > ops.maxRows) ops.maxRows = ops.minRows;
+            if (ops.maxCols != -1 && ops.minCols > ops.maxCols) ops.maxCols = ops.minCols;
         }
 
         // Context variable
@@ -209,10 +215,14 @@
             getValue: function () {
                 return this.dom.innerText;
             },
-            setValue: function (value) {
+            setValue: function (value, ops) {
+                // Normalize parameters
+                if (typeof ops == "undefined") ops = {};
+                if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+
                 // Set value
                 $(this.dom).html(value);
-                updateRowColCount();
+                if (!ops.noUpdate) updateRowColCount();
             },
             clear: function () {
                 this.setValue("");
@@ -402,19 +412,21 @@
             hasSelection: function () {
                 return this.getSelection().cells.length > 0;
             },
-            insertCell: function (index, optValue) {
+            insertCell: function (index, ops) {
                 // Check that options allow for insertion
-                var ops = that.options;
+                var options = that.options;
                 if (this.type == "row") {
-                    var maxCols = ops.maxCols;
+                    var maxCols = options.maxCols;
                     if (maxCols != -1 && (this.getCellCount() >= maxCols)) return;
                 } else {
-                    var maxRows = ops.maxRows;
+                    var maxRows = options.maxRows;
                     if (maxRows != -1 && (this.getCellCount() >= maxRows)) return;
                 }
 
                 // Normalize parameters
-                if (typeof optValue == "undefined") optValue = ops.initialCellValue;
+                if (typeof ops == "undefined") ops = {};
+                if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+                if (typeof ops.value == "undefined") ops.value = options.initialCellValue;
 
                 // Insert into row
                 if (this.type == "row") {
@@ -434,7 +446,7 @@
                         // Configure cell
                         cell.setEditable(edit);
                         cell.setHeader(header);
-                        if (row == this) cell.setValue(optValue);
+                        if (row == this) cell.setValue(ops.value, {noUpdate: ops.noUpdate});
 
                         // Add cell to rows and col
                         row.cells.splice(index, 0, cell);
@@ -459,7 +471,7 @@
                         // Configure cell
                         cell.setEditable(edit);
                         cell.setHeader(header);
-                        if (col == this) cell.setValue(optValue);
+                        if (col == this) cell.setValue(ops.value, {noUpdate: ops.noUpdate});
 
                         // Add cell to cols and row
                         col.cells.splice(index, 0, cell);
@@ -511,8 +523,13 @@
                     }
                 }
             },
-            setCell: function (index, value) {
-                this.cells[index].setValue(value);
+            setCell: function (index, value, ops) {
+                // Normalize parameters
+                if (typeof ops == "undefined") ops = {};
+                if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+
+                // Set value
+                this.cells[index].setValue(value, {noUpdate: ops.noUpdate});
             }
         };
         this.Vector = Vector;
@@ -1058,23 +1075,26 @@
         hasSelection: function () {
             return this.getSelectedRows().length > 0;
         },
-        insertRow: function (index, optValues) {
+        insertRow: function (index, ops) {
             var colCount = this.getColCount();
 
             // Normalize parameters
-            if (typeof optValues == "undefined") optValues = [];
-            while (optValues.length < colCount) optValues.push(this.options.initialCellValue);
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+            if (typeof ops.values == "undefined") ops.values = [];
+            while (ops.values.length < colCount) ops.values.push(this.options.initialCellValue);
 
             // Insert row
             if (colCount > 0) {
-                this.cols[0].insertCell(index, optValues[0]);
+                this.cols[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
+
                 for (var i = 1; i < colCount; i++) {
                     var col = this.cols[i];
-                    col.setCell(index, optValues[i]);
+                    col.setCell(index, ops.values[i], {noUpdate: ops.noUpdate});
                 }
             } else {
                 // Renormalize parameters
-                if (optValues.length == 0) optValues.push("");
+                if (ops.values.length == 0) ops.values.push(this.options.initialCellValue);
 
                 // Create row and row dom
                 var rowDom = this.table.insertRow(0),
@@ -1082,13 +1102,13 @@
                 this.rows.push(row);
 
                 // Add row, and add column for each optValue
-                for (var i = 0; i < optValues.length; i++) {
+                for (var i = 0; i < ops.values.length; i++) {
                     var td = this.table.rows[0].insertCell(-1),
                         cell = new Cell(td),
                         col = new Vector([cell], "col");
 
                     // Set cell value
-                    cell.setValue(optValues[i]);
+                    cell.setValue(ops.values[i], {noUpdate: ops.noUpdate});
 
                     // Add cell to row
                     row.cells.push(cell);
@@ -1098,36 +1118,38 @@
                 }
             }
         },
-        insertCol: function (index, optValues) {
+        insertCol: function (index, ops) {
             var rowCount = this.getRowCount();
 
             // Normalize parameters
-            if (typeof optValues == "undefined") optValues = [];
-            while (optValues.length < rowCount) optValues.push(this.options.initialCellValue);
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+            if (typeof ops.values == "undefined") ops.values = [];
+            while (ops.values.length < rowCount) ops.values.push(this.options.initialCellValue);
 
             // Insert row
             if (rowCount > 0) {
-                this.rows[0].insertCell(index, optValues[0]);
+                this.rows[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
                 for (var i = 1; i < rowCount; i++) {
                     var row = this.rows[i];
-                    row.setCell(index, optValues[i]);
+                    row.setCell(index, ops.values[i], {noUpdate: ops.noUpdate});
                 }
             } else {
                 // Renormalize parameters
-                if (optValues.length == 0) optValues.push("");
+                if (ops.values.length == 0) ops.values.push(this.options.initialCellValue);
 
                 // Create col
                 var col = new Vector([], "col");
                 this.cols.push(col);
 
-                for (var i = 0; i < optValues.length; i++) {
+                for (var i = 0; i < ops.values.length; i++) {
                     var rowDom = this.table.insertRow(-1),
                         cellDom = rowDom.insertCell(-1),
                         cell = new Cell(cellDom),
                         row = new Vector([cell], "row");
 
                     // Set cell value
-                    cell.setValue(optValues[i]);
+                    cell.setValue(ops.values[i], {noUpdate: ops.noUpdate});
 
                     // Add cell to col
                     col.cells.push(cell);
@@ -1151,7 +1173,7 @@
 // Testing
 var editable = new EdiTable(document.getElementById("table"), {
     growRows: true,
-    //minRows: 7,
-    //minCols: 6
+    minRows: 10,
+    minCols: 10
 });
 
