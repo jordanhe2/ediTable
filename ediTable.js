@@ -15,7 +15,6 @@
             max = Math.max(ops.start, ops.end),
             i = (ops.dir > 0) ? min : max;
         while (i >= min && i <= max) {
-            ;
             ops.func.apply(ops.funcContext, [ops.arr[i], i]);
             i += ops.dir;
         }
@@ -29,7 +28,7 @@
      */
     var EdiTable = function (table, optOptions) {
         // Utitilites
-        function normalizeTable(table) {
+        function normalizeTable (table) {
             var rows = $("tr", table).toArray(),
                 lengths = rows.map(function (row) {
                     return row.cells.length;
@@ -50,16 +49,91 @@
                 }
             }
         }
+        function updateSelectionBorder(){
+            // Update border
+            var rows = that.getRowCount(),
+                cols = that.getColCount();
+
+            for (var i = 0; i < rows; i++) {
+                var row = that.rows[i];
+                for (var j = 0; j < cols; j++) {
+                    var cell = row.cells[j],
+                        cellDom = $(cell.dom);
+
+                    if (!cell.selected) continue;
+
+                    // Top border
+                    cellDom.toggleClass("ediTable-cell-selected-top",
+                        (i == 0 || !that.rows[i - 1].cells[j].selected));
+                    // Bottom border
+                    cellDom.toggleClass("ediTable-cell-selected-bottom",
+                        (i == (rows - 1) || !that.rows[i + 1].cells[j].selected));
+                    // Left border
+                    cellDom.toggleClass("ediTable-cell-selected-left",
+                        (j == 0 || !row.cells[j - 1].selected));
+                    // Right border
+                    cellDom.toggleClass("ediTable-cell-selected-right",
+                        (j == (cols - 1) || !row.cells[j + 1].selected));
+                }
+            }
+        }
+        function updateRowColCount() {
+            var options = that.options,
+                rowCount = that.getRowCount(),
+                colCount = that.getColCount();
+
+            // Ensure maxes are good
+            if (options.maxRows > -1){
+                while(that.getRowCount() > options.maxRows){
+                    that.removeRow(that.getRowCount() - 1);
+                }
+            }
+            if (options.maxCols > -1){
+                while(that.getColCount() > options.maxCols){
+                    that.removeCol(that.getColCount() - 1);
+                }
+            }
+
+            // Ensure mins are good
+            /*while(that.getRowCount() < options.minRows){
+                console.log("adding row");
+                that.insertRow(that.getRowCount());
+            }
+            while(that.getColCount() < options.minCols){
+                console.log("adding col");
+                that.insertCol(that.getColCount());
+            }*/
+
+            // Grow rows
+            if (options.growRows){
+                // TODO
+            }
+            // Grow cols
+            if (options.growCols){
+                // YOLO
+            }
+            // Shrink rows
+            if (options.shrinkRows){
+                // TODO
+            }
+            // Shrink cols
+            if (options.shrinkCols){
+                // TODO
+            }
+        }
 
         function normalizeOptions(options) {
-            options.minRows = options.minRows || 1;
-            options.minCols = options.minCols || 1;
-            options.maxRows = options.maxRows || -1;
-            options.maxCols = options.maxCols || -1;
-            options.growRows = options.growRows || false;
-            options.growCols = options.growCols || false;
-            options.shrinkRows = options.shrinkRows || false;
-            options.shrinkCols = options.shrinkCols || false;
+            if (typeof options.initialCellValue == "undefined") options.initialCellValue = "";
+            if (typeof options.minRows == "undefined") options.minRows = 1;
+            if (typeof options.minCols == "undefined") options.minCols = 1;
+            if (typeof options.maxRows == "undefined") options.maxRows = -1;
+            if (typeof options.maxCols == "undefined") options.maxCols = -1;
+            if (typeof options.growRows == "undefined") options.growRows = false;
+            if (typeof options.growCols == "undefined") options.growCols = false;
+            if (typeof options.shrinkRows == "undefined") options.shrinkRows = false;
+            if (typeof options.shrinkCols == "undefined") options.shrinkCols = false;
+            if (typeof options.rowsAllowMiddleShrink == "undefined") options.rowsAllowMiddleShrink = false;
+            if (typeof options.colsAllowMiddleShrink == "undefined") options.colsAllowMiddleShrink = false;
         }
 
         // Context variable
@@ -118,40 +192,7 @@
                 }
                 if (ops.last) {
                     that.Selection.terminalCell = this;
-
-                    // Update border
-                    var rows = that.getRowCount(),
-                        cols = that.getColCount();
-
-                    function useClass(cell, className, use) {
-                        if (use) {
-                            $(cell.dom).addClass(className);
-                        } else {
-                            $(cell.dom).removeClass(className);
-                        }
-                    }
-
-                    for (var i = 0; i < rows; i++) {
-                        var row = that.rows[i];
-                        for (var j = 0; j < cols; j++) {
-                            var cell = row.cells[j];
-
-                            if (!cell.selected) continue;
-
-                            // Top border
-                            useClass(cell, "ediTable-cell-selected-top",
-                                (i == 0 || !that.rows[i - 1].cells[j].selected));
-                            // Bottom border
-                            useClass(cell, "ediTable-cell-selected-bottom",
-                                (i == (rows - 1) || !that.rows[i + 1].cells[j].selected));
-                            // Left border
-                            useClass(cell, "ediTable-cell-selected-left",
-                                (j == 0 || !row.cells[j - 1].selected));
-                            // Right border
-                            useClass(cell, "ediTable-cell-selected-right",
-                                (j == (cols - 1) || !row.cells[j + 1].selected));
-                        }
-                    }
+                    updateSelectionBorder();
                 }
             },
             deselect: function () {
@@ -168,18 +209,10 @@
             getValue: function () {
                 return this.dom.innerText;
             },
-            setValue: function (value, ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.last == "undefined") ops.last = true;
-
+            setValue: function (value) {
                 // Set value
                 $(this.dom).html(value);
-
-                // Perform updates
-                if (ops.last){
-                    that.updateRowColCount();
-                }
+                updateRowColCount();
             },
             clear: function () {
                 this.setValue("");
@@ -291,17 +324,10 @@
                 // Normalize parameters
                 if (typeof ops == "undefined") ops = {};
                 if (typeof ops.offset == "undefined") ops.offset = 0;
-                if (typeof ops.last == "undefined") ops.last = true;
 
                 // Set values
                 for (var i = 0; i < values.length && i < this.cells.length; i ++){
-                    var cellOps = {
-                        last: false
-                    };
-                    if (ops.last /*&& somethingElse */){
-                        cellOps.last = true;
-                    }
-                    this.cells[i + ops.offset].setValue(values[i], cellOps);
+                    this.cells[i + ops.offset].setValue(values[i]);
                 }
             },
             clear: function (ops) {
@@ -337,7 +363,7 @@
                     func: function (cell) {
                         if (!cell.isClear()) clear = false;
                     }
-                })
+                });
                 return clear;
             },
             getValues: function (ops) {
@@ -388,7 +414,7 @@
                 }
 
                 // Normalize parameters
-                optValue = optValue || "";
+                if (typeof optValue == "undefined") optValue = ops.initialCellValue;
 
                 // Insert into row
                 if (this.type == "row") {
@@ -653,7 +679,6 @@
                     .on("keydown", handleKeyDown);
             }
         };
-
         this.Selection.init();
 
         // Setup rows
@@ -663,7 +688,6 @@
             });
             return new Vector(cells, "row");
         });
-
         // Setup cols
         if (this.getRowCount() > 0) {
             for (var i = 0; i < this.rows[0].cells.length; i++) {
@@ -674,6 +698,8 @@
                 this.cols.push(new Vector(cells, "col"));
             }
         }
+        // Fix rows and cols
+        updateRowColCount();
 
 
         function copyTest(event) {
@@ -1037,7 +1063,7 @@
 
             // Normalize parameters
             if (typeof optValues == "undefined") optValues = [];
-            while (optValues.length < colCount) optValues.push("");
+            while (optValues.length < colCount) optValues.push(this.options.initialCellValue);
 
             // Insert row
             if (colCount > 0) {
@@ -1077,7 +1103,7 @@
 
             // Normalize parameters
             if (typeof optValues == "undefined") optValues = [];
-            while (optValues.length < rowCount) optValues.push("");
+            while (optValues.length < rowCount) optValues.push(this.options.initialCellValue);
 
             // Insert row
             if (rowCount > 0) {
@@ -1116,32 +1142,6 @@
         },
         removeCol: function (index) {
             this.rows[0].removeCell(index);
-        },
-        updateRowColCount: function(){
-            var options = this.options,
-                rowCount = this.getRowCount(),
-                colCount = this.getColCount(),
-                lastRowClear = this.rows[rowCount - 1].isClear(),
-                lastColClear = this.cols[colCount - 1].isClear(),
-                secondLastRowClear = this.rows[rowCount - 2].isClear(),
-                secondLastColClear = this.cols[colCount - 2].isClear();
-
-            // Grow rows
-            if (options.growRows){
-                // TODO
-            }
-            // Grow cols
-            if (options.growCols){
-                // YOLO
-            }
-            // Shrink rows
-            if (options.shrinkRows){
-                // TODO
-            }
-            // Shrink cols
-            if (options.shrinkCols){
-                // TODO
-            }
         }
     };
     window.EdiTable = EdiTable;
@@ -1149,5 +1149,9 @@
 
 
 // Testing
-var editable = new EdiTable(document.getElementById("table"), {growRows: true});
+var editable = new EdiTable(document.getElementById("table"), {
+    growRows: true,
+    //minRows: 7,
+    //minCols: 6
+});
 
