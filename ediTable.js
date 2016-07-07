@@ -730,6 +730,9 @@
         // Fix rows and cols
         updateRowColCount();
 
+        // Add CSS
+        $(this.table).addClass("ediTable");
+
 
         function copyTest(event) {
             if (that.hasFocus()) {

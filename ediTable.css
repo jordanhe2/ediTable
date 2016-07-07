@@ -2,6 +2,11 @@
 /* ============= POSITIONING - DO NOT ALTER ============= */
 /* ====================================================== */
 
+.ediTable {
+}
+.ediTable * {
+    outline: none;
+}
 .ediTable-cell-selected {
     position: relative;
 }
@@ -39,4 +44,8 @@
     border-width: 3px;
     border-color: #2e69d9;
     background-color: rgba(120, 161, 237, 0.3);
+}
+
+.ediTable-cell-editing {
+    /* TODO */
 }
