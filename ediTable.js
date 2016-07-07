@@ -20,6 +20,19 @@
             i += ops.dir;
         }
     }
+    function selectText(element) {
+        if (document.body.createTextRange) {
+            var range = document.body.createTextRange();
+            range.moveToElementText(element);
+            range.select();
+        } else if (window.getSelection) {
+            var selection = window.getSelection();
+            var range = document.createRange();
+            range.selectNodeContents(element);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }
 
     /**
      * Represents a table by wrapping around an HTML table.
@@ -161,6 +174,7 @@
         var Cell = function (dom) {
             this.dom = dom;
             this.selected = false;
+            this.editMode = false;
         };
         Cell.prototype = {
             setEditable: function (edit) {
@@ -168,6 +182,22 @@
             },
             isEditable: function () {
                 return $(this.dom).prop("contenteditable") == "true";
+            },
+            setEditMode: function(edit){
+                this.editMode = edit;
+
+                var t = this;
+                function onKeyDown(e){
+                    t.setValue(t.getValue());
+                }
+                if (edit){
+                    this.dom.focus();
+                    //selectText(this.dom);
+
+                    $(this.dom).on("keypress", onKeyDown);
+                } else {
+                    $(this.dom).detach("keypress", onKeyDown);
+                }
             },
             setHeader: function (header) {
                 var type = (header ? "th" : "td"),
@@ -208,6 +238,9 @@
                     that.Selection.terminalCell = this;
                     updateSelectionBorder();
                 }
+
+                // Enter edit mode
+                this.setEditMode(ops.first && ops.last && this.isEditable());
             },
             deselect: function () {
                 this.selected = false;
