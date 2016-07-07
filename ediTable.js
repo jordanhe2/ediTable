@@ -904,15 +904,7 @@
                     var tableWidth = that.getColCount();
                     var tableHeight = that.getRowCount();
 
-                    for (var i = 0; i < tableHeight - firstCellCoords[0] && i < data.length; i++) {
-                        var row = that.rows[i + firstCellCoords[0]];
-
-                        for (var j = 0; j < tableWidth - firstCellCoords[1] && j < data[i].length; j++) {
-                            var cell = row.cells[j + firstCellCoords[1]];
-
-                            cell.setValue(data[i][j]);
-                        }
-                    }
+                    that.setRowValues(data, {rowOffset: firstCellCoords[0], colOffset: firstCellCoords[1]});
                 }
 
                 event.preventDefault();
