@@ -1236,10 +1236,3 @@
     window.EdiTable = EdiTable;
 //})();
 
-
-// Testing
-var editable = new EdiTable(document.getElementById("table"), {
-    growRows: true,
-    growCols: true
-});
-
