@@ -577,35 +577,29 @@
                     startCoords = [];
 
                 var handleMouseDown = function (e) {
-                    if (that.hasFocus()) {
-                        var targetCoords = selection.getCoords(e.target);
+                    var targetCoords = selection.getCoords(e.target);
+
+                    if (targetCoords) {
+                        startCoords = targetCoords;
 
                         if (targetCoords) {
-                            startCoords = targetCoords;
-
-                            if (targetCoords) {
-                                that.select({
-                                    rowStart: startCoords[0],
-                                    rowEnd: targetCoords[0],
-                                    colStart: startCoords[1],
-                                    colEnd: targetCoords[1]
-                                });
-                            } else {
-                                that.deselect();
-                            }
-
-                            $(document)
-                                .on("mousemove", handleMouseMove);
+                            that.select({
+                                rowStart: startCoords[0],
+                                rowEnd: targetCoords[0],
+                                colStart: startCoords[1],
+                                colEnd: targetCoords[1]
+                            });
+                        } else {
+                            that.deselect();
                         }
+
+                        $(document)
+                            .on("mousemove", handleMouseMove);
                     }
                 };
                 var handleMouseUp = function (e) {
-                    if (that.hasFocus()) {
-                        var targetCoords = selection.getCoords(e.target);
-
-                        $(document)
-                            .unbind("mousemove", handleMouseMove);
-                    }
+                    $(document)
+                        .unbind("mousemove", handleMouseMove);
                 };
                 var handleMouseMove = function (e) {
                     var targetCoords = selection.getCoords(e.target);
@@ -624,9 +618,7 @@
 
                 var handleKeyDown = function (e) {
                     // Prevent default if table has focus
-                    if (false /* TODO */) {
-                        e.preventDefault();
-                    }
+                    //if (that.hasFocus()) e.preventDefault();
 
                     // Special case: select all
                     if (e.ctrlKey && e.keyCode == 65) {
@@ -890,7 +882,11 @@
         function focusTracker(e) {
             that.lastClicked = e.target;
 
-            if (that.hasFocus()) e.preventDefault();
+            if (that.hasFocus()) {
+                e.preventDefault();
+            } else {
+                that.deselect();
+            }
         }
 
         document.addEventListener("click", focusTracker)
