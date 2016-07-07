@@ -186,8 +186,12 @@
             this.editMode = false;
         };
         Cell.prototype = {
-            setEditable: function (edit) {
-                $(this.dom).prop("contenteditable", edit);
+            setEditable: function (optEdit) {
+                // Normalize parameters
+                if (typeof optEdit == "undefined") optEdit = true;
+
+                // Set editable
+                $(this.dom).prop("contenteditable", optEdit);
             },
             isEditable: function () {
                 return $(this.dom).prop("contenteditable") == "true";
@@ -266,6 +270,9 @@
                 return this.dom.innerText;
             },
             setValue: function (value, ops) {
+                // Only set value if editable
+                if (!this.isEditable()) return;
+
                 // Normalize parameters
                 if (typeof ops == "undefined") ops = {};
                 if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
@@ -295,8 +302,9 @@
             getCellCount: function () {
                 return this.cells.length;
             },
-            setEditable: function (edit, ops) {
+            setEditable: function (optEdit, ops) {
                 // Normalize parameters
+                if (typeof optEdit == "undefined") optEdit = true;
                 if (typeof ops == "undefined") ops = {};
                 if (typeof ops.start == "undefined") ops.start = 0;
                 if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
@@ -308,7 +316,7 @@
                     start: ops.start,
                     end: ops.end,
                     func: function (cell) {
-                        cell.setEditable(edit);
+                        cell.setEditable(optEdit);
                     }
                 });
             },
@@ -386,7 +394,7 @@
                 if (typeof ops.offset == "undefined") ops.offset = 0;
 
                 // Set values
-                for (var i = 0; i < values.length && i < this.cells.length; i++) {
+                for (var i = 0; i < values.length && i < this.cells.length - ops.offset; i++) {
                     this.cells[i + ops.offset].setValue(values[i]);
                 }
             },
@@ -935,8 +943,9 @@
         getColCount: function () {
             return this.cols.length;
         },
-        setEditable: function (edit, ops) {
+        setEditable: function (optEdit, ops) {
             // Normalize parameters
+            if (typeof optEdit == "undefined") optEdit = true;
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
             if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
@@ -950,7 +959,7 @@
                 start: ops.rowStart,
                 end: ops.rowEnd,
                 func: function (row) {
-                    row.setEditable(edit, {start: ops.colStart, end: ops.colEnd});
+                    row.setEditable(optEdit, {start: ops.colStart, end: ops.colEnd});
                 }
             })
         },
@@ -1024,7 +1033,7 @@
             if (typeof ops.colOffset == "undefined") ops.colOffset = 0;
 
             // Set values
-            for (var i = 0; i < values.length && i < this.rows.length; i ++){
+            for (var i = 0; i < values.length && i < this.rows.length - ops.rowOffset; i ++){
                 this.rows[i + ops.rowOffset].setValues(values[i], {offset: ops.colOffset});
             }
         },
@@ -1036,7 +1045,7 @@
             if (typeof ops.colOffset == "undefined") ops.colOffset = 0;
 
             // Set values
-            for (var i = 0; i < values.length && i < this.cols.length; i ++){
+            for (var i = 0; i < values.length && i < this.cols.length - ops.colOffset; i ++){
                 this.cols[i + ops.colOffset].setValues(values[i], {offset: ops.rowOffset});
             }
         },
