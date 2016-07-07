@@ -33,6 +33,14 @@
             selection.addRange(range);
         }
     }
+    function isArrayOfArrays(thing){
+        if (!(thing instanceof Array)) return false;
+        for (var i = 0; i < thing.length; i ++){
+            if (!(thing[i] instanceof Array)) return false;
+        }
+
+        return true;
+    }
 
     /**
      * Represents a table by wrapping around an HTML table.
@@ -63,7 +71,6 @@
                 }
             }
         }
-
         function updateSelectionBorder() {
             // Update border
             var rows = that.getRowCount(),
@@ -92,7 +99,6 @@
                 }
             }
         }
-
         function updateRowColCount() {
             var ops = that.options,
                 insertOps = {noUpdate: true};
@@ -134,14 +140,17 @@
             }
             // Shrink rows
             if (ops.shrinkRows) {
-                // TODO
+                while (that.getRowCount() > ops.minRows){
+                    // TODO
+                }
             }
             // Shrink cols
             if (ops.shrinkCols) {
-                // TODO
+                while (that.getColCount() > ops.minCols){
+                    // TODO
+                }
             }
         }
-
         function normalizeOptions(ops) {
             // Define the undefined
             if (typeof ops.initialCellValue == "undefined") ops.initialCellValue = "";
@@ -1015,11 +1024,29 @@
                 }
             });
         },
-        setRowValues: function (values) {
-            // TODO
+        setRowValues: function (values, ops) {
+            // Normalize paramters
+            if (!isArrayOfArrays(values)) throw new TypeError("values parameter must be an Array of Arrays");
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowOffset == "undefined") ops.rowOffset = 0;
+            if (typeof ops.colOffset == "undefined") ops.colOffset = 0;
+
+            // Set values
+            for (var i = 0; i < values.length && i < this.rows.length; i ++){
+                this.rows[i + ops.rowOffset].setValues(values[i], {offset: ops.colOffset});
+            }
         },
-        setColValues: function (values) {
-            // TODO
+        setColValues: function (values, ops) {
+            // Normalize paramters
+            if (!isArrayOfArrays(values)) throw new TypeError("values parameter must be an Array of Arrays");
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowOffset == "undefined") ops.rowOffset = 0;
+            if (typeof ops.colOffset == "undefined") ops.colOffset = 0;
+
+            // Set values
+            for (var i = 0; i < values.length && i < this.cols.length; i ++){
+                this.cols[i + ops.colOffset].setValues(values[i], {offset: ops.rowOffset});
+            }
         },
         clear: function (ops) {
             // Normalize parameters
