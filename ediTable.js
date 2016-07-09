@@ -692,6 +692,12 @@
                         };
 
                         switch (e.keyCode) {
+                            // TAB
+                            case 9:
+                                var notOnTheEnd = originCoords[1] < that.getColCount() - 1;
+                                deltaCoords.x = (notOnTheEnd ? 1 : -originCoords[1]);
+                                deltaCoords.y = (notOnTheEnd ? 0 : 1);
+                                break;
                             //LEFT
                             case 37:
                                 deltaCoords.x = -1;
