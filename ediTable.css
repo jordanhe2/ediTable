@@ -43,6 +43,14 @@
 .ediTable {
 }
 
+/* Editable Cell */
+.ediTable *[contenteditable="true"]{
+}
+
+/* Non-editable Cell */
+.ediTable *[contenteditable="false"]{
+}
+
 /* Selection Box */
 .ediTable-cell-selected:before {
     border-width: 3px;
