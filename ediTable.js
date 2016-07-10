@@ -140,14 +140,54 @@
             }
             // Shrink rows
             if (ops.shrinkRows) {
-                while (that.getRowCount() > ops.minRows){
-                    // TODO
+                if (ops.rowsAllowMiddleShrink){
+                    var i = 0;
+                    while (that.getRowCount() > ops.minRows){
+                        var rowStart = that.getRowCount() - (ops.growRows ? 2 : 1),
+                            rowIndex = rowStart - i;
+                        if (rowIndex >= 0 && that.rows[rowIndex].isClear()){
+                            that.removeRow(rowIndex);
+                        } else {
+                            i ++;
+                        }
+
+                        if (rowIndex == 0) break;
+                    }
+                } else {
+                    while (that.getRowCount() > ops.minRows){
+                        var rowIndex = that.getRowCount() - (ops.growRows ? 2 : 1);
+                        if (rowIndex >= 0 && that.rows[rowIndex].isClear()){
+                            that.removeRow(rowIndex);
+                        } else {
+                            break;
+                        }
+                    }
                 }
             }
             // Shrink cols
             if (ops.shrinkCols) {
-                while (that.getColCount() > ops.minCols){
-                    // TODO
+                if (ops.colsAllowMiddleShrink){
+                    var i = 0;
+                    while (that.getColCount() > ops.minCols){
+                        var colStart = that.getColCount() - (ops.growCols ? 2 : 1),
+                            colIndex = colStart - i;
+                        if (colIndex >= 0 && that.cols[colIndex].isClear()){
+                            that.removeCol(colIndex);
+                        } else {
+                            i ++;
+                        }
+
+                        if (colIndex == 0) break;
+                    }
+                } else {
+                    while (that.getColCount() > ops.minCols){
+                        var colIndex = that.getColCount() - (ops.growCols ? 2 : 1);
+                        if (colIndex >= 0 && that.cols[colIndex].isClear()){
+                            that.removeCol(colIndex);
+                        } else {
+                            break;
+                        }
+                    }
                 }
             }
         }

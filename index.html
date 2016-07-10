@@ -80,7 +80,12 @@
     <script type="text/javascript" src="ediTable.js"></script>
     <script>
         var editable = new EdiTable(document.getElementById("table"), {
-            growRows: true
+            growRows: true,
+            growCols: true,
+            shrinkRows: true,
+            shrinkCols: true,
+            rowsAllowMiddleShrink: true,
+            colsAllowMiddleShrink: true
         });
     </script>
 </body>

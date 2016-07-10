@@ -39,6 +39,10 @@
 /* ================= USER CUSTOMIZATIONS ================ */
 /* ====================================================== */
 
+/* Table-wide Style */
+.ediTable {
+}
+
 /* Selection Box */
 .ediTable-cell-selected:before {
     border-width: 3px;
