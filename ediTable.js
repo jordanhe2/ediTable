@@ -706,9 +706,6 @@
                 };
 
                 var handleKeyDown = function (e) {
-                    // Prevent default if table has focus
-                    if (that.hasFocus()) e.preventDefault();
-
                     // Special case: select all
                     if (e.ctrlKey && e.keyCode == 65) {
                         if (e.shiftKey) {
@@ -733,6 +730,7 @@
                         switch (e.keyCode) {
                             // TAB
                             case 9:
+                                if (that.hasFocus()) e.preventDefault();
                                 var notOnTheEnd = originCoords[1] < that.getColCount() - 1;
                                 deltaCoords.x = (notOnTheEnd ? 1 : -originCoords[1]);
                                 deltaCoords.y = (notOnTheEnd ? 0 : 1);
