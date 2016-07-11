@@ -123,17 +123,16 @@
                 that.insertCol(that.getColCount(), insertOps);
             }
 
-            var lastRowClear = that.rows[that.getRowCount() - 1].isClear(),
-                lastColClear = that.cols[that.getColCount() - 1].isClear();
-
             // Grow rows
             if (ops.growRows) {
+                var lastRowClear = that.rows[that.getRowCount() - 1].isClear();
                 if (!lastRowClear && (ops.maxRows == -1 || that.getRowCount() < ops.maxRows)) {
                     that.insertRow(that.getRowCount(), insertOps);
                 }
             }
             // Grow cols
             if (ops.growCols){
+                var lastColClear = that.cols[that.getColCount() - 1].isClear();
                 if (!lastColClear && (ops.maxCols == -1 || that.getColCount() < ops.maxCols)){
                     that.insertCol(that.getColCount(), insertOps);
                 }
@@ -708,7 +707,7 @@
 
                 var handleKeyDown = function (e) {
                     // Prevent default if table has focus
-                    //if (that.hasFocus()) e.preventDefault();
+                    if (that.hasFocus()) e.preventDefault();
 
                     // Special case: select all
                     if (e.ctrlKey && e.keyCode == 65) {
