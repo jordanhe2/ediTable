@@ -64,10 +64,12 @@
                     diff = max - (tds.length + ths.length);
 
                 if (diff > 0) {
-                    var type = (tds.length == 0 ? "th" : "td");
+                    var type = (tds.length == 0 ? "th" : "td"),
+                        cells = new Array(diff);
                     for (var j = 0; j < diff; j++) {
-                        $(row).append(document.createElement(type));
+                        cells[j] = document.createElement(type);
                     }
+                    $(row).append(cells);
                 }
             }
         }
@@ -284,11 +286,15 @@
 
                 // Perform other updates
                 if (ops.first) {
+                    that.setRenderEnabled(false);
+
                     that.Selection.originCell = this;
                 }
                 if (ops.last) {
                     that.Selection.terminalCell = this;
                     updateSelectionBorder();
+
+                    that.setRenderEnabled(true);
                 }
 
                 // Enter edit mode
@@ -296,11 +302,12 @@
             },
             deselect: function () {
                 this.selected = false;
-                $(this.dom).removeClass("ediTable-cell-selected");
-                $(this.dom).removeClass("ediTable-cell-selected-left");
-                $(this.dom).removeClass("ediTable-cell-selected-right");
-                $(this.dom).removeClass("ediTable-cell-selected-top");
-                $(this.dom).removeClass("ediTable-cell-selected-bottom");
+                $(this.dom)
+                    .removeClass("ediTable-cell-selected")
+                    .removeClass("ediTable-cell-selected-left")
+                    .removeClass("ediTable-cell-selected-right")
+                    .removeClass("ediTable-cell-selected-top")
+                    .removeClass("ediTable-cell-selected-bottom");
             },
             isClear: function () {
                 return this.dom.innerHTML == "";
@@ -645,17 +652,13 @@
             originCell: null,
             terminalCell: null,
             getCoords: function (element) {
-                var el = $(element);
-                var coords = null;
+                var el = $(element),
+                    cell = el.closest("tr > *")[0],
+                    row = el.closest("tr")[0],
+                    coords = null;
 
-                if ($(that.table).find(el).length > 0) {
-                    var cell = el.closest("tr > *");
-                    var row = el.closest("tr");
-
-                    var rowIndex = row.index();
-                    var colIndex = cell.index();
-
-                    coords = [rowIndex, colIndex];
+                if (cell && row) {
+                    coords = [row.rowIndex, cell.cellIndex];
                 }
 
                 return coords;
@@ -980,6 +983,15 @@
         document.addEventListener("paste", pasteTest);
     };
     EdiTable.prototype = {
+        setRenderEnabled: function () {
+            var lastStyle = this.table.style.display;
+            var setRenderEnabled = function(enable){
+                if (!enable) lastStyle = this.table.style.display;
+                this.table.style.display = enable ? lastStyle : "none";
+            }
+
+            return setRenderEnabled;
+            }(),
         getRowCount: function () {
             return this.rows.length;
         },
