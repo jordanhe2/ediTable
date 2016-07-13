@@ -547,11 +547,9 @@
 
                 if (this.type == "row") {
                     var maxCols = options.maxCols;
-                    if (!options.growRows) return false;
                     if (maxCols != -1 && (this.getCellCount() >= maxCols)) return false;
                 } else {
                     var maxRows = options.maxRows;
-                    if (!options.growCols) return false;
                     if (maxRows != -1 && (this.getCellCount() >= maxRows)) return false;
                 }
 
@@ -1316,7 +1314,7 @@
             return this.getSelectedRows().length > 0;
         },
         rowsCanGrow: function(){
-            return this.cols[0].canInsertCell();
+            return this.options.growRows && this.cols[0].canInsertCell();
         },
         insertRow: function (index, ops) {
             var colCount = this.getColCount();
@@ -1328,18 +1326,9 @@
             while (ops.values.length < colCount) ops.values.push(this.options.initialCellValue);
 
             // Insert row
-            var cellOps = {
-                noUpdate: ops.noUpdate,
-                first: false,
-                last: false
-            };
             if (colCount > 0) {
                 this.cols[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
-
-                for (var i = 1; i < colCount; i++) {
-                    var col = this.cols[i];
-                    col.setCell(index, ops.values[i], cellOps);
-                }
+                this.rows[index].setValues(ops.values, ops);
             }
             // If no rows
             else {
@@ -1369,7 +1358,7 @@
             }
         },
         colsCanGrow: function(){
-            return this.rows[0].canInsertCell();
+            return this.options.growCols && this.rows[0].canInsertCell();
         },
         insertCol: function (index, ops) {
             var rowCount = this.getRowCount();
@@ -1381,18 +1370,9 @@
             while (ops.values.length < rowCount) ops.values.push(this.options.initialCellValue);
 
             // Insert row
-            var cellOps = {
-                noUpdate: ops.noUpdate,
-                first: false,
-                last: false
-            }
             if (rowCount > 0) {
                 this.rows[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
-
-                for (var i = 1; i < rowCount; i++) {
-                    var row = this.rows[i];
-                    row.setCell(index, ops.values[i], cellOps);
-                }
+                this.cols[index].setValues(ops.values, ops);
             }
             // If no cols
             else {
