@@ -1,4 +1,6 @@
 //(function(){
+    "use strict";
+
     // UTILITIES
     function forEach(ops) {
         // Normalize ops
@@ -455,8 +457,15 @@
                         last: false
                     }
                     if (i == 0 && ops.first) cellOps.first = true;
-                    if ((i == this.cells.length - ops.offset - 1 || i == values.length - 1)
-                        && ops.last) cellOps.last = true;
+                    if (ops.last){
+                        if (i == this.cells.length - ops.offset - 1 || i == values.length - 1){
+                            if (this.canInsertCell()){
+                                if (i == values.length - 1) cellOps.last = true;
+                            } else {
+                                cellOps.last = true;
+                            }
+                        }
+                    }
 
                     this.cells[i + ops.offset].setValue(values[i], cellOps);
                 }
@@ -533,16 +542,23 @@
             hasSelection: function () {
                 return this.getSelection().cells.length > 0;
             },
-            insertCell: function (index, ops) {
-                // Check that options allow for insertion
+            canInsertCell: function(){
                 var options = that.options;
+
                 if (this.type == "row") {
                     var maxCols = options.maxCols;
-                    if (maxCols != -1 && (this.getCellCount() >= maxCols)) return;
+                    if (!options.growRows) return false;
+                    if (maxCols != -1 && (this.getCellCount() >= maxCols)) return false;
                 } else {
                     var maxRows = options.maxRows;
-                    if (maxRows != -1 && (this.getCellCount() >= maxRows)) return;
+                    if (!options.growCols) return false;
+                    if (maxRows != -1 && (this.getCellCount() >= maxRows)) return false;
                 }
+
+                return true;
+            },
+            insertCell: function (index, ops) {
+                if (!this.canInsertCell()) return;
 
                 // Normalize parameters
                 if (typeof ops == "undefined") ops = {};
@@ -1025,14 +1041,19 @@
             }
         },
         setRenderEnabled: function () {
-            var lastStyle = this.table.style.display;
+            var lastStyle,
+                enabled = true;
             var setRenderEnabled = function(enable){
-                if (!enable) lastStyle = this.table.style.display;
-                this.table.style.display = enable ? lastStyle : "none";
+                if (enable != enabled){
+                    if (!enable) lastStyle = this.table.style.display;
+                    this.table.style.display = enable ? lastStyle : "none";
+
+                    enabled = enable;
+                }
             }
 
             return setRenderEnabled;
-            }(),
+        }(),
         getRowCount: function () {
             return this.rows.length;
         },
@@ -1136,7 +1157,14 @@
                     offset: ops.colOffset
                 };
                 if (i == 0) rowOps.first = true;
-                if (i == this.rows.length - ops.rowOffset - 1 || i == values.length - 1) rowOps.last = true;
+                if (i == this.rows.length - ops.rowOffet - 1 || i == values.length - 1){
+                    if (this.rowsCanGrow()){
+                        if (i == values.length - 1) rowOps.last = true;
+                    } else {
+                        rowOps.last = true;
+                    }
+                }
+
                 this.rows[i + ops.rowOffset].setValues(values[i], rowOps);
             }
         },
@@ -1155,7 +1183,14 @@
                     offset: ops.rowOffset
                 };
                 if (i == 0) colOps.first = true;
-                if (i == this.cols.length - ops.colOffset - 1 || i == values.length - 1) colOps.last = true;
+                if (i == this.cols.length - ops.colOffet - 1 || i == values.length - 1){
+                    if (this.colCanGrow()){
+                        if (i == values.length - 1) colOps.last = true;
+                    } else {
+                        colOps.last = true;
+                    }
+                }
+
                 this.cols[i + ops.colOffset].setValues(values[i], colOps);
             }
         },
@@ -1280,6 +1315,9 @@
         hasSelection: function () {
             return this.getSelectedRows().length > 0;
         },
+        rowsCanGrow: function(){
+            return this.cols[0].canInsertCell();
+        },
         insertRow: function (index, ops) {
             var colCount = this.getColCount();
 
@@ -1329,6 +1367,9 @@
                     this.cols.push(col);
                 }
             }
+        },
+        colsCanGrow: function(){
+            return this.rows[0].canInsertCell();
         },
         insertCol: function (index, ops) {
             var rowCount = this.getRowCount();
