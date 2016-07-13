@@ -1182,7 +1182,7 @@
                 };
                 if (i == 0) colOps.first = true;
                 if (i == this.cols.length - ops.colOffet - 1 || i == values.length - 1){
-                    if (this.colCanGrow()){
+                    if (this.colsCanGrow()){
                         if (i == values.length - 1) colOps.last = true;
                     } else {
                         colOps.last = true;
