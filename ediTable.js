@@ -169,7 +169,7 @@
                     var cell = row.cells[j],
                         jqCell = $(cell);
 
-                    if (!that.CellManager.isSelected(cell)) continue;
+                    if (!cm.isSelected(cell)) continue;
 
                     // Top border
                     jqCell.toggleClass("ediTable-cell-selected-top",
@@ -354,7 +354,7 @@
                     .removeClass("ediTable-cell-selected-bottom");
             },
             isSelected: function (cell) {
-                $(cell).hasClass("ediTable-cell-selected");
+                return $(cell).hasClass("ediTable-cell-selected");
             },
             getValue: function (cell) {
                 return cell.innerText;
@@ -844,7 +844,22 @@
             this.setRowValues(values, ops);
         },
         clear: function (ops) {
-            // TODO
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart == "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+
+            // Clear
+            ops.table = this.table;
+            ops.func = function(cell){
+                that.CellManager.clear(cell);
+            }
+            forEachTableCell(cell);
+
+            // Call updates
+            // ....
         },
         isClear: function (ops) {
             // Normalize parameters
