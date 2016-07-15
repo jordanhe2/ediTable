@@ -828,12 +828,19 @@
             }
         },
         setColValues: function (values, ops) {
+            // Normalize paramters
+            if (!isArrayOfArrays(values)) throw new TypeError("values parameter must be an Array of Arrays");
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+            if (typeof ops.colStart == "undefined") ops.colStart = 0;
+
             // Flip flop parameters
             var temp = ops.rowStart;
             ops.rowStart = ops.colStart;
             ops.colStart = temp;
             values = arrayTranspose(values);
 
+            // Feed to setRowValues
             this.setRowValues(values, ops);
         },
         clear: function (ops) {
