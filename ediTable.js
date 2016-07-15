@@ -770,6 +770,7 @@
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Do selection
+            var that = this;
             this.deselect();
             ops.table = this.table;
             ops.func = function(cell){
@@ -782,7 +783,7 @@
             this.Selection.originCell = ends.first;
             this.Selection.terminalCell = ends.last;
 
-            updateSelectionBorder();
+            //updateSelectionBorder();
             this.setRenderEnabled(true);
         },
         deselect: function (ops) {
@@ -794,6 +795,7 @@
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Do deselection
+            var that = this;
             ops.table = this.table;
             ops.func = function(cell){
                 that.CellManager.deselect(cell);
@@ -852,11 +854,12 @@
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Clear
+            var that = this;
             ops.table = this.table;
             ops.func = function(cell){
                 that.CellManager.clear(cell);
             }
-            forEachTableCell(cell);
+            forEachTableCell(ops);
 
             // Call updates
             // ....
@@ -982,6 +985,7 @@
             return arrayTranspose(this.getSelectedRows());
         },
         getSelectedRowValues: function () {
+            var that = this;
             return this.getSelectedRows().map(function(row) {
                 return row.map(function(cell) {
                     return that.CellManager.getValue(cell);
@@ -989,6 +993,7 @@
             });
         },
         getSelectedColValues: function () {
+            var that = this;
             return this.getSelectedCols().map(function(col) {
                 return col.map(function(cell) {
                     return that.CellManager.getValue(cell);
