@@ -2,6 +2,32 @@
     "use strict";
 
     // UTILITIES
+    function arrayTranspose (array) {
+        array = array[0].map(function(col, i) {
+            return array.map(function(row) {
+                return row[i]
+            });
+        });
+
+        return array;
+    }
+    function tableToArray(table){
+        var rows = table.rows,
+            arr = [];
+
+        for (var i = 0; i < rows.length; i ++){
+            var row = rows[i];
+
+            arr[i] = [];
+            for (var j = 0; j < row.cells.length; j ++) {
+                var cell = row.cells[j];
+
+                arr[i][j] = cell;
+            }
+        }
+
+        return arr;
+    }
     function forEach(ops) {
         // Normalize ops
         if (typeof ops == "undefined" ||
@@ -20,6 +46,60 @@
         while (i >= min && i <= max) {
             ops.func.apply(ops.funcContext, [ops.arr[i], i]);
             i += ops.dir;
+        }
+    }
+    function forEach2D(ops){
+        // Normalize parameters
+        if (typeof ops == "undefined" ||
+            typeof ops.func == "undefined" ||
+            typeof ops.arr == "undefined" ||
+            ops.arr.length == 0 ||
+            !isArrayOfArrays(ops.arr)) return;
+        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+        if (typeof ops.colStart == "undefined") ops.colStart = 0;
+        if (typeof ops.rowEnd == "undefined") ops.rowEnd = ops.arr.length - 1;
+        if (typeof ops.colEnd == "undefined") ops.colEnd = ops.arr[0].length - 1;
+        if (typeof ops.rowDir == "undefined") ops.rowDir = (ops.rowEnd > ops.rowStart) ? 1 : -1;
+        if (typeof ops.colDir == "undefined") ops.colDir = (ops.colEnd > ops.colStart) ? 1 : -1;
+        if (typeof ops.funcContext == "undefined") ops.funcContext = null;
+
+        forEach({
+            arr: ops.arr,
+            start: ops.rowStart,
+            end: ops.rowEnd,
+            dir: ops.rowDir,
+            func: function (row) {
+                forEach({
+                    arr: row,
+                    start: ops.colStart,
+                    end: ops.colEnd,
+                    dir: ops.colDir,
+                    func: function(cell){
+                        ops.func.apply(ops.funcContext, [cell]);
+                    }
+                });
+            }
+        })
+    }
+    function forEachTableCell(ops){
+        if (typeof ops.table != "undefined") ops.arr = tableToArray(ops.table);
+
+        var first = null,
+            last = null,
+            userFunc = ops.func,
+            func = function (cell, index) {
+                last = cell;
+
+                if (!first) first = cell;
+
+                userFunc(cell, index);
+            };
+        ops.func = func;
+        forEach2D(ops);
+
+        return {
+            first: first,
+            last: last
         }
     }
     function selectText(element) {
@@ -218,46 +298,32 @@
         // Context variable
         var that = this;
 
-        /**
-         * Represents an individual cell of a table by wrapping around a <td> or <th>.
-         *
-         * @param{HTMLTableDataCellElement|HTMLTableHeaderCellElement} - element to wrap around
-         */
-        var Cell = function (dom) {
-            this.dom = dom;
-            this.selected = false;
-            this.editMode = false;
+        // Actual EdiTable properties and init begin here
+        this.table = table;
+        this.options = optOptions || {};
+        this.events = {
+            change: []
         };
-        Cell.prototype = {
-            setEditable: function (optEdit) {
+
+        normalizeTable(this.table);
+        normalizeOptions(this.options);
+
+        this.CellManager = {
+            setEditable: function (cell, optEdit) {
                 // Normalize parameters
                 if (typeof optEdit == "undefined") optEdit = true;
 
                 // Set editable
-                $(this.dom).prop("contenteditable", optEdit);
+                cell.contenteditable = optEdit ? "true" : "false";
             },
-            isEditable: function () {
-                return $(this.dom).prop("contenteditable") == "true";
+            isEditable: function (cell) {
+                return cell.contenteditable == "true";
             },
-            setEditMode: function(edit){
-                this.editMode = edit;
+            setHeader: function (cell, optHeader) {
+                if (typeof optHeader == "undefined") optHeader = true;
 
-                var t = this;
-                function onKeyDown(e){
-                    t.setValue(t.getValue());
-                }
-                if (edit){
-                    this.dom.focus();
-                    //selectText(this.dom);
-
-                    $(this.dom).on("keypress", onKeyDown);
-                } else {
-                    $(this.dom).detach("keypress", onKeyDown);
-                }
-            },
-            setHeader: function (header) {
-                var type = (header ? "th" : "td"),
-                    oldDom = this.dom,
+                var type = (optHeader ? "th" : "td"),
+                    oldDom = cell,
                     children = $(oldDom).contents().detach(),
                     newDom = document.createElement(type);
 
@@ -266,427 +332,42 @@
                     $(newDom).attr(oldDom.attributes[index].name, oldDom.attributes[index].value);
                 });
 
-                // Append children
                 $(newDom).append(children);
 
-                // Replace oldDom with newDom
                 $(oldDom).replaceWith(newDom);
-                this.dom = newDom;
             },
-            isHeader: function () {
-                return this.dom.tagName.toLowerCase() == "th";
+            isHeader: function (cell) {
+                return cell.tagName.toLowerCase() == "th";
             },
-            select: function (ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.first == "undefined") ops.first = true;
-                if (typeof ops.last == "undefined") ops.last = true;
-
+            select: function (cell) {
                 // Mark as selected
-                this.selected = true;
-                $(this.dom).addClass("ediTable-cell-selected");
-
-                // Perform other updates
-                if (ops.first) {
-                    that.setRenderEnabled(false);
-
-                    that.Selection.originCell = this;
-                }
-                if (ops.last) {
-                    that.Selection.terminalCell = this;
-                    updateSelectionBorder();
-
-                    that.setRenderEnabled(true);
-                }
-
-                // Enter edit mode
-                this.setEditMode(ops.first && ops.last && this.isEditable());
+                $(cell).addClass("ediTable-cell-selected");
             },
-            deselect: function () {
-                this.selected = false;
-                $(this.dom)
+            deselect: function (cell) {
+                $(cell)
                     .removeClass("ediTable-cell-selected")
                     .removeClass("ediTable-cell-selected-left")
                     .removeClass("ediTable-cell-selected-right")
                     .removeClass("ediTable-cell-selected-top")
                     .removeClass("ediTable-cell-selected-bottom");
             },
-            isClear: function () {
-                return this.dom.innerHTML == "";
+            isClear: function (cell) {
+                return cell.innerHTML == "";
             },
-            getValue: function () {
-                return this.dom.innerText;
+            getValue: function (cell) {
+                return cell.innerText;
             },
-            setValue: function (value, ops) {
+            setValue: function (cell, value) {
                 // Only set value if editable
-                if (!this.isEditable()) return;
-
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.first == "undefined") ops.first = true;
-                if (typeof ops.last == "undefined") ops.last = true;
-                if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+                if (!this.isEditable(cell)) return;
 
                 // Set value
-                $(this.dom).html(value);
-                if (!ops.noUpdate) updateRowColCount();
-
-                // Fire change event
-                if (ops.last){
-                    that.fireEvent("change");
-                }
+                $(cell).html(value);
             },
-            clear: function () {
-                this.setValue("");
+            clear: function (cell) {
+                this.setValue(cell, "");
             }
         };
-        this.Cell = Cell;
-
-        /**
-         * Represents a single row or column of a table.  Note that no DOM objects are wrapped
-         * because HTML tables only store data in rows, not both.
-         *
-         * @param{Array<Cell>} - collection of Cell objects to be in the new Vector
-         * @param{String} - either "row" or "col", whichever is applicable
-         */
-        var Vector = function (cells, type) {
-            this.cells = cells;
-            this.type = ((type == "row" || type == "col") ? type : "row");
-        };
-        Vector.prototype = {
-            getCellCount: function () {
-                return this.cells.length;
-            },
-            setEditable: function (optEdit, ops) {
-                // Normalize parameters
-                if (typeof optEdit == "undefined") optEdit = true;
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.start == "undefined") ops.start = 0;
-                if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
-
-                // Set editable
-                var cells = this.cells;
-                forEach({
-                    arr: cells,
-                    start: ops.start,
-                    end: ops.end,
-                    func: function (cell) {
-                        cell.setEditable(optEdit);
-                    }
-                });
-            },
-            isEditable: function () {
-                for (var i = 0; i < this.getCellCount(); i++) {
-                    if (!this.cells[i].isEditable()) return false;
-                }
-                return true;
-            },
-            setHeader: function (header) {
-                for (var i = 0; i < this.getCellCount(); i++) {
-                    this.cells[i].setHeader(header);
-                }
-            },
-            isHeader: function () {
-                for (var i = 0; i < this.getCellCount(); i++) {
-                    if (!this.cells[i].isHeader()) return false;
-                }
-                return true;
-            },
-            select: function (ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.start == "undefined") ops.start = 0;
-                if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
-                if (typeof ops.first == "undefined") ops.first = true;
-                if (typeof ops.last == "undefined") ops.last = true;
-
-                // Loop this.cells and select/deselect
-                this.deselect();
-                var dir = (ops.end - ops.start > 0) ? 1 : -1,
-                    min = Math.min(ops.start, ops.end),
-                    max = Math.max(ops.start, ops.end),
-                    cells = this.cells;
-                forEach({
-                    arr: cells,
-                    start: ops.start,
-                    end: ops.end,
-                    func: function (cell, i) {
-                        var cellOps = {first: false, last: false};
-                        if (ops.first) {
-                            if ((dir == 1 && i == min) || (dir == -1 && i == max)) {
-                                cellOps.first = true;
-                            }
-                        }
-                        if (ops.last) {
-                            if ((dir == 1 && i == max) || (dir == -1 && i == min)) {
-                                cellOps.last = true;
-                            }
-                        }
-                        cell.select(cellOps);
-                    }
-                });
-            },
-            deselect: function (ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.start == "undefined") ops.start = 0;
-                if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
-
-                // Loop this.cells and deselect
-                var cells = this.cells;
-                forEach({
-                    arr: cells,
-                    start: ops.start,
-                    end: ops.end,
-                    func: function (cell) {
-                        cell.deselect();
-                    }
-                });
-            },
-            setValues: function (values, ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.first == "undefined") ops.first = true;
-                if (typeof ops.last == "undefined") ops.last = true;
-                if (typeof ops.offset == "undefined") ops.offset = 0;
-
-                // Set values
-                for (var i = 0; i < values.length && i < this.cells.length - ops.offset; i++) {
-                    var cellOps = {
-                        first: false,
-                        last: false
-                    }
-                    if (i == 0 && ops.first) cellOps.first = true;
-                    if (ops.last){
-                        if (i == this.cells.length - ops.offset - 1 || i == values.length - 1){
-                            if (this.canInsertCell()){
-                                if (i == values.length - 1) cellOps.last = true;
-                            } else {
-                                cellOps.last = true;
-                            }
-                        }
-                    }
-
-                    this.cells[i + ops.offset].setValue(values[i], cellOps);
-                }
-            },
-            clear: function (ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.start == "undefined") ops.start = 0;
-                if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
-
-                // Clear cells
-                var cells = this.cells;
-                forEach({
-                    arr: cells,
-                    start: ops.start,
-                    end: ops.end,
-                    func: function (cell) {
-                        cell.clear();
-                    }
-                });
-            },
-            isClear: function (ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.start == "undefined") ops.start = 0;
-                if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
-
-                // Check cells
-                var cells = this.cells,
-                    clear = true;
-                forEach({
-                    arr: cells,
-                    start: ops.start,
-                    end: ops.end,
-                    func: function (cell) {
-                        if (!cell.isClear()) clear = false;
-                    }
-                });
-                return clear;
-            },
-            getValues: function (ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.start == "undefined") ops.start = 0;
-                if (typeof ops.end == "undefined") ops.end = this.getCellCount() - 1;
-
-                // Loop this.cells and return values in an array
-                var cells = this.cells,
-                    values = [];
-                forEach({
-                    arr: cells,
-                    start: ops.start,
-                    end: ops.end,
-                    func: function (cell) {
-                        values.push(cell.getValue());
-                    }
-                });
-
-                return values;
-            },
-            getSelection: function () {
-                return new Vector(
-                    this.cells.filter(function (cell) {
-                        return cell.selected;
-                    }),
-                    this.type
-                );
-            },
-            getSelectedValues: function () {
-                return this.getSelection().cells.map(function (cell) {
-                    return cell.getValue();
-                });
-            },
-            hasSelection: function () {
-                return this.getSelection().cells.length > 0;
-            },
-            canInsertCell: function(){
-                var options = that.options;
-
-                if (this.type == "row") {
-                    var maxCols = options.maxCols;
-                    if (maxCols != -1 && (this.getCellCount() >= maxCols)) return false;
-                } else {
-                    var maxRows = options.maxRows;
-                    if (maxRows != -1 && (this.getCellCount() >= maxRows)) return false;
-                }
-
-                return true;
-            },
-            insertCell: function (index, ops) {
-                if (!this.canInsertCell()) return;
-
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
-                if (typeof ops.value == "undefined") ops.value = options.initialCellValue;
-
-                // Insert into row
-                var insertOps = {
-                    first: false,
-                    last: false,
-                    noUpdate: true
-                }
-                if (this.type == "row") {
-                    // Create new col
-                    var newCol = new Vector([], "col");
-                    that.cols.splice(index, 0, newCol);
-
-                    // Make cells, add them to rows and col
-                    for (var i = 0; i < that.getRowCount(); i++) {
-                        var row = that.rows[i],
-                            rowDom = that.table.rows[i],
-                            edit = row.isEditable(),
-                            header = row.isHeader(),
-                            cellDom = rowDom.insertCell(index),
-                            cell = new Cell(cellDom);
-
-                        // Configure cell
-                        cell.setEditable(edit);
-                        cell.setHeader(header);
-                        if (row == this) cell.setValue(ops.value, insertOps);
-
-                        // Add cell to rows and col
-                        row.cells.splice(index, 0, cell);
-                        newCol.cells.push(cell);
-                    }
-                }
-                // Insert into col
-                else {
-                    // Create new row
-                    var newRow = new Vector([], "row"),
-                        rowDom = that.table.insertRow(index);
-                    that.rows.splice(index, 0, newRow);
-
-                    // Make cells, and them to cols and row
-                    for (var i = 0; i < that.getColCount(); i++) {
-                        var col = that.cols[i],
-                            edit = col.isEditable(),
-                            header = col.isHeader(),
-                            cellDom = rowDom.insertCell(i),
-                            cell = new Cell(cellDom);
-
-                        // Configure cell
-                        cell.setEditable(edit);
-                        cell.setHeader(header);
-                        if (col == this) cell.setValue(ops.value, insertOps);
-
-                        // Add cell to cols and row
-                        col.cells.splice(index, 0, cell);
-                        newRow.cells.push(cell);
-                    }
-                }
-            },
-            removeCell: function (index) {
-                // Check that options allow for removal
-                var ops = that.options;
-                if (this.type == "row") {
-                    var minCols = ops.minCols;
-                    if (minCols != -1 && (this.getCellCount() <= minCols)) return;
-                } else {
-                    var minRows = ops.minRows;
-                    if (minRows != -1 && (this.getCellCount() <= minRows)) return;
-                }
-
-                // Remove from row
-                if (this.type == "row") {
-                    // Remove cells from rows and dom
-                    for (var i = 0; i < that.getRowCount(); i++) {
-                        that.table.rows[i].deleteCell(index);
-                        that.rows[i].cells.splice(index, 1);
-                    }
-
-                    // Remove col
-                    that.cols.splice(index, 1);
-
-                    // Remove all trs if no cols are left
-                    if (that.cols.length == 0) {
-                        (that.table.tBodies[0] || that.table).innerHTML = "";
-                    }
-                }
-                // Remove from col
-                else {
-                    // Remove cells from cols
-                    for (var i = 0; i < that.getColCount(); i++) {
-                        that.cols[i].cells.splice(index, 1);
-                    }
-
-                    // Remove dom and row
-                    that.table.deleteRow(index);
-                    that.rows.splice(index, 1);
-
-                    // Remove all cols if no rows are left
-                    if (that.rows.length == 0) {
-                        that.cols = [];
-                    }
-                }
-            },
-            setCell: function (index, value, ops) {
-                // Normalize parameters
-                if (typeof ops == "undefined") ops = {};
-                if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
-
-                // Set value
-                this.cells[index].setValue(value, ops);
-            }
-        };
-        this.Vector = Vector;
-
-
-        // Actual EdiTable properties and init begin here
-        this.table = table;
-        this.options = optOptions || {};
-        this.rows = [];
-        this.cols = [];
-        this.events = {
-            change: []
-        };
-
-        normalizeTable(this.table);
-        normalizeOptions(this.options);
-
         this.Selection = {
             originCell: null,
             terminalCell: null,
@@ -837,23 +518,6 @@
         };
         this.Selection.init();
 
-        // Setup rows
-        this.rows = $("tr", this.table).toArray().map(function (tr) {
-            var cells = $(tr.cells).toArray().map(function (td) {
-                return new Cell(td);
-            });
-            return new Vector(cells, "row");
-        });
-        // Setup cols
-        if (this.getRowCount() > 0) {
-            for (var i = 0; i < this.rows[0].cells.length; i++) {
-                var cells = [];
-                for (var j = 0; j < this.getRowCount(); j++) {
-                    cells.push(this.rows[j].cells[i]);
-                }
-                this.cols.push(new Vector(cells, "col"));
-            }
-        }
         // Fix rows and cols
         updateRowColCount();
 
@@ -904,13 +568,9 @@
                 event.clipboardData.setData("text/html", table.outerHTML);
                 event.clipboardData.setData("text/plain", tableText);
 
-                console.log("COPYING");
-
-                //TODO prevent default on table 'focus'.
                 event.preventDefault();
             }
         }
-
         function cutTest(event) {
             if (that.hasFocus()) {
                 copyTest(event);
@@ -929,7 +589,6 @@
                 }
             }
         }
-
         function pasteTest(event) {
             if (that.hasFocus()) {
                 var html, data = [];
@@ -997,7 +656,7 @@
                     var tableWidth = that.getColCount();
                     var tableHeight = that.getRowCount();
 
-                    that.setRowValues(data, {rowOffset: firstCellCoords[0], colOffset: firstCellCoords[1]});
+                    that.setRowValues(data, {rowStart: firstCellCoords[0], colStart: firstCellCoords[1]});
                 }
 
                 event.preventDefault();
@@ -1038,6 +697,12 @@
                 }
             }
         },
+        hasFocus: function () {
+            var activeElement = document.activeElement;
+            var lastClicked = this.lastClicked;
+
+            return $(activeElement).closest(this.table).length == 1 || $(lastClicked).closest(this.table).length == 1;
+        },
         setRenderEnabled: function () {
             var lastStyle,
                 enabled = true;
@@ -1053,10 +718,11 @@
             return setRenderEnabled;
         }(),
         getRowCount: function () {
-            return this.rows.length;
+            return this.table.rows.length;
         },
         getColCount: function () {
-            return this.cols.length;
+            var row = this.table.rows[0];
+            return (row ? row.cells.length : 0);
         },
         setEditable: function (optEdit, ops) {
             // Normalize parameters
@@ -1068,21 +734,27 @@
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Set editable
-            var rows = this.rows;
-            forEach({
-                arr: rows,
-                start: ops.rowStart,
-                end: ops.rowEnd,
-                func: function (row) {
-                    row.setEditable(optEdit, {start: ops.colStart, end: ops.colEnd});
-                }
-            })
+            ops.table = this.table;
+            ops.func = function(cell){
+                cell.contenteditable = (optEdit ? "true" : "false");
+            };
+            forEachTableCell(ops);
         },
-        isEditable: function () {
-            for (var i = 0; i < this.getRowCount(); i++) {
-                if (!this.rows[i].isEditable()) return false;
-            }
-            return true;
+        isEditable: function (ops) {
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart == "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+
+            var editable = true;
+            ops.table = this.table;
+            ops.func = function(cell){
+                if (cell.contenteditable != "true") editable = false;
+            };
+            forEachTableCell(ops);
+            return editable;
         },
         select: function (ops) {
             // Normalize parameters
@@ -1094,32 +766,19 @@
 
             // Do selection
             this.deselect();
-            var rows = this.rows,
-                dir = (ops.rowEnd - ops.rowStart > 0) ? 1 : -1,
-                min = Math.min(ops.rowStart, ops.rowEnd),
-                max = Math.max(ops.rowStart, ops.rowEnd);
-            forEach({
-                arr: rows,
-                start: ops.rowStart,
-                end: ops.rowEnd,
-                func: function (row, i) {
-                    var rowOps = {
-                        start: ops.colStart,
-                        end: ops.colEnd,
-                        first: false,
-                        last: false
-                    };
+            ops.table = this.table;
+            ops.func = function(cell){
+                this.CellManager.select(cell);
+            };
 
-                    if ((dir == 1 && i == min) || (dir == -1 && i == max)) {
-                        rowOps.first = true;
-                    }
-                    if ((dir == 1 && i == max) || (dir == -1 && i == min)) {
-                        rowOps.last = true;
-                    }
+            this.setRenderEnabled(false);
+            var ends = forEachTableCell(ops);
 
-                    row.select(rowOps);
-                }
-            });
+            this.Selection.originCell = ends.first;
+            this.Selection.terminalCell = ends.last;
+
+            updateSelectionBorder();
+            this.setRenderEnabled(true);
         },
         deselect: function (ops) {
             // Normalize parameters
@@ -1130,87 +789,53 @@
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Do deselection
-            var rows = this.rows;
-            forEach({
-                arr: rows,
-                start: ops.rowStart,
-                end: ops.rowEnd,
-                func: function (row) {
-                    row.deselect({start: ops.colStart, end: ops.colEnd});
-                }
-            });
+            ops.table = this.table;
+            ops.func = function(cell){
+                this.CellManager.deselect(cell);
+            };
+            forEachTableCell(ops);
         },
         setRowValues: function (values, ops) {
             // Normalize paramters
             if (!isArrayOfArrays(values)) throw new TypeError("values parameter must be an Array of Arrays");
             if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowOffset == "undefined") ops.rowOffset = 0;
-            if (typeof ops.colOffset == "undefined") ops.colOffset = 0;
+            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+            if (typeof ops.colStart == "undefined") ops.colStart = 0;
 
             // Set values
-            for (var i = 0; i < values.length && i < this.rows.length - ops.rowOffset; i ++){
-                var rowOps = {
-                    first: false,
-                    last: false,
-                    offset: ops.colOffset
-                };
-                if (i == 0) rowOps.first = true;
-                if (i == this.rows.length - ops.rowOffet - 1 || i == values.length - 1){
-                    if (this.rowsCanGrow()){
-                        if (i == values.length - 1) rowOps.last = true;
-                    } else {
-                        rowOps.last = true;
+            var rows = this.table.rows;
+            for (var i = 0; i < values.length && i < rows.length - ops.rowStart; i ++){
+                if (i == rows.length - ops.rowStart - 1 || i == values.length - 1){
+                    if (this.rowsCanGrow()) this.insertRow(i + 1);
+                }
+
+                var row = rows[i];
+                for (var j = 0; j < values[i].length && row.cells.length - ops.colStart; j ++){
+                    if (j == row.cells.length - ops.colStart - 1 || j == values[i].length - 1){
+                        if (this.colsCanGrow()) this.insertCol(j + 1);
+
+                        var cell = row.cells[j];
+                        this.CellManager.setValue(cell, values[i][j]);
                     }
                 }
 
-                this.rows[i + ops.rowOffset].setValues(values[i], rowOps);
+                this.fireEvent("change");
             }
         },
         setColValues: function (values, ops) {
-            // Normalize paramters
-            if (!isArrayOfArrays(values)) throw new TypeError("values parameter must be an Array of Arrays");
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowOffset == "undefined") ops.rowOffset = 0;
-            if (typeof ops.colOffset == "undefined") ops.colOffset = 0;
+            // Flip flop parameters
+            var temp = ops.rowStart;
+            ops.rowStart = ops.colStart;
+            ops.colStart = temp;
+            values = arrayTranspose(values);
 
-            // Set values
-            for (var i = 0; i < values.length && i < this.cols.length - ops.colOffset; i ++){
-                var colOps = {
-                    first: false,
-                    last: false,
-                    offset: ops.rowOffset
-                };
-                if (i == 0) colOps.first = true;
-                if (i == this.cols.length - ops.colOffet - 1 || i == values.length - 1){
-                    if (this.colsCanGrow()){
-                        if (i == values.length - 1) colOps.last = true;
-                    } else {
-                        colOps.last = true;
-                    }
-                }
-
-                this.cols[i + ops.colOffset].setValues(values[i], colOps);
-            }
+            this.setRowValues(values, ops);
         },
         clear: function (ops) {
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
-
-            // Clear
-            var rows = this.rows;
-            forEach({
-                arr: rows,
-                start: ops.rowStart,
-                end: ops.rowEnd,
-                func: function (row) {
-                    row.clear({start: ops.colStart, end: ops.colEnd});
-                }
-            });
+            // TODO
         },
+
+        // <not_done>
         isClear: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
@@ -1231,50 +856,6 @@
                 }
             });
             return clear;
-        },
-        getRowValues: function (ops) {
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
-
-            // Get values
-            var rows = this.rows,
-                rowVals = [];
-            forEach({
-                arr: rows,
-                start: ops.rowStart,
-                end: ops.rowEnd,
-                func: function (row) {
-                    rowVals.push(row.getValues({start: ops.colStart, end: ops.colEnd}));
-                }
-            });
-
-            return rowVals;
-        },
-        getColValues: function (ops) {
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
-
-            // Get values
-            var cols = this.cols,
-                colVals = [];
-            forEach({
-                arr: cols,
-                start: ops.colStart,
-                end: ops.colEnd,
-                func: function (col) {
-                    colVals.push(col.getValues({start: ops.rowStart, end: ops.rowEnd}))
-                }
-            });
-
-            return colVals;
         },
         getSelectedRows: function () {
             var rows = [];
@@ -1304,17 +885,8 @@
                 return col.getValues();
             });
         },
-        hasFocus: function () {
-            var activeElement = document.activeElement;
-            var lastClicked = this.lastClicked;
-
-            return $(activeElement).closest(this.table).length == 1 || $(lastClicked).closest(this.table).length == 1;
-        },
         hasSelection: function () {
             return this.getSelectedRows().length > 0;
-        },
-        rowsCanGrow: function(){
-            return this.options.growRows && this.cols[0].canInsertCell();
         },
         insertRow: function (index, ops) {
             var colCount = this.getColCount();
@@ -1357,9 +929,6 @@
                 }
             }
         },
-        colsCanGrow: function(){
-            return this.options.growCols && this.rows[0].canInsertCell();
-        },
         insertCol: function (index, ops) {
             var rowCount = this.getRowCount();
 
@@ -1400,11 +969,64 @@
                 }
             }
         },
+        // </not_done>
+
+        getRowValues: function (ops) {
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart == "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+
+            // Get values
+            var rows = this.table.rows,
+                rowVals = [];
+
+            // For each row
+            forEach({
+                arr: rows,
+                start: ops.rowStart,
+                end: ops.rowEnd,
+                func: function(row){
+                    // For each cell
+                    var rowVal = [];
+                    forEach({
+                        arr: row,
+                        start: ops.colStart,
+                        end: ops.colEnd,
+                        func: function(cell){
+                            rowVal.push(cell.innerText);
+                        }
+                    })
+                    rowVals.push(rowVal);
+                }
+            });
+
+            return rowVals;
+        },
+        getColValues: function (ops) {
+            return arrayTranspose(this.getRowValues(ops));
+        },
+        rowsCanGrow: function(){
+            var ops = this.options;
+            return ops.growRows && (ops.maxRows == -1 || this.table.rows.length < ops.maxRows);
+        },
+        colsCanGrow: function(){
+            var ops = this.options;
+            return ops.growCols && (ops.maxCols == -1 || this.table.rows[0].cells.length < ops.maxCols);
+        },
         removeRow: function (index) {
-            this.cols[0].removeCell(index);
+            this.table.deleteRow(index);
         },
         removeCol: function (index) {
-            this.rows[0].removeCell(index);
+            var rows = this.table.rows;
+
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+
+                row.deleteCell(index);
+            }
         }
     };
     window.EdiTable = EdiTable;
