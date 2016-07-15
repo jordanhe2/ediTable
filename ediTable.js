@@ -279,7 +279,6 @@
         }
         function normalizeOptions(ops) {
             // Define the undefined
-            if (typeof ops.initialCellValue == "undefined") ops.initialCellValue = "";
             if (typeof ops.minRows == "undefined") ops.minRows = 1;
             if (typeof ops.minCols == "undefined") ops.minCols = 1;
             if (typeof ops.maxRows == "undefined") ops.maxRows = -1;
@@ -301,7 +300,7 @@
         // Context variable
         var that = this;
 
-        // Actual EdiTable properties and init begin here
+        // EdiTable properties
         this.table = table;
         this.options = optOptions || {};
         this.events = {
@@ -372,6 +371,9 @@
             isClear: function (cell) {
                 return cell.innerHTML == "";
             }
+        };
+        this.VectorManager = {
+
         };
         this.Selection = {
             originCell: null,
@@ -882,91 +884,6 @@
 
             return clear;
         },
-
-        // <not_done>
-        insertRow: function (index, ops) {
-            var colCount = this.getColCount();
-
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
-            if (typeof ops.values == "undefined") ops.values = [];
-            while (ops.values.length < colCount) ops.values.push(this.options.initialCellValue);
-
-            // Insert row
-            if (colCount > 0) {
-                this.cols[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
-                this.rows[index].setValues(ops.values, ops);
-            }
-            // If no rows
-            else {
-                // Renormalize parameters
-                if (ops.values.length == 0) ops.values.push(this.options.initialCellValue);
-
-                // Create row and row dom
-                var rowDom = this.table.insertRow(0),
-                    row = new Vector([], "row");
-                this.rows.push(row);
-
-                // Add row, and add column for each optValue
-                for (var i = 0; i < ops.values.length; i++) {
-                    var td = this.table.rows[0].insertCell(-1),
-                        cell = new Cell(td),
-                        col = new Vector([cell], "col");
-
-                    // Set cell value
-                    cell.setValue(ops.values[i], cellOps);
-
-                    // Add cell to row
-                    row.cells.push(cell);
-
-                    // Push col to cols
-                    this.cols.push(col);
-                }
-            }
-        },
-        insertCol: function (index, ops) {
-            var rowCount = this.getRowCount();
-
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
-            if (typeof ops.values == "undefined") ops.values = [];
-            while (ops.values.length < rowCount) ops.values.push(this.options.initialCellValue);
-
-            // Insert row
-            if (rowCount > 0) {
-                this.rows[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
-                this.cols[index].setValues(ops.values, ops);
-            }
-            // If no cols
-            else {
-                // Renormalize parameters
-                if (ops.values.length == 0) ops.values.push(this.options.initialCellValue);
-
-                // Create col
-                var col = new Vector([], "col");
-                this.cols.push(col);
-
-                for (var i = 0; i < ops.values.length; i++) {
-                    var rowDom = this.table.insertRow(-1),
-                        cellDom = rowDom.insertCell(-1),
-                        cell = new Cell(cellDom),
-                        row = new Vector([cell], "row");
-
-                    // Set cell value
-                    cell.setValue(ops.values[i], cellOps);
-
-                    // Add cell to col
-                    col.cells.push(cell);
-
-                    // Push row to rows
-                    this.rows.push(row);
-                }
-            }
-        },
-        // </not_done>
-
         getSelectedRows: function () {
             var rows = [];
             for (var i = 0; i < this.getRowCount(); i++) {
@@ -1040,13 +957,122 @@
         getColValues: function (ops) {
             return arrayTranspose(this.getRowValues(ops));
         },
+        canInsertRow: function () {
+            return (this.options.maxRows == -1 || this.table.rows.length < this.options.maxRows);
+        },
+        canInsertCol: function () {
+            return (this.options.maxCols == -1 || this.table.rows[0].cells.length < this.options.maxCols)
+        },
         rowsCanGrow: function(){
-            var ops = this.options;
-            return ops.growRows && (ops.maxRows == -1 || this.table.rows.length < ops.maxRows);
+            return this.options.growRows && this.canInsertRow();
         },
         colsCanGrow: function(){
             var ops = this.options;
-            return ops.growCols && (ops.maxCols == -1 || this.table.rows[0].cells.length < ops.maxCols);
+            return ops.growCols && this.canInsertCol();
+        },
+        insertRow: function (index, ops) {
+            /*var colCount = this.getColCount();
+
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+            if (typeof ops.values == "undefined") ops.values = [];
+            while (ops.values.length < colCount) ops.values.push(this.options.initialCellValue);
+
+            // Insert row
+            if (colCount > 0) {
+                this.cols[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
+                this.rows[index].setValues(ops.values, ops);
+            }
+            // If no rows
+            else {
+                // Renormalize parameters
+                if (ops.values.length == 0) ops.values.push(this.options.initialCellValue);
+
+                // Create row and row dom
+                var rowDom = this.table.insertRow(0),
+                    row = new Vector([], "row");
+                this.rows.push(row);
+
+                // Add row, and add column for each optValue
+                for (var i = 0; i < ops.values.length; i++) {
+                    var td = this.table.rows[0].insertCell(-1),
+                        cell = new Cell(td),
+                        col = new Vector([cell], "col");
+
+                    // Set cell value
+                    cell.setValue(ops.values[i], cellOps);
+
+                    // Add cell to row
+                    row.cells.push(cell);
+
+                    // Push col to cols
+                    this.cols.push(col);
+                }
+            }*/
+            if (!this.canInsertRow()) return;
+
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.values == "undefined") ops.values = [];
+            //if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+            while (ops.values.length < this.getRowCount()) ops.values.push("");
+
+            // Insert row
+            var newRow = this.table.insertRow(index);
+
+            // Add cells and set values
+            //for (var i = 0; i < ops.values.length || )
+        },
+        insertCol: function (index, ops) {
+            /*var rowCount = this.getRowCount();
+
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+            if (typeof ops.values == "undefined") ops.values = [];
+            while (ops.values.length < rowCount) ops.values.push(this.options.initialCellValue);
+
+            // Insert row
+            if (rowCount > 0) {
+                this.rows[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
+                this.cols[index].setValues(ops.values, ops);
+            }
+            // If no cols
+            else {
+                // Renormalize parameters
+                if (ops.values.length == 0) ops.values.push(this.options.initialCellValue);
+
+                // Create col
+                var col = new Vector([], "col");
+                this.cols.push(col);
+
+                for (var i = 0; i < ops.values.length; i++) {
+                    var rowDom = this.table.insertRow(-1),
+                        cellDom = rowDom.insertCell(-1),
+                        cell = new Cell(cellDom),
+                        row = new Vector([cell], "row");
+
+                    // Set cell value
+                    cell.setValue(ops.values[i], cellOps);
+
+                    // Add cell to col
+                    col.cells.push(cell);
+
+                    // Push row to rows
+                    this.rows.push(row);
+                }
+            }*/
+            if (!this.canInsertCol()) return;
+
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.values == "undefined") ops.values = [];
+            //if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
+            while (ops.values.length < this.getColCount()) ops.values.push("");
+
+            // Insert col and set values
+            // ...
         },
         removeRow: function (index) {
             this.table.deleteRow(index);
