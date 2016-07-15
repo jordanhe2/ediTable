@@ -2,7 +2,7 @@
     "use strict";
 
     // UTILITIES
-    function arrayTranspose (array) {
+    function arrayTranspose(array) {
         array = array[0].map(function(col, i) {
             return array.map(function(row) {
                 return row[i]
@@ -157,29 +157,32 @@
         }
         function updateSelectionBorder() {
             // Update border
-            var rows = that.getRowCount(),
-                cols = that.getColCount();
+            var table = that.table,
+                rows = that.table.rows,
+                rowCount = that.getRowCount(),
+                colCount = that.getColCount(),
+                cm = that.CellManager;
 
-            for (var i = 0; i < rows; i++) {
-                var row = that.rows[i];
-                for (var j = 0; j < cols; j++) {
+            for (var i = 0; i < rowCount; i++) {
+                var row = that.table.rows[i];
+                for (var j = 0; j < colCount; j++) {
                     var cell = row.cells[j],
-                        cellDom = $(cell.dom);
+                        jqCell = $(cell);
 
-                    if (!cell.selected) continue;
+                    if (!that.CellManager.isSelected(cell)) continue;
 
                     // Top border
-                    cellDom.toggleClass("ediTable-cell-selected-top",
-                        (i == 0 || !that.rows[i - 1].cells[j].selected));
+                    jqCell.toggleClass("ediTable-cell-selected-top",
+                        (i == 0 || !cm.isSelected(rows[i - 1].cells[j])));
                     // Bottom border
-                    cellDom.toggleClass("ediTable-cell-selected-bottom",
-                        (i == (rows - 1) || !that.rows[i + 1].cells[j].selected));
+                    jqCell.toggleClass("ediTable-cell-selected-bottom",
+                        (i == (rowCount - 1) || !cm.isSelected(rows[i + 1].cells[j])));
                     // Left border
-                    cellDom.toggleClass("ediTable-cell-selected-left",
-                        (j == 0 || !row.cells[j - 1].selected));
+                    jqCell.toggleClass("ediTable-cell-selected-left",
+                        (j == 0 || !cm.isSelected(row.cells[j - 1])));
                     // Right border
-                    cellDom.toggleClass("ediTable-cell-selected-right",
-                        (j == (cols - 1) || !row.cells[j + 1].selected));
+                    jqCell.toggleClass("ediTable-cell-selected-right",
+                        (j == (colCount - 1) || !cm.isSelected(row.cells[j + 1])));
                 }
             }
         }
@@ -340,7 +343,6 @@
                 return cell.tagName.toLowerCase() == "th";
             },
             select: function (cell) {
-                // Mark as selected
                 $(cell).addClass("ediTable-cell-selected");
             },
             deselect: function (cell) {
@@ -351,8 +353,8 @@
                     .removeClass("ediTable-cell-selected-top")
                     .removeClass("ediTable-cell-selected-bottom");
             },
-            isClear: function (cell) {
-                return cell.innerHTML == "";
+            isSelected: function (cell) {
+                $(cell).hasClass("ediTable-cell-selected");
             },
             getValue: function (cell) {
                 return cell.innerText;
@@ -366,6 +368,9 @@
             },
             clear: function (cell) {
                 this.setValue(cell, "");
+            },
+            isClear: function (cell) {
+                return cell.innerHTML == "";
             }
         };
         this.Selection = {
@@ -519,7 +524,7 @@
         this.Selection.init();
 
         // Fix rows and cols
-        updateRowColCount();
+        //updateRowColCount();
 
         // Add CSS
         $(this.table).addClass("ediTable");
@@ -768,7 +773,7 @@
             this.deselect();
             ops.table = this.table;
             ops.func = function(cell){
-                this.CellManager.select(cell);
+                that.CellManager.select(cell);
             };
 
             this.setRenderEnabled(false);
@@ -791,7 +796,7 @@
             // Do deselection
             ops.table = this.table;
             ops.func = function(cell){
-                this.CellManager.deselect(cell);
+                that.CellManager.deselect(cell);
             };
             forEachTableCell(ops);
         },
@@ -834,8 +839,6 @@
         clear: function (ops) {
             // TODO
         },
-
-        // <not_done>
         isClear: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
@@ -845,49 +848,17 @@
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Check rows
-            var rows = this.rows,
-                clear = true;
-            forEach({
-                arr: rows,
-                start: ops.rowStart,
-                end: ops.rowEnd,
-                func: function (row) {
-                    if (!row.isClear(ops.colStart, ops.colEnd)) clear = false;
-                }
-            });
+            var clear = true;
+            ops.table = this.table;
+            ops.func = function(cell){
+                if (!that.CellManager.isClear(cell)) clear = false;
+            }
+            forEachTableCell(ops);
+
             return clear;
         },
-        getSelectedRows: function () {
-            var rows = [];
-            for (var i = 0; i < this.getRowCount(); i++) {
-                if (this.rows[i].hasSelection()) {
-                    rows.push(this.rows[i].getSelection());
-                }
-            }
-            return rows;
-        },
-        getSelectedCols: function () {
-            var cols = [];
-            for (var i = 0; i < this.getColCount(); i++) {
-                if (this.cols[i].hasSelection()) {
-                    cols.push(this.cols[i].getSelection());
-                }
-            }
-            return cols;
-        },
-        getSelectedRowValues: function () {
-            return this.getSelectedRows().map(function (row) {
-                return row.getValues();
-            });
-        },
-        getSelectedColValues: function () {
-            return this.getSelectedCols().map(function (col) {
-                return col.getValues();
-            });
-        },
-        hasSelection: function () {
-            return this.getSelectedRows().length > 0;
-        },
+
+        // <not_done>
         insertRow: function (index, ops) {
             var colCount = this.getColCount();
 
@@ -971,6 +942,40 @@
         },
         // </not_done>
 
+        getSelectedRows: function () {
+            var rows = [];
+            for (var i = 0; i < this.getRowCount(); i++) {
+                var row = [],
+                    cells = this.table.rows[i].cells;
+
+                for (var j = 0; j < cells.length; j ++) {
+                    if (this.CellManager.isSelected(cells[j])) row.push(cells[j]);
+                }
+
+                if (row.length > 0) rows.push(row);
+            }
+            return rows;
+        },
+        getSelectedCols: function () {
+            return arrayTranspose(this.getSelectedRows());
+        },
+        getSelectedRowValues: function () {
+            return this.getSelectedRows().map(function(row) {
+                return row.map(function(cell) {
+                    return that.CellManager.getValue(cell);
+                })
+            });
+        },
+        getSelectedColValues: function () {
+            return this.getSelectedCols().map(function(col) {
+                return col.map(function(cell) {
+                    return that.CellManager.getValue(cell);
+                })
+            });
+        },
+        hasSelection: function () {
+            return this.getSelectedRows().length > 0;
+        },
         getRowValues: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
