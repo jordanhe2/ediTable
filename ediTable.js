@@ -186,9 +186,8 @@
                 }
             }
         }
-        function updateRowColCount() {
-            var ops = that.options,
-                insertOps = {noUpdate: true};
+        function fixMinMax(){
+            var ops = that.options;
 
             // Ensure maxes are good
             if (ops.maxRows > -1) {
@@ -204,26 +203,23 @@
 
             // Ensure mins are good
             while (that.getRowCount() < ops.minRows) {
-                that.insertRow(that.getRowCount(), insertOps);
+                that.insertRow(that.getRowCount());
             }
             while (that.getColCount() < ops.minCols) {
-                that.insertCol(that.getColCount(), insertOps);
+                that.insertCol(that.getColCount());
             }
+        }
+        function updateSize() {
+            var ops = that.options,
+                vm = that.VectorManager;
 
             // Grow rows
-            if (ops.growRows) {
-                var lastRowClear = that.rows[that.getRowCount() - 1].isClear();
-                if (!lastRowClear && (ops.maxRows == -1 || that.getRowCount() < ops.maxRows)) {
-                    that.insertRow(that.getRowCount(), insertOps);
-                }
-            }
+            var lastRowClear = vm.isClear(that.getRow(that.getRowCount() - 1));
+            if (!lastRowClear && that.rowsCanGrow()) that.insertRow(that.getRowCount());
             // Grow cols
-            if (ops.growCols){
-                var lastColClear = that.cols[that.getColCount() - 1].isClear();
-                if (!lastColClear && (ops.maxCols == -1 || that.getColCount() < ops.maxCols)){
-                    that.insertCol(that.getColCount(), insertOps);
-                }
-            }
+            var lastColClear = vm.isClear(that.getCol(that.getColCount() - 1));
+            if (!lastColClear && that.colsCanGrow()) that.insertCol(that.getColCount());
+
             // Shrink rows
             if (ops.shrinkRows) {
                 if (ops.rowsAllowMiddleShrink){
@@ -231,7 +227,7 @@
                     while (that.getRowCount() > ops.minRows){
                         var rowStart = that.getRowCount() - (ops.growRows ? 2 : 1),
                             rowIndex = rowStart - i;
-                        if (rowIndex >= 0 && that.rows[rowIndex].isClear()){
+                        if (rowIndex >= 0 && vm.isClear(that.getRow(rowIndex))){
                             that.removeRow(rowIndex);
                         } else {
                             i ++;
@@ -242,7 +238,7 @@
                 } else {
                     while (that.getRowCount() > ops.minRows){
                         var rowIndex = that.getRowCount() - (ops.growRows ? 2 : 1);
-                        if (rowIndex >= 0 && that.rows[rowIndex].isClear()){
+                        if (rowIndex >= 0 && vm.isClear(that.getRow(rowIndex))){
                             that.removeRow(rowIndex);
                         } else {
                             break;
@@ -257,7 +253,7 @@
                     while (that.getColCount() > ops.minCols){
                         var colStart = that.getColCount() - (ops.growCols ? 2 : 1),
                             colIndex = colStart - i;
-                        if (colIndex >= 0 && that.cols[colIndex].isClear()){
+                        if (colIndex >= 0 && vm.isClear(that.getCol(colIndex))){
                             that.removeCol(colIndex);
                         } else {
                             i ++;
@@ -268,7 +264,7 @@
                 } else {
                     while (that.getColCount() > ops.minCols){
                         var colIndex = that.getColCount() - (ops.growCols ? 2 : 1);
-                        if (colIndex >= 0 && that.cols[colIndex].isClear()){
+                        if (colIndex >= 0 && vm.isClear(that.getCol(colIndex))){
                             that.removeCol(colIndex);
                         } else {
                             break;
@@ -316,10 +312,10 @@
                 if (typeof optEdit == "undefined") optEdit = true;
 
                 // Set editable
-                cell.contenteditable = optEdit ? "true" : "false";
+                cell.contentEditable = optEdit;
             },
             isEditable: function (cell) {
-                return cell.contenteditable == "true";
+                return cell.isContentEditable;
             },
             setHeader: function (cell, optHeader) {
                 if (typeof optHeader == "undefined") optHeader = true;
@@ -364,6 +360,7 @@
 
                 // Set value
                 $(cell).html(value);
+                updateSize();
             },
             clear: function (cell) {
                 this.setValue(cell, "");
@@ -373,7 +370,32 @@
             }
         };
         this.VectorManager = {
+            getValues: function(cells){
+                return cells.map(function(cell){
+                    return that.CellManager.getValue(cell);
+                });
+            },
+            isHeader: function(cells){
+                for (var i = 0; i < cells.length; i++) {
+                    if (!that.CellManager.isHeader(cells[i])) return false;
+                }
 
+                return true;
+            },
+            isEditable: function(cells){
+                for (var i = 0; i < cells.length; i++) {
+                    if (!that.CellManager.isEditable(cells[i])) return false;
+                }
+
+                return true;
+            },
+            isClear: function(cells){
+                for (var i = 0; i < cells.length; i++) {
+                    if (!that.CellManager.isClear(cells[i])) return false;
+                }
+
+                return true;
+            }
         };
         this.Selection = {
             originCell: null,
@@ -728,8 +750,14 @@
             return this.table.rows.length;
         },
         getColCount: function () {
-            var row = this.table.rows[0];
-            return (row ? row.cells.length : 0);
+            var max = 0,
+                rows = this.table.rows;
+
+            for (var i = 0; i < rows.length; i ++){
+                max = Math.max(max, rows[i].cells.length);
+            }
+
+            return max;
         },
         setEditable: function (optEdit, ops) {
             // Normalize parameters
@@ -741,9 +769,10 @@
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Set editable
+            var that = this;
             ops.table = this.table;
             ops.func = function(cell){
-                cell.contenteditable = (optEdit ? "true" : "false");
+                that.CellManager.setEditable(cell, optEdit);
             };
             forEachTableCell(ops);
         },
@@ -755,10 +784,11 @@
             if (typeof ops.colStart == "undefined") ops.colStart = 0;
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
 
-            var editable = true;
+            var editable = true,
+                that = this;
             ops.table = this.table;
             ops.func = function(cell){
-                if (cell.contenteditable != "true") editable = false;
+                if (!that.CellManager.isEditable(cell)) editable = false;
             };
             forEachTableCell(ops);
             return editable;
@@ -814,22 +844,15 @@
             // Set values
             var rows = this.table.rows;
             for (var i = 0; i < values.length && i < rows.length - ops.rowStart; i ++){
-                if (i == rows.length - ops.rowStart - 1 || i == values.length - 1){
-                    if (this.rowsCanGrow()) this.insertRow(i + 1);
-                }
+                var row = rows[i + ops.rowStart];
 
-                var row = rows[i];
                 for (var j = 0; j < values[i].length && row.cells.length - ops.colStart; j ++){
-                    if (j == row.cells.length - ops.colStart - 1 || j == values[i].length - 1){
-                        if (this.colsCanGrow()) this.insertCol(j + 1);
-
-                        var cell = row.cells[j];
-                        this.CellManager.setValue(cell, values[i][j]);
-                    }
+                    var cell = row.cells[j + ops.colStart];
+                    this.CellManager.setValue(cell, values[i][j]);
                 }
-
-                this.fireEvent("change");
             }
+
+            this.fireEvent("change");
         },
         setColValues: function (values, ops) {
             // Normalize paramters
@@ -920,7 +943,26 @@
         hasSelection: function () {
             return this.getSelectedRows().length > 0;
         },
-        getRowValues: function (ops) {
+        getRow: function (index, ops) {
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.colStart == "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+
+            var cells = [],
+                row = this.table.rows[index];
+
+            forEach({
+                arr: row.cells,
+                start: ops.colStart,
+                end: ops.colEnd,
+                func: function(cell){
+                    cells.push(cell);
+                }
+            });
+
+            return cells;
+        },
+        getRows: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -930,29 +972,48 @@
 
             // Get values
             var rows = this.table.rows,
-                rowVals = [];
+                rowVals = [],
+                that = this;
 
             // For each row
             forEach({
                 arr: rows,
                 start: ops.rowStart,
                 end: ops.rowEnd,
-                func: function(row){
-                    // For each cell
-                    var rowVal = [];
-                    forEach({
-                        arr: row,
-                        start: ops.colStart,
-                        end: ops.colEnd,
-                        func: function(cell){
-                            rowVal.push(cell.innerText);
-                        }
-                    })
+                func: function(row, index){
+                    var rowVal = that.getRow(index, ops);
+
                     rowVals.push(rowVal);
                 }
             });
 
             return rowVals;
+        },
+        getRowValues: function (ops) {
+            var that = this;
+            return this.getRows(ops).map(function(row){
+                return that.VectorManager.getValues(row);
+            });
+        },
+        getCol: function(index, ops){
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+
+            var cells = [];
+
+            ops.table = this.table;
+            ops.colStart = index;
+            ops.colEnd = index;
+            ops.func = function (cell){
+                cells.push(cell);
+            };
+            forEachTableCell(ops);
+
+            return cells;
+        },
+        getCols: function(ops){
+            return arrayTranspose(this.getCols(ops));
         },
         getColValues: function (ops) {
             return arrayTranspose(this.getRowValues(ops));
@@ -971,108 +1032,62 @@
             return ops.growCols && this.canInsertCol();
         },
         insertRow: function (index, ops) {
-            /*var colCount = this.getColCount();
-
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
-            if (typeof ops.values == "undefined") ops.values = [];
-            while (ops.values.length < colCount) ops.values.push(this.options.initialCellValue);
-
-            // Insert row
-            if (colCount > 0) {
-                this.cols[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
-                this.rows[index].setValues(ops.values, ops);
-            }
-            // If no rows
-            else {
-                // Renormalize parameters
-                if (ops.values.length == 0) ops.values.push(this.options.initialCellValue);
-
-                // Create row and row dom
-                var rowDom = this.table.insertRow(0),
-                    row = new Vector([], "row");
-                this.rows.push(row);
-
-                // Add row, and add column for each optValue
-                for (var i = 0; i < ops.values.length; i++) {
-                    var td = this.table.rows[0].insertCell(-1),
-                        cell = new Cell(td),
-                        col = new Vector([cell], "col");
-
-                    // Set cell value
-                    cell.setValue(ops.values[i], cellOps);
-
-                    // Add cell to row
-                    row.cells.push(cell);
-
-                    // Push col to cols
-                    this.cols.push(col);
-                }
-            }*/
             if (!this.canInsertRow()) return;
 
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.values == "undefined") ops.values = [];
-            //if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
-            while (ops.values.length < this.getRowCount()) ops.values.push("");
+            while (ops.values.length < this.getColCount()) ops.values.push("");
 
             // Insert row
-            var newRow = this.table.insertRow(index);
+            var newRow = this.table.insertRow(index),
+                prevRow = index > 0 ? this.getRow(index - 1) : null,
+                nextRow = index < this.getRowCount() - 1 ? this.getRow(index + 1) : null,
+                isEditable = (prevRow ? this.VectorManager.isEditable(prevRow) : true) &&
+                    (nextRow ? this.VectorManager.isEditable(nextRow) : true),
+                isHeader = (prevRow ? this.VectorManager.isHeader(prevRow) : true) &&
+                    (nextRow ? this.VectorManager.isHeader(nextRow) : true);
 
-            // Add cells and set values
-            //for (var i = 0; i < ops.values.length || )
+            // Add cells
+            for (var i = 0; i < this.getColCount(); i++) {
+                var cell = newRow.insertCell(i);
+
+                this.CellManager.setEditable(cell, isEditable);
+                // Call set header last to not lose cell reference
+                this.CellManager.setHeader(cell, isHeader);
+            }
+
+            this.setRowValues([ops.values], {
+                rowStart: index
+            });
         },
         insertCol: function (index, ops) {
-            /*var rowCount = this.getRowCount();
-
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
-            if (typeof ops.values == "undefined") ops.values = [];
-            while (ops.values.length < rowCount) ops.values.push(this.options.initialCellValue);
-
-            // Insert row
-            if (rowCount > 0) {
-                this.rows[0].insertCell(index, {value: ops.values[0], noUpdate: ops.noUpdate});
-                this.cols[index].setValues(ops.values, ops);
-            }
-            // If no cols
-            else {
-                // Renormalize parameters
-                if (ops.values.length == 0) ops.values.push(this.options.initialCellValue);
-
-                // Create col
-                var col = new Vector([], "col");
-                this.cols.push(col);
-
-                for (var i = 0; i < ops.values.length; i++) {
-                    var rowDom = this.table.insertRow(-1),
-                        cellDom = rowDom.insertCell(-1),
-                        cell = new Cell(cellDom),
-                        row = new Vector([cell], "row");
-
-                    // Set cell value
-                    cell.setValue(ops.values[i], cellOps);
-
-                    // Add cell to col
-                    col.cells.push(cell);
-
-                    // Push row to rows
-                    this.rows.push(row);
-                }
-            }*/
             if (!this.canInsertCol()) return;
 
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.values == "undefined") ops.values = [];
-            //if (typeof ops.noUpdate == "undefined") ops.noUpdate = false;
             while (ops.values.length < this.getColCount()) ops.values.push("");
 
-            // Insert col and set values
-            // ...
+            // Insert col
+            var prevCol = index > 0 ? this.getCol(index - 1) : null,
+                nextCol = index < this.getColCount() - 1 ? this.getCol(index + 1) : null,
+                isEditable = (prevCol ? this.VectorManager.isEditable(prevCol) : true) &&
+                    (nextCol ? this.VectorManager.isEditable(nextCol) : true),
+                isHeader = (prevCol ? this.VectorManager.isHeader(prevCol) : true) &&
+                    (nextCol ? this.VectorManager.isHeader(nextCol) : true);
+
+            for (var i = 0; i < this.getRowCount(); i ++){
+                var cell = this.table.rows[i].insertCell(index);
+
+                this.CellManager.setEditable(cell, isEditable);
+                this.CellManager.setHeader(cell, isHeader);
+            }
+
+            // Set values
+            this.setColValues([ops.values], {
+                colStart: index
+            })
         },
         removeRow: function (index) {
             this.table.deleteRow(index);
