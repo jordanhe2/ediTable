@@ -11,20 +11,14 @@
 
         return array;
     }
+    function toArray(arrayLikeItem){
+        return Array.apply(null, arrayLikeItem);
+    }
     function tableToArray(table){
         var rows = table.rows,
             arr = [];
 
-        for (var i = 0; i < rows.length; i ++){
-            var row = rows[i];
-
-            arr[i] = [];
-            for (var j = 0; j < row.cells.length; j ++) {
-                var cell = row.cells[j];
-
-                arr[i][j] = cell;
-            }
-        }
+        for (var i = 0; i < rows.length; i ++) arr[i] = toArray(rows[i].cells);
 
         return arr;
     }
@@ -370,6 +364,11 @@
             }
         };
         this.VectorManager = {
+            getSelection: function(cells){
+                return cells.filter(function(cell){
+                    return that.CellManager.isSelected(cell);
+                });
+            },
             getValues: function(cells){
                 return cells.map(function(cell){
                     return that.CellManager.getValue(cell);
@@ -907,39 +906,6 @@
 
             return clear;
         },
-        getSelectedRows: function () {
-            var rows = [];
-            for (var i = 0; i < this.getRowCount(); i++) {
-                var row = [],
-                    cells = this.table.rows[i].cells;
-
-                for (var j = 0; j < cells.length; j ++) {
-                    if (this.CellManager.isSelected(cells[j])) row.push(cells[j]);
-                }
-
-                if (row.length > 0) rows.push(row);
-            }
-            return rows;
-        },
-        getSelectedCols: function () {
-            return arrayTranspose(this.getSelectedRows());
-        },
-        getSelectedRowValues: function () {
-            var that = this;
-            return this.getSelectedRows().map(function(row) {
-                return row.map(function(cell) {
-                    return that.CellManager.getValue(cell);
-                })
-            });
-        },
-        getSelectedColValues: function () {
-            var that = this;
-            return this.getSelectedCols().map(function(col) {
-                return col.map(function(cell) {
-                    return that.CellManager.getValue(cell);
-                })
-            });
-        },
         hasSelection: function () {
             return this.getSelectedRows().length > 0;
         },
@@ -981,17 +947,31 @@
                 start: ops.rowStart,
                 end: ops.rowEnd,
                 func: function(row, index){
-                    var rowVal = that.getRow(index, ops);
-
-                    rowVals.push(rowVal);
+                    rowVals.push(that.getRow(index, ops));
                 }
             });
 
             return rowVals;
         },
+        getSelectedRows: function () {
+            var rows = [];
+            for (var i = 0; i < this.getRowCount(); i++) {
+                var row = toArray(this.table.rows[i].cells),
+                    rowSelection = this.VectorManager.getSelection(row);
+
+                if (rowSelection.length > 0) rows.push(rowSelection);
+            }
+            return rows;
+        },
         getRowValues: function (ops) {
             var that = this;
             return this.getRows(ops).map(function(row){
+                return that.VectorManager.getValues(row);
+            });
+        },
+        getSelectedRowValues: function () {
+            var that = this;
+            return this.getSelectedRows().map(function(row) {
                 return that.VectorManager.getValues(row);
             });
         },
@@ -1013,10 +993,16 @@
             return cells;
         },
         getCols: function(ops){
-            return arrayTranspose(this.getCols(ops));
+            return arrayTranspose(this.getRows(ops));
+        },
+        getSelectedCols: function () {
+            return arrayTranspose(this.getSelectedRows());
         },
         getColValues: function (ops) {
             return arrayTranspose(this.getRowValues(ops));
+        },
+        getSelectedColValues: function () {
+            return arrayTranspose(this.getSelectedRowValues());
         },
         canInsertRow: function () {
             return (this.options.maxRows == -1 || this.table.rows.length < this.options.maxRows);
