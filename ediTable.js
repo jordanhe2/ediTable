@@ -149,37 +149,6 @@
                 }
             }
         }
-        function updateSelectionBorder() {
-            // Update border
-            var table = that.table,
-                rows = that.table.rows,
-                rowCount = that.getRowCount(),
-                colCount = that.getColCount(),
-                cm = that.CellManager;
-
-            for (var i = 0; i < rowCount; i++) {
-                var row = that.table.rows[i];
-                for (var j = 0; j < colCount; j++) {
-                    var cell = row.cells[j],
-                        jqCell = $(cell);
-
-                    if (!cm.isSelected(cell)) continue;
-
-                    // Top border
-                    jqCell.toggleClass("ediTable-cell-selected-top",
-                        (i == 0 || !cm.isSelected(rows[i - 1].cells[j])));
-                    // Bottom border
-                    jqCell.toggleClass("ediTable-cell-selected-bottom",
-                        (i == (rowCount - 1) || !cm.isSelected(rows[i + 1].cells[j])));
-                    // Left border
-                    jqCell.toggleClass("ediTable-cell-selected-left",
-                        (j == 0 || !cm.isSelected(row.cells[j - 1])));
-                    // Right border
-                    jqCell.toggleClass("ediTable-cell-selected-right",
-                        (j == (colCount - 1) || !cm.isSelected(row.cells[j + 1])));
-                }
-            }
-        }
         function fixMinMax(){
             var ops = that.options;
 
@@ -814,8 +783,40 @@
             this.Selection.originCell = ends.first;
             this.Selection.terminalCell = ends.last;
 
-            //updateSelectionBorder();
+            updateSelectionBorder();
             this.setRenderEnabled(true);
+
+            var that = this;
+            function updateSelectionBorder(){
+                var table = that.table,
+                    rows = that.table.rows,
+                    rowCount = that.getRowCount(),
+                    colCount = that.getColCount(),
+                    cm = that.CellManager;
+
+                for (var i = 0; i < rowCount; i++) {
+                    var row = that.table.rows[i];
+                    for (var j = 0; j < colCount; j++) {
+                        var cell = row.cells[j],
+                            jqCell = $(cell);
+
+                        if (!cm.isSelected(cell)) continue;
+
+                        // Top border
+                        jqCell.toggleClass("ediTable-cell-selected-top",
+                            (i == 0 || !cm.isSelected(rows[i - 1].cells[j])));
+                        // Bottom border
+                        jqCell.toggleClass("ediTable-cell-selected-bottom",
+                            (i == (rowCount - 1) || !cm.isSelected(rows[i + 1].cells[j])));
+                        // Left border
+                        jqCell.toggleClass("ediTable-cell-selected-left",
+                            (j == 0 || !cm.isSelected(row.cells[j - 1])));
+                        // Right border
+                        jqCell.toggleClass("ediTable-cell-selected-right",
+                            (j == (colCount - 1) || !cm.isSelected(row.cells[j + 1])));
+                    }
+                }
+            }
         },
         deselect: function (ops) {
             // Normalize parameters
