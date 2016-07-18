@@ -439,8 +439,8 @@
                     if (that.hasSelection()) {
                         var moveOrigin = !e.shiftKey,
                             jumpTerminal = !(e.shiftKey || e.ctrlKey),
-                            originCoords = selection.getCoords(selection.originCell.dom),
-                            terminalCoords = selection.getCoords(selection.terminalCell.dom);
+                            originCoords = selection.getCoords(selection.originCell),
+                            terminalCoords = selection.getCoords(selection.terminalCell);
 
                         var deltaCoords = {
                             x: 0,
@@ -516,7 +516,8 @@
         this.Selection.init();
 
         // Fix rows and cols
-        //updateRowColCount();
+        fixMinMax();
+        updateSize();
 
         // Add CSS
         $(this.table).addClass("ediTable");
@@ -762,6 +763,9 @@
             return editable;
         },
         select: function (ops) {
+            this.setRenderEnabled(false);
+
+
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -776,18 +780,13 @@
             ops.func = function(cell){
                 that.CellManager.select(cell);
             };
-
-            this.setRenderEnabled(false);
             var ends = forEachTableCell(ops);
 
             this.Selection.originCell = ends.first;
             this.Selection.terminalCell = ends.last;
 
-            updateSelectionBorder();
-            this.setRenderEnabled(true);
-
             var that = this;
-            function updateSelectionBorder(){
+            (function updateSelectionBorder(){
                 var table = that.table,
                     rows = that.table.rows,
                     rowCount = that.getRowCount(),
@@ -816,7 +815,10 @@
                             (j == (colCount - 1) || !cm.isSelected(row.cells[j + 1])));
                     }
                 }
-            }
+            })();
+
+
+            this.setRenderEnabled(true);
         },
         deselect: function (ops) {
             // Normalize parameters
