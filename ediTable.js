@@ -363,6 +363,11 @@
                 }
 
                 return true;
+            },
+            clear: function(cells){
+                for (var i = 0; i < cells.length; i ++){
+                    that.CellManager.clear(cells[i]);
+                }
             }
         };
         this.Selection = {
@@ -525,27 +530,26 @@
 
         function copyTest(event) {
             if (that.hasFocus()) {
-                //Get html of selected.
-                var rows = that.getSelectedRows();
-                var table = document.createElement("table");
+                // Get html of selected.
+                var rows = that.getSelectedRows(),
+                    table = document.createElement("table");
 
                 for (var i = 0; i < rows.length; i++) {
-                    var row = rows[i];
-                    var selection = row.getSelection();
-                    var rowDom = document.createElement("tr");
+                    var row = rows[i],
+                        rowDom = document.createElement("tr");
 
-                    for (var j = 0; j < selection.getCellCount(); j++) {
-                        var cell = selection.cells[j];
-                        var cellDom = cell.dom;
+                    for (var j = 0; j < row.length; j++) {
+                        var cell = row[j];
 
-                        rowDom.appendChild($(cellDom).clone()[0]);
+                        rowDom.appendChild($(cell).clone()[0]);
                     }
 
                     table.appendChild(rowDom);
                 }
 
-                var tableText = "";
-                var selectedValues = that.getSelectedRowValues();
+                // Get text of selected
+                var tableText = "",
+                    selectedValues = that.getSelectedRowValues();
 
                 for (var i = 0; i < selectedValues.length; i++) {
                     var rowValues = selectedValues[i];
@@ -571,20 +575,11 @@
         }
         function cutTest(event) {
             if (that.hasFocus()) {
+                // Copy
                 copyTest(event);
-                //TODO clear selected cells.
-                var selectedRows = that.getSelectedRows();
 
-                for (var i = 0; i < selectedRows.length; i++) {
-                    var row = selectedRows[i];
-                    var selection = row.getSelection();
-
-                    for (var j = 0; j < selection.getCellCount(); j++) {
-                        var cell = selection.cells[j];
-
-                        cell.clear();
-                    }
-                }
+                // Clear selection
+                that.clearSelection();
             }
         }
         function pasteTest(event) {
@@ -890,6 +885,12 @@
 
             // Call updates
             // ....
+        },
+        clearSelection: function(){
+            var rows = this.getSelectedRows();
+            for (var i = 0; i < rows.length; i ++){
+                this.VectorManager.clear(rows[i]);
+            }
         },
         isClear: function (ops) {
             // Normalize parameters
