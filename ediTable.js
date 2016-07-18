@@ -584,9 +584,10 @@
         }
         function pasteTest(event) {
             if (that.hasFocus()) {
-                var html, data = [];
-                var htmlText = event.clipboardData.getData("text/html");
-                var plainText = event.clipboardData.getData("text/plain");
+                var html,
+                    data = [];
+                var htmlText = event.clipboardData.getData("text/html"),
+                    plainText = event.clipboardData.getData("text/plain");
 
                 var selectedRows = that.getSelectedRows();
 
@@ -612,8 +613,8 @@
                         var rows = table.rows;
 
                         for (var i = 0; i < rows.length; i++) {
-                            var row = rows[i];
-                            var cells = row.cells;
+                            var row = rows[i],
+                                cells = row.cells;
 
                             data[i] = [];
 
@@ -629,8 +630,8 @@
                     var rows = plainText.split("\n");
 
                     for (var i = 0; i < rows.length; i++) {
-                        var row = rows[i];
-                        var cols = row.split("\t");
+                        var row = rows[i],
+                            cols = row.split("\t");
 
                         data[i] = [];
 
@@ -645,10 +646,7 @@
                 //If there is a selection
                 if (data.length > 0 && selectedRows.length > 0) {
                     //Set the values
-                    var firstCellCoords = that.Selection.getCoords(selectedRows[0].getSelection().cells[0].dom);
-                    var tableWidth = that.getColCount();
-                    var tableHeight = that.getRowCount();
-
+                    var firstCellCoords = that.Selection.getCoords(selectedRows[0][0]);
                     that.setRowValues(data, {rowStart: firstCellCoords[0], colStart: firstCellCoords[1]});
                 }
 
