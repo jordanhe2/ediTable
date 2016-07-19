@@ -666,7 +666,7 @@
             }
         }
 
-        document.addEventListener("click", focusTracker)
+        document.addEventListener("click", focusTracker);
         document.addEventListener("copy", copyTest);
         document.addEventListener("cut", cutTest);
         document.addEventListener("paste", pasteTest);
@@ -1045,9 +1045,9 @@
                 this.CellManager.setHeader(cell, isHeader);
             }
 
-            this.setRowValues([ops.values], {
+            /*this.setRowValues([ops.values], {
                 rowStart: index
-            });
+            });*/
         },
         insertCol: function (index, ops) {
             if (!this.canInsertCol()) return;
@@ -1073,9 +1073,9 @@
             }
 
             // Set values
-            this.setColValues([ops.values], {
+            /*this.setColValues([ops.values], {
                 colStart: index
-            })
+            })*/
         },
         removeRow: function (index) {
             this.table.deleteRow(index);
