@@ -283,6 +283,9 @@
             setHeader: function (cell, optHeader) {
                 if (typeof optHeader == "undefined") optHeader = true;
 
+                // Return if element already is/isn't header
+                if (optHeader == this.isHeader(cell)) return;
+
                 var type = (optHeader ? "th" : "td"),
                     oldDom = cell,
                     children = $(oldDom).contents().detach(),
