@@ -550,8 +550,6 @@
                     table.appendChild(rowDom);
                 }
 
-                console.log(table.outerHTML);
-
                 // Get text of selected
                 var tableText = "",
                     selectedValues = that.getSelectedRowValues();
