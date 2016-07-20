@@ -375,7 +375,7 @@
             terminalCell: null,
             getCoords: function (element) {
                 var el = $(element),
-                    cell = el.closest("tr > *")[0],
+                    cell = el.closest("tr > td, tr > th")[0],
                     row = el.closest("tr")[0],
                     coords = null;
 
@@ -547,6 +547,8 @@
                     table.appendChild(rowDom);
                 }
 
+                console.log(table.outerHTML);
+
                 // Get text of selected
                 var tableText = "",
                     selectedValues = that.getSelectedRowValues();
@@ -647,6 +649,7 @@
                 if (data.length > 0 && selectedRows.length > 0) {
                     //Set the values
                     var firstCellCoords = that.Selection.getCoords(selectedRows[0][0]);
+                    //TODO solve issue when pasting multiple cells of data "" (columns being removed because they are empty
                     that.setRowValues(data, {rowStart: firstCellCoords[0], colStart: firstCellCoords[1]});
                 }
 
