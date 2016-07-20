@@ -1025,13 +1025,8 @@
             var ops = this.options;
             return ops.growCols && this.canInsertCol();
         },
-        insertRow: function (index, ops) {
+        insertRow: function (index) {
             if (!this.canInsertRow()) return;
-
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.values == "undefined") ops.values = [];
-            while (ops.values.length < this.getColCount()) ops.values.push("");
 
             // Insert row
             var newRow = this.table.insertRow(index),
@@ -1050,18 +1045,9 @@
                 // Call set header last to not lose cell reference
                 this.CellManager.setHeader(cell, isHeader);
             }
-
-            /*this.setRowValues([ops.values], {
-                rowStart: index
-            });*/
         },
-        insertCol: function (index, ops) {
+        insertCol: function (index) {
             if (!this.canInsertCol()) return;
-
-            // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.values == "undefined") ops.values = [];
-            while (ops.values.length < this.getColCount()) ops.values.push("");
 
             // Insert col
             var prevCol = index > 0 ? this.getCol(index - 1) : null,
@@ -1077,11 +1063,6 @@
                 this.CellManager.setEditable(cell, isEditable);
                 this.CellManager.setHeader(cell, isHeader);
             }
-
-            // Set values
-            /*this.setColValues([ops.values], {
-                colStart: index
-            })*/
         },
         removeRow: function (index) {
             this.table.deleteRow(index);
