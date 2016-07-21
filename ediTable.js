@@ -570,7 +570,7 @@
         $(this.table).addClass("ediTable");
 
 
-        function copyTest(event) {
+        function onCopy(event) {
             if (that.hasFocus()) {
                 // Get html of selected.
                 var rows = that.getSelectedRows(),
@@ -615,10 +615,10 @@
                 event.preventDefault();
             }
         }
-        function cutTest(event) {
+        function onCut(event) {
             if (that.hasFocus()) {
                 // Copy
-                copyTest(event);
+                onCopy(event);
 
                 // Clear selection
                 var s = that.Selection,
@@ -634,7 +634,7 @@
                 }
             }
         }
-        function pasteTest(event) {
+        function onPaste(event) {
             if (that.hasFocus()) {
                 var html,
                     data = [];
@@ -720,9 +720,9 @@
         }
 
         document.addEventListener("click", focusTracker);
-        document.addEventListener("copy", copyTest);
-        document.addEventListener("cut", cutTest);
-        document.addEventListener("paste", pasteTest);
+        document.addEventListener("copy", onCopy);
+        document.addEventListener("cut", onCut);
+        document.addEventListener("paste", onPaste);
     };
     EdiTable.prototype = {
         addEventListener: function(type, func){
