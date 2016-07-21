@@ -379,6 +379,29 @@
         this.Selection = {
             originCell: null,
             terminalCell: null,
+            editingCell: null,
+            isEditing: function () {
+                return !!editingCell;
+            },
+            setEditMode: function (cell) {
+                // Clear editing cell
+                this.exitEditMode();
+
+                // Set edit mode
+                cell.focus();
+                selectText(cell);
+                $(cell).addClass("ediTable-cell-editing");
+
+                // Save current editing cell
+                that.Selection.editingCell = cell;
+            },
+            exitEditMode: function () {
+                document.body.focus();
+
+                $(this.editingCell).removeClass("ediTable-cell-editing");
+                //clear selected html
+                this.editingCell = null;
+            },
             getCoords: function (element) {
                 var el = $(element),
                     cell = el.closest("tr > td, tr > th")[0],
@@ -409,12 +432,23 @@
                                 colStart: startCoords[1],
                                 colEnd: targetCoords[1]
                             });
+
+                            e.preventDefault();
                         } else {
                             that.deselect();
                         }
 
                         $(document)
                             .on("mousemove", handleMouseMove);
+                    }
+                };
+                var handleDoubleClick = function (e) {
+                    var targetCoords = selection.getCoords(e.target);
+
+                    if (targetCoords) {
+                        selection.setEditMode(e.target);
+
+                        e.preventDefault();
                     }
                 };
                 var handleMouseUp = function (e) {
@@ -520,6 +554,7 @@
 
                 $(document)
                     .on("mousedown", handleMouseDown)
+                    .on("dblclick", handleDoubleClick)
                     .on("mouseup", handleMouseUp)
                     .on("keydown", handleKeyDown);
             }
