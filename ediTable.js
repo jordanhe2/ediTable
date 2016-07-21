@@ -374,11 +374,6 @@
                 }
 
                 return true;
-            },
-            clear: function(cells){
-                for (var i = 0; i < cells.length; i ++){
-                    that.CellManager.clear(cells[i]);
-                }
             }
         };
         this.Selection = {
@@ -591,7 +586,17 @@
                 copyTest(event);
 
                 // Clear selection
-                that.clearSelection();
+                var s = that.Selection,
+                    originCoords = s.getCoords(s.originCell),
+                    termCoords = s.getCoords(s.terminalCell);
+                if (originCoords && termCoords) {
+                    that.clear({
+                        rowStart: originCoords[0],
+                        colStart: originCoords[1],
+                        rowEnd: termCoords[0],
+                        colEnd: termCoords[1]
+                    });
+                }
             }
         }
         function pasteTest(event) {
@@ -918,13 +923,7 @@
             forEachTableCell(ops);
 
             // Call updates
-            // ....
-        },
-        clearSelection: function(){
-            var rows = this.getSelectedRows();
-            for (var i = 0; i < rows.length; i ++){
-                this.VectorManager.clear(rows[i]);
-            }
+            shrinkTable(this);
         },
         isClear: function (ops) {
             // Normalize parameters
@@ -992,14 +991,12 @@
             return rowVals;
         },
         getSelectedRows: function () {
-            var rows = [];
-            for (var i = 0; i < this.getRowCount(); i++) {
-                var row = toArray(this.table.rows[i].cells),
-                    rowSelection = this.VectorManager.getSelection(row);
-
-                if (rowSelection.length > 0) rows.push(rowSelection);
-            }
-            return rows;
+            var that = this;
+            return this.getRows().map(function(row){
+                return that.VectorManager.getSelection(row);
+            }).filter(function(row){
+                return row.length > 0;
+            });
         },
         getRowValues: function (ops) {
             var that = this;
