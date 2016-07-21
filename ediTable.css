@@ -58,6 +58,6 @@
     background-color: rgba(120, 161, 237, 0.3);
 }
 
-.ediTable-cell-editing {
-    /* TODO */
+.ediTable-cell-editing:before {
+    background: none;
 }
