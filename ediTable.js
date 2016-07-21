@@ -48,7 +48,7 @@
             typeof ops.func == "undefined" ||
             typeof ops.arr == "undefined" ||
             ops.arr.length == 0 ||
-            !isArrayOfArrays(ops.arr)) return;
+            !is2DArray(ops.arr)) return;
         if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
         if (typeof ops.colStart == "undefined") ops.colStart = 0;
         if (typeof ops.rowEnd == "undefined") ops.rowEnd = ops.arr.length - 1;
@@ -109,89 +109,89 @@
             selection.addRange(range);
         }
     }
-    function isArrayOfArrays(thing){
+    function is2DArray(thing){
         if (!(thing instanceof Array)) return false;
-        for (var i = 0; i < thing.length; i ++){
-            if (!(thing[i] instanceof Array)) return false;
+
+        var length = (thing.length > 0 && thing[0] instanceof Array) ? thing[0].length : 0;
+        for (var i = 1; i < thing.length; i ++){
+            var innerThing = thing[i];
+            if (!(innerThing instanceof Array)) return false;
+            if (innerThing.length != length) return false;
         }
 
         return true;
     }
 
-    /**
-     * Represents a table by wrapping around an HTML table.
-     *
-     * @param{HTMLTableElement} - HTML table for the new EdiTable to wrap around
-     * @param{Object} - contains various options for the new EdiTable
-     */
-    var EdiTable = function (table, optOptions) {
-        // Utitilites
-        function normalizeTable(table) {
-            var rows = $("tr", table).toArray(),
-                lengths = rows.map(function (row) {
-                    return row.cells.length;
-                }),
-                max = Math.max.apply(null, lengths);
+    function normalizeTable(table) {
+        var rows = $("tr", table).toArray(),
+            lengths = rows.map(function (row) {
+                return row.cells.length;
+            }),
+            max = Math.max.apply(null, lengths);
 
-            for (var i = 0; i < rows.length; i++) {
-                var row = rows[i],
-                    tds = $("td", row).toArray(),
-                    ths = $("th", row).toArray(),
-                    diff = max - (tds.length + ths.length);
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i],
+                tds = $("td", row).toArray(),
+                ths = $("th", row).toArray(),
+                diff = max - (tds.length + ths.length);
 
-                if (diff > 0) {
-                    var type = (tds.length == 0 ? "th" : "td"),
-                        cells = new Array(diff);
-                    for (var j = 0; j < diff; j++) {
-                        cells[j] = document.createElement(type);
-                    }
-                    $(row).append(cells);
+            if (diff > 0) {
+                var type = (tds.length == 0 ? "th" : "td"),
+                    cells = new Array(diff);
+                for (var j = 0; j < diff; j++) {
+                    cells[j] = document.createElement(type);
                 }
+                $(row).append(cells);
             }
         }
-        function fixMinMax(){
-            var ops = that.options;
+    }
+    function fixTableMinMax(ctx){
+        var ops = ctx.options;
 
-            // Ensure maxes are good
-            if (ops.maxRows > -1) {
-                while (that.getRowCount() > ops.maxRows) {
-                    that.removeRow(that.getRowCount() - 1);
-                }
-            }
-            if (ops.maxCols > -1) {
-                while (that.getColCount() > ops.maxCols) {
-                    that.removeCol(that.getColCount() - 1);
-                }
-            }
-
-            // Ensure mins are good
-            while (that.getRowCount() < ops.minRows) {
-                that.insertRow(that.getRowCount());
-            }
-            while (that.getColCount() < ops.minCols) {
-                that.insertCol(that.getColCount());
+        // Ensure maxes are good
+        if (ops.maxRows > -1) {
+            while (ctx.getRowCount() > ops.maxRows) {
+                ctx.removeRow(ctx.getRowCount() - 1);
             }
         }
-        function updateSize() {
-            var ops = that.options,
-                vm = that.VectorManager;
+        if (ops.maxCols > -1) {
+            while (ctx.getColCount() > ops.maxCols) {
+                ctx.removeCol(ctx.getColCount() - 1);
+            }
+        }
 
-            // Grow rows
-            var lastRowClear = vm.isClear(that.getRow(that.getRowCount() - 1));
-            if (!lastRowClear && that.rowsCanGrow()) that.insertRow(that.getRowCount());
-            // Grow cols
-            var lastColClear = vm.isClear(that.getCol(that.getColCount() - 1));
-            if (!lastColClear && that.colsCanGrow()) that.insertCol(that.getColCount());
+        // Ensure mins are good
+        while (ctx.getRowCount() < ops.minRows) {
+            ctx.insertRow(ctx.getRowCount());
+        }
+        while (ctx.getColCount() < ops.minCols) {
+            ctx.insertCol(ctx.getColCount());
+        }
+    }
+    function growTable(ctx) {
+        var ops = ctx.options,
+            vm = ctx.VectorManager;
+
+        // Grow rows
+        var lastRowClear = vm.isClear(ctx.getRow(ctx.getRowCount() - 1));
+        if (!lastRowClear && ctx.rowsCanGrow()) ctx.insertRow(ctx.getRowCount());
+        // Grow cols
+        var lastColClear = vm.isClear(ctx.getCol(ctx.getColCount() - 1));
+        if (!lastColClear && ctx.colsCanGrow()) ctx.insertCol(ctx.getColCount());
+    }
+    function shrinkTable(ctx) {
+            var ops = ctx.options,
+                vm = ctx.VectorManager;
 
             // Shrink rows
             if (ops.shrinkRows) {
                 if (ops.rowsAllowMiddleShrink){
                     var i = 0;
-                    while (that.getRowCount() > ops.minRows){
-                        var rowStart = that.getRowCount() - (ops.growRows ? 2 : 1),
+                    while (ctx.getRowCount() > ops.minRows){
+                        var rowStart = ctx.getRowCount() - (ops.growRows ? 2 : 1),
                             rowIndex = rowStart - i;
-                        if (rowIndex >= 0 && vm.isClear(that.getRow(rowIndex))){
-                            that.removeRow(rowIndex);
+                        if (rowIndex >= 0 && vm.isClear(ctx.getRow(rowIndex))){
+                            ctx.removeRow(rowIndex);
                         } else {
                             i ++;
                         }
@@ -199,10 +199,10 @@
                         if (rowIndex == 0) break;
                     }
                 } else {
-                    while (that.getRowCount() > ops.minRows){
-                        var rowIndex = that.getRowCount() - (ops.growRows ? 2 : 1);
-                        if (rowIndex >= 0 && vm.isClear(that.getRow(rowIndex))){
-                            that.removeRow(rowIndex);
+                    while (ctx.getRowCount() > ops.minRows){
+                        var rowIndex = ctx.getRowCount() - (ops.growRows ? 2 : 1);
+                        if (rowIndex >= 0 && vm.isClear(ctx.getRow(rowIndex))){
+                            ctx.removeRow(rowIndex);
                         } else {
                             break;
                         }
@@ -213,11 +213,11 @@
             if (ops.shrinkCols) {
                 if (ops.colsAllowMiddleShrink){
                     var i = 0;
-                    while (that.getColCount() > ops.minCols){
-                        var colStart = that.getColCount() - (ops.growCols ? 2 : 1),
+                    while (ctx.getColCount() > ops.minCols){
+                        var colStart = ctx.getColCount() - (ops.growCols ? 2 : 1),
                             colIndex = colStart - i;
-                        if (colIndex >= 0 && vm.isClear(that.getCol(colIndex))){
-                            that.removeCol(colIndex);
+                        if (colIndex >= 0 && vm.isClear(ctx.getCol(colIndex))){
+                            ctx.removeCol(colIndex);
                         } else {
                             i ++;
                         }
@@ -225,10 +225,10 @@
                         if (colIndex == 0) break;
                     }
                 } else {
-                    while (that.getColCount() > ops.minCols){
-                        var colIndex = that.getColCount() - (ops.growCols ? 2 : 1);
-                        if (colIndex >= 0 && vm.isClear(that.getCol(colIndex))){
-                            that.removeCol(colIndex);
+                    while (ctx.getColCount() > ops.minCols){
+                        var colIndex = ctx.getColCount() - (ops.growCols ? 2 : 1);
+                        if (colIndex >= 0 && vm.isClear(ctx.getCol(colIndex))){
+                            ctx.removeCol(colIndex);
                         } else {
                             break;
                         }
@@ -236,6 +236,15 @@
                 }
             }
         }
+
+    /**
+     * Represents a table by wrapping around an HTML table.
+     *
+     * @param{HTMLTableElement} - HTML table for the new EdiTable to wrap around
+     * @param{Object} - contains various options for the new EdiTable
+     */
+    var EdiTable = function (table, optOptions) {
+        // Utitilites
         function normalizeOptions(ops) {
             // Define the undefined
             if (typeof ops.minRows == "undefined") ops.minRows = 1;
@@ -326,7 +335,6 @@
 
                 // Set value
                 $(cell).html(value);
-                updateSize();
             },
             clear: function (cell) {
                 this.setValue(cell, "");
@@ -524,8 +532,9 @@
         this.Selection.init();
 
         // Fix rows and cols
-        fixMinMax();
-        updateSize();
+        fixTableMinMax(this);
+        growTable(this);
+        shrinkTable(this);
 
         // Add CSS
         $(this.table).addClass("ediTable");
@@ -835,10 +844,30 @@
         },
         setRowValues: function (values, ops) {
             // Normalize paramters
-            if (!isArrayOfArrays(values)) throw new TypeError("values parameter must be an Array of Arrays");
+            if (!is2DArray(values)) throw new TypeError("values parameter must be 2D Array");
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
             if (typeof ops.colStart == "undefined") ops.colStart = 0;
+
+            //Add rows
+            var rowEnd = ops.rowStart + values.length,
+                maxRows = this.options.maxRows;
+            do {
+                var rowCount = this.getRowCount(),
+                    rowDiff = rowEnd - rowCount - 1;
+
+                this.insertRow(rowCount);
+            } while ((maxRows == -1 || rowCount < maxRows) && rowDiff > 0);
+
+            //Add cols
+            var colEnd = ops.colStart + values[0].length,
+                maxCols = this.options.maxCols;
+            do {
+                var colCount = this.getColCount(),
+                    colDiff = colEnd - colCount - 1;
+
+                this.insertCol(colCount);
+            } while ((maxCols == -1 || colCount < maxCols) && colDiff > 0);
 
             // Set values
             var rows = this.table.rows;
@@ -851,11 +880,14 @@
                 }
             }
 
+            shrinkTable(this);
+            growTable(this);
+
             this.fireEvent("change");
         },
         setColValues: function (values, ops) {
             // Normalize paramters
-            if (!isArrayOfArrays(values)) throw new TypeError("values parameter must be an Array of Arrays");
+            if (!is2DArray(values)) throw new TypeError("values parameter must be 2D Array");
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
             if (typeof ops.colStart == "undefined") ops.colStart = 0;
@@ -906,7 +938,7 @@
             var clear = true;
             ops.table = this.table;
             ops.func = function(cell){
-                if (!that.CellManager.isClear(cell)) clear = false;
+                if (!ctx.CellManager.isClear(cell)) clear = false;
             }
             forEachTableCell(ops);
 
