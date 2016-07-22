@@ -388,97 +388,22 @@
                 return true;
             }
         };
-        this.Selection = {
-            originCell: null,
-            terminalCell: null,
-            editingCell: null,
-            isEditing: function () {
-                return this.editingCell != null;
-            },
-            setEditMode: function (cell) {
-                // Clear editing cell
-                this.exitEditMode();
+        this.Selection = function () {
+            var selection,
+                table = $(that.table),
+                startCoords = [];
 
-                // Set edit mode
-                cell.focus();
-                selectText(cell);
-                $(cell).addClass("ediTable-cell-editing");
+            var handleMouseDown = function (e) {
+                var targetCoords = selection.getCoords(e.target);
 
-                // Save current editing cell
-                that.Selection.editingCell = cell;
-            },
-            exitEditMode: function () {
-                if (this.isEditing()){
-                    this.editingCell.blur();
-                    document.body.focus();
+                that.lastClicked = e.target;
 
-                    deselectText();
-                    $(this.editingCell).removeClass("ediTable-cell-editing");
-                    this.editingCell = null;
-                }
-            },
-            getCoords: function (element) {
-                var el = $(element),
-                    cell = el.closest("tr > td, tr > th")[0],
-                    row = el.closest("tr")[0],
-                    coords = null;
+                if (targetCoords) {
+                    startCoords = targetCoords;
 
-                if (cell && row) {
-                    coords = [row.rowIndex, cell.cellIndex];
-                }
-
-                return coords;
-            },
-            init: function () {
-                var selection = that.Selection,
-                    table = $(that.table),
-                    startCoords = [];
-
-                var handleMouseDown = function (e) {
-                    var targetCoords = selection.getCoords(e.target);
-
-                    that.lastClicked = e.target;
-
-                    if (targetCoords) {
-                        startCoords = targetCoords;
-
-                        if (e.target != selection.editingCell) {
-                            selection.exitEditMode();
-
-                            that.select({
-                                rowStart: startCoords[0],
-                                rowEnd: targetCoords[0],
-                                colStart: startCoords[1],
-                                colEnd: targetCoords[1]
-                            });
-
-                            e.preventDefault();
-                        }
-
-                        $(document)
-                            .on("mousemove", handleMouseMove);
-                    } else {
-                        that.deselect();
+                    if (e.target != selection.editingCell) {
                         selection.exitEditMode();
-                    }
-                };
-                var handleDoubleClick = function (e) {
-                    var targetCoords = selection.getCoords(e.target);
 
-                    if (targetCoords) {
-                        selection.setEditMode(e.target);
-
-                        e.preventDefault();
-                    }
-                };
-                var handleMouseUp = function (e) {
-                    $(document)
-                        .unbind("mousemove", handleMouseMove);
-                };
-                var handleMouseMove = function (e) {
-                    var targetCoords = selection.getCoords(e.target);
-
-                    if (!selection.isEditing() && targetCoords) {
                         that.select({
                             rowStart: startCoords[0],
                             rowEnd: targetCoords[0],
@@ -488,109 +413,203 @@
 
                         e.preventDefault();
                     }
-                };
 
-                var handleKeyDown = function (e) {
-                    console.log("down");
+                    $(document)
+                        .on("mousemove", handleMouseMove);
+                } else {
+                    that.deselect();
+                    selection.exitEditMode();
+                }
+            };
+            var handleDoubleClick = function (e) {
+                var targetCoords = selection.getCoords(e.target);
 
-                    var hasFocus = that.hasFocus(),
-                        ctrl = e.ctrlKey,
-                        shift = e.shiftKey;
+                if (targetCoords) {
+                    selection.setEditMode(e.target);
 
-                    // Special case: select all
-                    if (ctrl && e.keyCode == 65) {
-                        if (hasFocus) e.preventDefault();
-
-                        if (shift)
-                            that.deselect();
-                        else
-                            that.select();
-                    }
-
-                    // Handle selection movement
-                    if (that.hasSelection()) {
-                        var tab = e.keyCode == 9,
-                            enter = e.keyCode == 13,
-                            moveOrigin = !shift,
-                            jumpTerminal = !(shift || ctrl),
-                            originCoords = selection.getCoords(selection.originCell),
-                            terminalCoords = selection.getCoords(selection.terminalCell);
-
-                        var deltaCoords = {x: 0, y: 0};
-                        switch (e.keyCode) {
-                            // TAB
-                            case 9:
-                                if (hasFocus) e.preventDefault();
-                                that.Selection.exitEditMode();
-
-                                var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
-                                    notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
-                                deltaCoords.x = (notOnTheEnd ? 1 : -originCoords[1]);
-                                deltaCoords.y = (notOnTheEnd ? 0 : (notOnTheBottom ? 1 : -originCoords[0]));
-                                break;
-                            // ENTER
-                            case 13:
-                                if (hasFocus) e.preventDefault();
-                                that.Selection.exitEditMode();
-
-                                var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
-                                    notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
-                                deltaCoords.x = (notOnTheBottom ? 0 : (notOnTheEnd ? 1 : -originCoords[1]));
-                                deltaCoords.y = (notOnTheBottom ? 1 : -originCoords[0]);
-                                break;
-                            // LEFT
-                            case 37: deltaCoords.x = -1; break;
-                            // UP
-                            case 38: deltaCoords.y = -1; break;
-                            // RIGHT
-                            case 39: deltaCoords.x = 1; break;
-                            // DOWN
-                            case 40: deltaCoords.y = 1; break;
-                        }
-
-                        // Translate according to deltaCoords
-                        if (originCoords && terminalCoords) {
-                            function testCoords(coords) {
-                                return !(
-                                    coords[0] < 0 ||
-                                    coords[0] >= that.getRowCount() ||
-                                    coords[1] < 0 ||
-                                    coords[1] >= that.getColCount()
-                                );
-                            }
-
-                            if (moveOrigin) {
-                                originCoords[1] += deltaCoords.x;
-                                originCoords[0] += deltaCoords.y;
-                            }
-
-                            if (jumpTerminal) {
-                                terminalCoords = originCoords;
-                            } else {
-                                terminalCoords[1] += deltaCoords.x;
-                                terminalCoords[0] += deltaCoords.y;
-                            }
-
-                            if (testCoords(originCoords) && testCoords(terminalCoords)) {
-                                that.select({
-                                    rowStart: originCoords[0],
-                                    rowEnd: terminalCoords[0],
-                                    colStart: originCoords[1],
-                                    colEnd: terminalCoords[1]
-                                });
-                            }
-                        }
-                    }
-                };
-
+                    e.preventDefault();
+                }
+            };
+            var handleMouseUp = function (e) {
                 $(document)
-                    .on("mousedown", handleMouseDown)
-                    .on("dblclick", handleDoubleClick)
-                    .on("mouseup", handleMouseUp)
-                    .on("keydown", handleKeyDown);
+                    .unbind("mousemove", handleMouseMove);
+            };
+            var handleMouseMove = function (e) {
+                var targetCoords = selection.getCoords(e.target);
+
+                if (!selection.isEditing() && targetCoords) {
+                    that.select({
+                        rowStart: startCoords[0],
+                        rowEnd: targetCoords[0],
+                        colStart: startCoords[1],
+                        colEnd: targetCoords[1]
+                    });
+
+                    e.preventDefault();
+                }
+            };
+
+            var handleKeyDown = function (e) {
+                var hasFocus = that.hasFocus(),
+                    ctrl = e.ctrlKey,
+                    shift = e.shiftKey,
+                    tab = e.keyCode == 9,
+                    enter = e.keyCode == 13;
+
+                // Special keys
+                if (tab || enter) {
+                    if (hasFocus) e.preventDefault();
+                    selection.exitEditMode();
+                }
+
+                // Don't interfere
+                if (selection.isEditing()) return;
+
+                // Special case: select all
+                if (ctrl && e.keyCode == 65) {
+                    if (hasFocus) e.preventDefault();
+
+                    if (shift)
+                        that.deselect();
+                    else
+                        that.select();
+                }
+
+                // Handle selection movement
+                if (that.hasSelection()) {
+                    var moveOrigin = !shift,
+                        jumpTerminal = !(shift || ctrl),
+                        originCoords = selection.getCoords(selection.originCell),
+                        terminalCoords = selection.getCoords(selection.terminalCell);
+
+                    var deltaCoords = {x: 0, y: 0};
+                    switch (e.keyCode) {
+                        // TAB
+                        case 9:
+                            var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
+                                notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
+                            deltaCoords.x = (notOnTheEnd ? 1 : -originCoords[1]);
+                            deltaCoords.y = (notOnTheEnd ? 0 : (notOnTheBottom ? 1 : -originCoords[0]));
+                            break;
+                        // ENTER
+                        case 13:
+                            var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
+                                notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
+                            deltaCoords.x = (notOnTheBottom ? 0 : (notOnTheEnd ? 1 : -originCoords[1]));
+                            deltaCoords.y = (notOnTheBottom ? 1 : -originCoords[0]);
+                            break;
+                        // LEFT
+                        case 37: deltaCoords.x = -1; break;
+                        // UP
+                        case 38: deltaCoords.y = -1; break;
+                        // RIGHT
+                        case 39: deltaCoords.x = 1; break;
+                        // DOWN
+                        case 40: deltaCoords.y = 1; break;
+                    }
+
+                    // Translate according to deltaCoords
+                    if (originCoords && terminalCoords) {
+                        function testCoords(coords) {
+                            return !(
+                                coords[0] < 0 ||
+                                coords[0] >= that.getRowCount() ||
+                                coords[1] < 0 ||
+                                coords[1] >= that.getColCount()
+                            );
+                        }
+
+                        if (moveOrigin) {
+                            originCoords[1] += deltaCoords.x;
+                            originCoords[0] += deltaCoords.y;
+                        }
+
+                        if (jumpTerminal) {
+                            terminalCoords = originCoords;
+                        } else {
+                            terminalCoords[1] += deltaCoords.x;
+                            terminalCoords[0] += deltaCoords.y;
+                        }
+
+                        if (testCoords(originCoords) && testCoords(terminalCoords)) {
+                            that.select({
+                                rowStart: originCoords[0],
+                                rowEnd: terminalCoords[0],
+                                colStart: originCoords[1],
+                                colEnd: terminalCoords[1]
+                            });
+                        }
+                    }
+                }
+            };
+            var handleCellInput = function (e) {
+                shrinkTable(that);
+                growTable(that);
+                that.fireEvent("change");
+            };
+
+            $(document)
+                .on("mousedown", handleMouseDown)
+                .on("dblclick", handleDoubleClick)
+                .on("mouseup", handleMouseUp)
+                .on("keydown", handleKeyDown);
+
+            selection = {
+                originCell: null,
+                terminalCell: null,
+                editingCell: null,
+                isEditing: function () {
+                    return this.editingCell != null;
+                },
+                setEditMode: function (cell) {
+                    var jCell = $(cell);
+
+                    // Clear editing cell
+                    this.exitEditMode();
+
+                    // Set edit mode
+                    cell.focus();
+                    selectText(cell);
+                    jCell.addClass("ediTable-cell-editing");
+
+                    // Attach temporary listener
+                    jCell.on("input", handleCellInput);
+
+                    // Save current editing cell
+                    that.Selection.editingCell = cell;
+                },
+                exitEditMode: function () {
+                    if (this.isEditing()){
+                        // Remove focus
+                        this.editingCell.blur();
+                        document.body.focus();
+                        deselectText();
+
+                        // Remove temporary class and listener
+                        $(this.editingCell)
+                            .removeClass("ediTable-cell-editing")
+                            .unbind("input", handleCellInput);
+
+                        // Reset editing cell
+                        this.editingCell = null;
+                    }
+                },
+                getCoords: function (element) {
+                    var el = $(element),
+                        cell = el.closest("tr > td, tr > th")[0],
+                        row = el.closest("tr")[0],
+                        coords = null;
+
+                    if (cell && row) {
+                        coords = [row.rowIndex, cell.cellIndex];
+                    }
+
+                    return coords;
+                }
             }
-        };
-        this.Selection.init();
+
+            return selection;
+        }();
 
         // Fix rows and cols
         fixTableMinMax(this);
