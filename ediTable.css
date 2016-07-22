@@ -2,15 +2,13 @@
 /* ============= POSITIONING - DO NOT ALTER ============= */
 /* ====================================================== */
 
-.ediTable {
-}
-.ediTable * {
+.ediTable td, .editable th {
     outline: none;
 }
 .ediTable-cell-selected {
     position: relative;
 }
-.ediTable-cell-selected:before{
+.ediTable-cell-selected:before {
     content: "";
     display: block;
     position: absolute;
@@ -44,20 +42,19 @@
 }
 
 /* Editable Cell */
-.ediTable *[contenteditable="true"]{
+.ediTable *[contenteditable="true"] {
 }
 
 /* Non-editable Cell */
-.ediTable *[contenteditable="false"]{
+.ediTable *[contenteditable="false"] {
 }
 
-/* Selection Box */
+/* Selection Box Overlay */
 .ediTable-cell-selected:before {
     border-width: 3px;
     border-color: #2e69d9;
     background-color: rgba(120, 161, 237, 0.3);
 }
-
 .ediTable-cell-editing:before {
     background: none;
 }
