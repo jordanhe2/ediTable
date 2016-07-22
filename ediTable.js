@@ -984,6 +984,8 @@
             ops.colStart = temp;
             values = arrayTranspose(values);
 
+            if (values.length == 0) values[0] = [];
+
             // Feed to setRowValues
             this.setRowValues(values, ops);
         },
