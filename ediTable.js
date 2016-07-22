@@ -264,6 +264,7 @@
             if (typeof ops.shrinkCols == "undefined") ops.shrinkCols = false;
             if (typeof ops.rowsAllowMiddleShrink == "undefined") ops.rowsAllowMiddleShrink = false;
             if (typeof ops.colsAllowMiddleShrink == "undefined") ops.colsAllowMiddleShrink = false;
+            if (typeof ops.pasteAsHTML == "undefined") ops.pasteAsHTML = false;
 
             // Correct logical errors
             if (ops.minRows < 0) ops.minRows = 0;
@@ -341,7 +342,11 @@
                 if (!this.isEditable(cell)) return;
 
                 // Set value
-                $(cell).html(value);
+                if (that.options.pasteAsHTML){
+                    $(cell).html(value);
+                } else {
+                    $(cell).text(value);
+                }
             },
             clear: function (cell) {
                 this.setValue(cell, "");
@@ -403,12 +408,14 @@
                 that.Selection.editingCell = cell;
             },
             exitEditMode: function () {
-                if (this.isEditing()) this.editingCell.blur();
-                document.body.focus();
+                if (this.isEditing()){
+                    this.editingCell.blur();
+                    document.body.focus();
 
-                deselectText();
-                $(this.editingCell).removeClass("ediTable-cell-editing");
-                this.editingCell = null;
+                    deselectText();
+                    $(this.editingCell).removeClass("ediTable-cell-editing");
+                    this.editingCell = null;
+                }
             },
             getCoords: function (element) {
                 var el = $(element),
@@ -430,10 +437,14 @@
                 var handleMouseDown = function (e) {
                     var targetCoords = selection.getCoords(e.target);
 
+                    that.lastClicked = e.target;
+
                     if (targetCoords) {
                         startCoords = targetCoords;
 
-                        if (targetCoords) {
+                        if (e.target != selection.editingCell) {
+                            selection.exitEditMode();
+
                             that.select({
                                 rowStart: startCoords[0],
                                 rowEnd: targetCoords[0],
@@ -442,12 +453,13 @@
                             });
 
                             e.preventDefault();
-                        } else {
-                            that.deselect();
                         }
 
                         $(document)
                             .on("mousemove", handleMouseMove);
+                    } else {
+                        that.deselect();
+                        selection.exitEditMode();
                     }
                 };
                 var handleDoubleClick = function (e) {
@@ -466,19 +478,21 @@
                 var handleMouseMove = function (e) {
                     var targetCoords = selection.getCoords(e.target);
 
-                    if (targetCoords) {
+                    if (!selection.isEditing() && targetCoords) {
                         that.select({
                             rowStart: startCoords[0],
                             rowEnd: targetCoords[0],
                             colStart: startCoords[1],
                             colEnd: targetCoords[1]
                         });
-                    }
 
-                    e.preventDefault();
+                        e.preventDefault();
+                    }
                 };
 
                 var handleKeyDown = function (e) {
+                    console.log("down");
+
                     var hasFocus = that.hasFocus(),
                         ctrl = e.ctrlKey,
                         shift = e.shiftKey;
@@ -588,49 +602,50 @@
 
 
         function onCopy(event) {
-            if (that.hasFocus()) {
-                // Get html of selected.
-                var rows = that.getSelectedRows(),
-                    table = document.createElement("table");
+            // Don't interfere
+            if (!that.hasFocus() || that.Selection.isEditing()) return;
 
-                for (var i = 0; i < rows.length; i++) {
-                    var row = rows[i],
-                        rowDom = document.createElement("tr");
+            // Get html of selected.
+            var rows = that.getSelectedRows(),
+                table = document.createElement("table");
 
-                    for (var j = 0; j < row.length; j++) {
-                        var cell = row[j];
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i],
+                    rowDom = document.createElement("tr");
 
-                        rowDom.appendChild($(cell).clone()[0]);
-                    }
+                for (var j = 0; j < row.length; j++) {
+                    var cell = row[j];
 
-                    table.appendChild(rowDom);
+                    rowDom.appendChild($(cell).clone()[0]);
                 }
 
-                // Get text of selected
-                var tableText = "",
-                    selectedValues = that.getSelectedRowValues();
-
-                for (var i = 0; i < selectedValues.length; i++) {
-                    var rowValues = selectedValues[i];
-
-                    for (var j = 0; j < rowValues.length; j++) {
-                        var value = rowValues[j];
-
-                        tableText += value;
-
-                        if (j != rowValues.length - 1) tableText += "\t";
-                    }
-
-                    if (i != selectedValues.length - 1) {
-                        tableText += "\n";
-                    }
-                }
-
-                event.clipboardData.setData("text/html", table.outerHTML);
-                event.clipboardData.setData("text/plain", tableText);
-
-                event.preventDefault();
+                table.appendChild(rowDom);
             }
+
+            // Get text of selected
+            var tableText = "",
+                selectedValues = that.getSelectedRowValues();
+
+            for (var i = 0; i < selectedValues.length; i++) {
+                var rowValues = selectedValues[i];
+
+                for (var j = 0; j < rowValues.length; j++) {
+                    var value = rowValues[j];
+
+                    tableText += value;
+
+                    if (j != rowValues.length - 1) tableText += "\t";
+                }
+
+                if (i != selectedValues.length - 1) {
+                    tableText += "\n";
+                }
+            }
+
+            event.clipboardData.setData("text/html", table.outerHTML);
+            event.clipboardData.setData("text/plain", tableText);
+
+            event.preventDefault();
         }
         function onCut(event) {
             if (that.hasFocus()) {
@@ -652,91 +667,82 @@
             }
         }
         function onPaste(event) {
-            if (that.hasFocus()) {
-                var html,
-                    data = [];
-                var htmlText = event.clipboardData.getData("text/html"),
-                    plainText = event.clipboardData.getData("text/plain");
+            // Don't interfere
+            if (!that.hasFocus() || that.Selection.isEditing()) return;
 
-                var selectedRows = that.getSelectedRows();
+            var html,
+                table,
+                data = [];
+            var htmlText = event.clipboardData.getData("text/html"),
+                plainText = event.clipboardData.getData("text/plain");
 
-                if (htmlText && htmlText != "") {
-                    if (window.DOMParser) {
-                        //DOMParser is more secure, but less widely supported.
-                        var parser = new DOMParser();
+            var selectedRows = that.getSelectedRows();
 
-                        html = parser.parseFromString(htmlText, "text/html");
-                    } else {
-                        //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
-                        html = document.implementation.createHTMLDocument();
+            if (htmlText && htmlText != "") {
+                if (window.DOMParser) {
+                    //DOMParser is more secure, but less widely supported.
+                    var parser = new DOMParser();
 
-                        html.write(htmlText);
-                    }
+                    html = parser.parseFromString(htmlText, "text/html");
+                } else {
+                    //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
+                    html = document.implementation.createHTMLDocument();
 
-                    //Get data from table instead of searching for tr's because semantics.
-                    var tables = html.getElementsByTagName("table");
-                    //Use first table if there is more than one copied.
-                    var table = tables.length > 0 ? tables[0] : null;
-
-                    if (table) {
-                        var rows = table.rows;
-
-                        for (var i = 0; i < rows.length; i++) {
-                            var row = rows[i],
-                                cells = row.cells;
-
-                            data[i] = [];
-
-                            for (var j = 0; j < cells.length; j++) {
-                                var cell = cells[j];
-
-                                data[i][j] = cell.innerText;
-                            }
-                        }
-                    }
-                } else if (plainText && plainText != "") {
-                    //Parse text in the format of columns separated by tabs and rows separated by new lines.
-                    var rows = plainText.split("\n");
-
-                    for (var i = 0; i < rows.length; i++) {
-                        var row = rows[i],
-                            cols = row.split("\t");
-
-                        data[i] = [];
-
-                        for (var j = 0; j < cols.length; j++) {
-                            var text = cols[j];
-
-                            data[i][j] = text;
-                        }
-                    }
+                    html.write(htmlText);
                 }
 
-                //If there is a selection
-                if (data.length > 0 && selectedRows.length > 0) {
-                    //Set the values
-                    var firstCellCoords = that.Selection.getCoords(selectedRows[0][0]);
-                    //TODO solve issue when pasting multiple cells of data "" (columns being removed because they are empty
-                    that.setRowValues(data, {rowStart: firstCellCoords[0], colStart: firstCellCoords[1]});
-                }
-
-                event.preventDefault();
+                //Get data from table instead of searching for tr's because semantics.
+                var tables = html.getElementsByTagName("table");
+                //Use first table if there is more than one copied.
+                table = tables.length > 0 ? tables[0] : null;
             }
+
+            if (table) {
+                var rows = table.rows;
+
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i],
+                        cells = row.cells;
+
+                    data[i] = [];
+
+                    for (var j = 0; j < cells.length; j++) {
+                        var cell = cells[j];
+
+                        data[i][j] = cell.innerText;
+                    }
+                }
+            } else if (plainText) {
+                //Parse text in the format of columns separated by tabs and rows separated by new lines.
+                var rows = plainText.split("\n");
+
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i],
+                        cols = row.split("\t");
+
+                    data[i] = [];
+
+                    for (var j = 0; j < cols.length; j++) {
+                        var text = cols[j];
+
+                        data[i][j] = text;
+                    }
+                }
+            }
+
+            //If there is a selection
+            if (data.length > 0 && selectedRows.length > 0) {
+                //Set the values
+                var firstCellCoords = that.Selection.getCoords(selectedRows[0][0]);
+                //TODO solve issue when pasting multiple cells of data "" (columns being removed because they are empty
+                that.setRowValues(data, {rowStart: firstCellCoords[0], colStart: firstCellCoords[1]});
+            }
+
+            event.preventDefault();
         }
 
         this.lastClicked = null;
 
-        function focusTracker(e) {
-            that.lastClicked = e.target;
-
-            if (that.hasFocus()) {
-                e.preventDefault();
-            } else {
-                that.deselect();
-            }
-        }
-
-        document.addEventListener("click", focusTracker);
         document.addEventListener("copy", onCopy);
         document.addEventListener("cut", onCut);
         document.addEventListener("paste", onPaste);
