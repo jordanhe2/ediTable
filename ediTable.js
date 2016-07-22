@@ -1,4 +1,4 @@
-//(function(){
+(function(){
     "use strict";
 
     // UTILITIES
@@ -543,6 +543,7 @@
                 }
             };
             var handleCellInput = function (e) {
+                // Call updates
                 shrinkTable(that);
                 growTable(that);
                 that.fireEvent("change");
@@ -962,9 +963,9 @@
                 }
             }
 
+            // Call updates
             shrinkTable(this);
             growTable(this);
-
             this.fireEvent("change");
         },
         setColValues: function (values, ops) {
@@ -1001,6 +1002,7 @@
 
             // Call updates
             shrinkTable(this);
+            this.fireEvent("change");
         },
         isClear: function (ops) {
             // Normalize parameters
@@ -1182,5 +1184,4 @@
         }
     };
     window.EdiTable = EdiTable;
-//})();
-
+})();
