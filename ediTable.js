@@ -479,9 +479,12 @@
                 if (that.hasSelection()) {
                     var moveOrigin = !shift,
                         jumpTerminal = !(shift || ctrl),
+                        moveEditing = false,
                         originCoords = selection.getCoords(selection.originCell),
-                        terminalCoords = selection.getCoords(selection.terminalCell);
+                        terminalCoords = selection.getCoords(selection.terminalCell),
+                        editingCoords = selection.getCoords(selection.editingCell);
 
+                    // Assign deltaCoords
                     var deltaCoords = {x: 0, y: 0};
                     switch (e.keyCode) {
                         // TAB
