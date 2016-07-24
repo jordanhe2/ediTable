@@ -846,10 +846,9 @@
 
         this.lastClicked = null;
 
-        $(document)
-            .on("copy", onCopy)
-            .on("cut", onCut)
-            .on("paste", onPaste);
+        document.addEventListener("copy", onCopy)
+        document.addEventListener("cut", onCut)
+        document.addEventListener("paste", onPaste);
     };
     EdiTable.prototype = {
         addEventListener: function(type, func){
@@ -1038,10 +1037,10 @@
 
             // Set values
             var rows = this.table.rows;
-            for (var i = 0; i < values.length && i < rows.length - ops.rowStart - 1; i ++){
+            for (var i = 0; i < values.length && i < rows.length - ops.rowStart; i ++){
                 var row = rows[i + ops.rowStart];
 
-                for (var j = 0; j < values[i].length && row.cells.length - ops.colStart - 1; j ++){
+                for (var j = 0; j < values[i].length && j < row.cells.length - ops.colStart; j ++){
                     var cell = row.cells[j + ops.colStart];
                     this.CellManager.setValue(cell, values[i][j]);
                 }
