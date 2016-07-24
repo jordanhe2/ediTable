@@ -451,106 +451,115 @@
 
             var handleKeyDown = function (e) {
                 var hasFocus = that.hasFocus(),
+                    hasSelection = that.hasSelection(),
                     ctrl = e.ctrlKey,
                     shift = e.shiftKey,
                     tab = e.keyCode == 9,
-                    enter = e.keyCode == 13;
+                    enter = e.keyCode == 13,
+                    esc = e.keyCode == 27;
 
                 // Special keys
-                if (tab || enter) {
+                if (tab || enter || esc) {
                     if (hasFocus) e.preventDefault();
                     selection.exitEditMode();
                 }
 
-                // Don't interfere
-                if (selection.isEditing()) return;
-
-                // Special case: select all
-                if (ctrl && e.keyCode == 65) {
-                    if (hasFocus) e.preventDefault();
-
-                    if (shift)
-                        that.deselect();
-                    else
-                        that.select();
-                }
-
-                // Special case: delete/backspace
-                if (e.keyCode == 46 || e.keyCode == 8){
-                    if (hasFocus) e.preventDefault();
-                    if (that.hasSelection()){
-                        that.clearSelection();
-                    }
-                }
-
-                // Handle selection movement
-                if (that.hasSelection()) {
-                    var moveOrigin = !shift,
-                        jumpTerminal = !(shift || ctrl),
-                        moveEditing = false,
-                        originCoords = selection.getCoords(selection.originCell),
-                        terminalCoords = selection.getCoords(selection.terminalCell),
-                        editingCoords = selection.getCoords(selection.editingCell);
-
-                    // Assign deltaCoords
-                    var deltaCoords = {x: 0, y: 0};
-                    switch (e.keyCode) {
-                        // TAB
-                        case 9:
-                            var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
-                                notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
-                            deltaCoords.x = (notOnTheEnd ? 1 : -originCoords[1]);
-                            deltaCoords.y = (notOnTheEnd ? 0 : (notOnTheBottom ? 1 : -originCoords[0]));
-                            break;
-                        // ENTER
-                        case 13:
-                            var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
-                                notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
-                            deltaCoords.x = (notOnTheBottom ? 0 : (notOnTheEnd ? 1 : -originCoords[1]));
-                            deltaCoords.y = (notOnTheBottom ? 1 : -originCoords[0]);
-                            break;
-                        // LEFT
-                        case 37: deltaCoords.x = -1; break;
-                        // UP
-                        case 38: deltaCoords.y = -1; break;
-                        // RIGHT
-                        case 39: deltaCoords.x = 1; break;
-                        // DOWN
-                        case 40: deltaCoords.y = 1; break;
+                if (!selection.isEditing()) {
+                    // Special case: select all
+                    if (ctrl && e.keyCode == 65) {
+                        if (hasFocus) e.preventDefault();
+                        if (shift) that.deselect(); else that.select();
                     }
 
-                    // Translate according to deltaCoords
-                    if (originCoords && terminalCoords) {
-                        function testCoords(coords) {
-                            return !(
-                                coords[0] < 0 ||
-                                coords[0] >= that.getRowCount() ||
-                                coords[1] < 0 ||
-                                coords[1] >= that.getColCount()
-                            );
-                        }
+                    if (hasSelection){
+                        var moveOrigin = !shift,
+                            jumpTerminal = !(shift || ctrl),
+                            moveEditing = false,
+                            originCoords = selection.getCoords(selection.originCell),
+                            terminalCoords = selection.getCoords(selection.terminalCell),
+                            editingCoords = selection.getCoords(selection.editingCell);
 
-                        if (moveOrigin) {
-                            originCoords[1] += deltaCoords.x;
-                            originCoords[0] += deltaCoords.y;
-                        }
-
-                        if (jumpTerminal) {
-                            terminalCoords = originCoords;
+                        // Special case: delete/backspace
+                        if (e.keyCode == 46 || e.keyCode == 8){
+                            if (hasFocus) e.preventDefault();
+                            if (that.hasSelection()){
+                                that.clearSelection();
+                            }
                         } else {
-                            terminalCoords[1] += deltaCoords.x;
-                            terminalCoords[0] += deltaCoords.y;
-                        }
+                            // Assign deltaCoords
+                            var deltaCoords = {x: 0, y: 0};
+                            switch (e.keyCode) {
+                                // TAB
+                                case 9:
+                                    var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
+                                        notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
+                                    deltaCoords.x = (notOnTheEnd ? 1 : -originCoords[1]);
+                                    deltaCoords.y = (notOnTheEnd ? 0 : (notOnTheBottom ? 1 : -originCoords[0]));
+                                    break;
+                                // ENTER
+                                case 13:
+                                    var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
+                                        notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
+                                    deltaCoords.x = (notOnTheBottom ? 0 : (notOnTheEnd ? 1 : -originCoords[1]));
+                                    deltaCoords.y = (notOnTheBottom ? 1 : -originCoords[0]);
+                                    break;
+                                // LEFT
+                                case 37: deltaCoords.x = -1; break;
+                                // UP
+                                case 38: deltaCoords.y = -1; break;
+                                // RIGHT
+                                case 39: deltaCoords.x = 1; break;
+                                // DOWN
+                                case 40: deltaCoords.y = 1; break;
+                            }
 
-                        if (testCoords(originCoords) && testCoords(terminalCoords)) {
-                            that.select({
-                                rowStart: originCoords[0],
-                                rowEnd: terminalCoords[0],
-                                colStart: originCoords[1],
-                                colEnd: terminalCoords[1]
-                            });
+                            // Translate according to deltaCoords
+                            if (originCoords && terminalCoords) {
+                                function testCoords(coords) {
+                                    return !(
+                                        coords[0] < 0 ||
+                                        coords[0] >= that.getRowCount() ||
+                                        coords[1] < 0 ||
+                                        coords[1] >= that.getColCount()
+                                    );
+                                }
+
+                                if (moveOrigin) {
+                                    originCoords[1] += deltaCoords.x;
+                                    originCoords[0] += deltaCoords.y;
+                                }
+
+                                if (jumpTerminal) {
+                                    terminalCoords = originCoords;
+                                } else {
+                                    terminalCoords[1] += deltaCoords.x;
+                                    terminalCoords[0] += deltaCoords.y;
+                                }
+
+                                if (testCoords(originCoords) && testCoords(terminalCoords)) {
+                                    that.select({
+                                        rowStart: originCoords[0],
+                                        rowEnd: terminalCoords[0],
+                                        colStart: originCoords[1],
+                                        colEnd: terminalCoords[1]
+                                    });
+                                }
+                            }
                         }
+                    } else {
+
                     }
+                } else {
+
+                }
+            };
+            var handleKeyPress = function (e) {
+                var hasFocus = that.hasFocus(),
+                    editing = selection.isEditing(),
+                    hasSelection = that.hasSelection();
+
+                if (hasFocus && hasSelection && !editing) {
+                    selection.setEditMode(selection.originCell);
                 }
             };
             var handleCellInput = function (e) {
@@ -564,7 +573,8 @@
                 .on("mousedown", handleMouseDown)
                 .on("dblclick", handleDoubleClick)
                 .on("mouseup", handleMouseUp)
-                .on("keydown", handleKeyDown);
+                .on("keydown", handleKeyDown)
+                .on("keypress", handleKeyPress);
 
             selection = {
                 originCell: null,
@@ -955,10 +965,10 @@
 
             // Set values
             var rows = this.table.rows;
-            for (var i = 0; i < values.length && i < rows.length - ops.rowStart; i ++){
+            for (var i = 0; i < values.length && i < rows.length - ops.rowStart - 1; i ++){
                 var row = rows[i + ops.rowStart];
 
-                for (var j = 0; j < values[i].length && row.cells.length - ops.colStart; j ++){
+                for (var j = 0; j < values[i].length && row.cells.length - ops.colStart - 1; j ++){
                     var cell = row.cells[j + ops.colStart];
                     this.CellManager.setValue(cell, values[i][j]);
                 }
