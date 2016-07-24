@@ -1,6 +1,11 @@
 (function(){
     "use strict";
 
+    // FIX STUPID STUFF
+    Number.prototype.mod = function(n) {
+        return ((this % n) + n) % n;
+    }
+
     // UTILITIES
     function arrayTranspose(array) {
         array = array[0].map(function(col, i) {
@@ -74,6 +79,31 @@
                 });
             }
         })
+    }
+    function flatten(array, mutable) {
+        var toString = Object.prototype.toString;
+        var arrayTypeStr = '[object Array]';
+
+        var result = [];
+        var nodes = (mutable && array) || array.slice();
+        var node;
+
+        if (!array.length) {
+            return result;
+        }
+
+        node = nodes.pop();
+
+        do {
+            if (toString.call(node) === arrayTypeStr) {
+                nodes.push.apply(nodes, node);
+            } else {
+                result.push(node);
+            }
+        } while (nodes.length && (node = nodes.pop()) !== undefined);
+
+        result.reverse();
+        return result;
     }
     function forEachTableCell(ops){
         if (typeof ops.table != "undefined") ops.arr = tableToArray(ops.table);
@@ -450,59 +480,81 @@
             };
 
             var handleKeyDown = function (e) {
-                var hasFocus = that.hasFocus(),
-                    hasSelection = that.hasSelection(),
+                var hasFocus = that.hasFocus();
+                if (!hasFocus) return;
+
+                var hasSelection = that.hasSelection(),
+                    singleCell = selection.originCell == selection.terminalCell,
                     ctrl = e.ctrlKey,
                     shift = e.shiftKey,
                     tab = e.keyCode == 9,
                     enter = e.keyCode == 13,
                     esc = e.keyCode == 27;
 
+                // Save editing coords since tab/enter clears editng mode
+                var editingCell = selection.editingCell;
+
                 // Special keys
                 if (tab || enter || esc) {
-                    if (hasFocus) e.preventDefault();
+                    e.preventDefault();
                     selection.exitEditMode();
                 }
 
                 if (!selection.isEditing()) {
                     // Special case: select all
                     if (ctrl && e.keyCode == 65) {
-                        if (hasFocus) e.preventDefault();
+                        e.preventDefault();
                         if (shift) that.deselect(); else that.select();
                     }
-
-                    if (hasSelection){
-                        var moveOrigin = !shift,
-                            jumpTerminal = !(shift || ctrl),
-                            moveEditing = false,
+                    // Move selection
+                    else if (hasSelection){
+                        var moveEditing = !singleCell && (tab || enter),
+                            moveOrigin = !shift && !moveEditing,
+                            moveTerminal = !moveEditing,
+                            jumpTerminal = !(shift || ctrl) && !moveEditing,
                             originCoords = selection.getCoords(selection.originCell),
-                            terminalCoords = selection.getCoords(selection.terminalCell),
-                            editingCoords = selection.getCoords(selection.editingCell);
+                            terminalCoords = selection.getCoords(selection.terminalCell);
 
-                        // Special case: delete/backspace
+                        // DELETE / BACKSPACE
                         if (e.keyCode == 46 || e.keyCode == 8){
-                            if (hasFocus) e.preventDefault();
+                            e.preventDefault();
                             if (that.hasSelection()){
                                 that.clearSelection();
                             }
-                        } else {
+                        }
+                        // ENTER / TAB
+                        else if ([9, 13].indexOf(e.keyCode) != -1) {
+                            var cells;
+                            // TAB
+                            if (e.keyCode == 9){
+                                cells = flatten(singleCell ? that.getRows() : that.getSelectedRows());
+                            }
+                            // ENTER
+                            else if (e.keyCode == 13){
+                                cells = flatten(singleCell ? that.getCols() : that.getSelectedCols())
+                            }
+
+                            var index = cells.indexOf(singleCell ? selection.originCell : editingCell);
+                            if (singleCell) {
+                                var newCoords = selection.getCoords(
+                                    cells[(index + (shift ? -1 : 1)).mod(cells.length)]
+                                );
+
+                                that.select({
+                                    rowStart: newCoords[0],
+                                    rowEnd: newCoords[0],
+                                    colStart: newCoords[1],
+                                    colEnd: newCoords[1]
+                                });
+                            } else if (moveEditing) {
+                                selection.setEditMode(cells[(index + (shift ? -1 : 1)).mod(cells.length)]);
+                            }
+                        }
+                        // ARROW KEYS
+                        else if ([37, 38, 39, 40].indexOf(e.keyCode) != -1){
                             // Assign deltaCoords
                             var deltaCoords = {x: 0, y: 0};
                             switch (e.keyCode) {
-                                // TAB
-                                case 9:
-                                    var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
-                                        notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
-                                    deltaCoords.x = (notOnTheEnd ? 1 : -originCoords[1]);
-                                    deltaCoords.y = (notOnTheEnd ? 0 : (notOnTheBottom ? 1 : -originCoords[0]));
-                                    break;
-                                // ENTER
-                                case 13:
-                                    var notOnTheEnd = originCoords[1] < that.getColCount() - 1,
-                                        notOnTheBottom = originCoords[0] < that.getRowCount() - 1;
-                                    deltaCoords.x = (notOnTheBottom ? 0 : (notOnTheEnd ? 1 : -originCoords[1]));
-                                    deltaCoords.y = (notOnTheBottom ? 1 : -originCoords[0]);
-                                    break;
                                 // LEFT
                                 case 37: deltaCoords.x = -1; break;
                                 // UP
@@ -531,7 +583,7 @@
 
                                 if (jumpTerminal) {
                                     terminalCoords = originCoords;
-                                } else {
+                                } else if (moveTerminal){
                                     terminalCoords[1] += deltaCoords.x;
                                     terminalCoords[0] += deltaCoords.y;
                                 }
@@ -546,11 +598,18 @@
                                 }
                             }
                         }
-                    } else {
-
                     }
-                } else {
-
+                    // NO SELECTION
+                    else {
+                        if ([9, 13, 37, 38, 39, 40].indexOf(e.keyCode) != -1){
+                            that.select({
+                                rowStart: 0,
+                                rowEnd: 0,
+                                colStart: 0,
+                                colEnd: 0
+                            });
+                        }
+                    }
                 }
             };
             var handleKeyPress = function (e) {
@@ -638,8 +697,21 @@
         growTable(this);
         shrinkTable(this);
 
-        // Add CSS
-        $(this.table).addClass("ediTable");
+        // Init table
+        $(this.table)
+            .addClass("ediTable")
+            .focusin(function (e) {
+                var coords = that.Selection.getCoords(e.target);
+
+                e.target.blur();
+
+                that.select({
+                    rowStart: coords[0],
+                    rowEnd: coords[0],
+                    colStart: coords[1],
+                    colEnd: coords[1]
+                });
+            });
 
 
         function onCopy(event) {
@@ -774,9 +846,10 @@
 
         this.lastClicked = null;
 
-        document.addEventListener("copy", onCopy);
-        document.addEventListener("cut", onCut);
-        document.addEventListener("paste", onPaste);
+        $(document)
+            .on("copy", onCopy)
+            .on("cut", onCut)
+            .on("paste", onPaste);
     };
     EdiTable.prototype = {
         addEventListener: function(type, func){
@@ -1211,3 +1284,4 @@
     };
     window.EdiTable = EdiTable;
 })();
+
