@@ -475,6 +475,14 @@
                         that.select();
                 }
 
+                // Special case: delete/backspace
+                if (e.keyCode == 46 || e.keyCode == 8){
+                    if (hasFocus) e.preventDefault();
+                    if (that.hasSelection()){
+                        that.clearSelection();
+                    }
+                }
+
                 // Handle selection movement
                 if (that.hasSelection()) {
                     var moveOrigin = !shift,
@@ -675,18 +683,8 @@
                 // Copy
                 onCopy(event);
 
-                // Clear selection
-                var s = that.Selection,
-                    originCoords = s.getCoords(s.originCell),
-                    termCoords = s.getCoords(s.terminalCell);
-                if (originCoords && termCoords) {
-                    that.clear({
-                        rowStart: originCoords[0],
-                        colStart: originCoords[1],
-                        rowEnd: termCoords[0],
-                        colEnd: termCoords[1]
-                    });
-                }
+                // Clear
+                that.clearSelection();
             }
         }
         function onPaste(event) {
@@ -1008,6 +1006,19 @@
             // Call updates
             shrinkTable(this);
             this.fireEvent("change");
+        },
+        clearSelection: function(){
+            var s = this.Selection,
+                originCoords = s.getCoords(s.originCell),
+                termCoords = s.getCoords(s.terminalCell);
+            if (originCoords && termCoords) {
+                this.clear({
+                    rowStart: originCoords[0],
+                    colStart: originCoords[1],
+                    rowEnd: termCoords[0],
+                    colEnd: termCoords[1]
+                });
+            }
         },
         isClear: function (ops) {
             // Normalize parameters
