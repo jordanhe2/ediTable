@@ -1,3 +1,10 @@
+/** === ediTable.js ===
+ * A simple MS Excel-like table editor for HTML
+ * Copyright (c) 2016 Jordan Hendrickson, Tanner Nielsen
+ *
+ * DEPENDENCIES:
+ *     jQuery - https://jquery.com
+ */
 (function(){
     "use strict";
 

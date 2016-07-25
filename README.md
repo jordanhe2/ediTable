@@ -1,2 +1,2 @@
 # ediTable
-A simple excel-like table for HTML.
+A simple MS Excel-like table for HTML
