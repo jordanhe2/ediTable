@@ -294,6 +294,7 @@
             if (typeof ops.shrinkCols == "undefined") ops.shrinkCols = false;
             if (typeof ops.rowsAllowMiddleShrink == "undefined") ops.rowsAllowMiddleShrink = false;
             if (typeof ops.colsAllowMiddleShrink == "undefined") ops.colsAllowMiddleShrink = false;
+            if (typeof ops.copyAsHTML == "undefined") ops.copyAsHTML = false;
             if (typeof ops.pasteAsHTML == "undefined") ops.pasteAsHTML = false;
 
             // Correct logical errors
@@ -718,21 +719,25 @@
             // Don't interfere
             if (!that.hasFocus() || that.Selection.isEditing()) return;
 
-            // Get html of selected.
-            var rows = that.getSelectedRows(),
-                table = document.createElement("table");
+            if (that.options.copyAsHTML) {
+                // Get html of selected.
+                var rows = that.getSelectedRows(),
+                    table = document.createElement("table");
 
-            for (var i = 0; i < rows.length; i++) {
-                var row = rows[i],
-                    rowDom = document.createElement("tr");
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i],
+                        rowDom = document.createElement("tr");
 
-                for (var j = 0; j < row.length; j++) {
-                    var cell = row[j];
+                    for (var j = 0; j < row.length; j++) {
+                        var cell = row[j];
 
-                    rowDom.appendChild($(cell).clone()[0]);
+                        rowDom.appendChild($(cell).clone()[0]);
+                    }
+
+                    table.appendChild(rowDom);
                 }
 
-                table.appendChild(rowDom);
+                event.clipboardData.setData("text/html", table.outerHTML);
             }
 
             // Get text of selected
@@ -755,7 +760,6 @@
                 }
             }
 
-            event.clipboardData.setData("text/html", table.outerHTML);
             event.clipboardData.setData("text/plain", tableText);
 
             event.preventDefault();
@@ -771,77 +775,88 @@
         }
         function onPaste(event) {
             // Don't interfere
-            if (!that.hasFocus() || that.Selection.isEditing()) return;
+            if (!that.hasFocus()) return;
 
-            var html,
-                table,
-                data = [];
-            var htmlText = event.clipboardData.getData("text/html"),
-                plainText = event.clipboardData.getData("text/plain");
+            if (!that.Selection.isEditing()) {
+                event.preventDefault();
 
-            var selectedRows = that.getSelectedRows();
+                var html,
+                    table,
+                    data = [];
+                var htmlText = event.clipboardData.getData("text/html"),
+                    plainText = event.clipboardData.getData("text/plain");
 
-            if (htmlText && htmlText != "") {
-                if (window.DOMParser) {
-                    //DOMParser is more secure, but less widely supported.
-                    var parser = new DOMParser();
+                var selectedRows = that.getSelectedRows();
 
-                    html = parser.parseFromString(htmlText, "text/html");
-                } else {
-                    //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
-                    html = document.implementation.createHTMLDocument();
+                if (htmlText && htmlText != "") {
+                    if (window.DOMParser) {
+                        //DOMParser is more secure, but less widely supported.
+                        var parser = new DOMParser();
 
-                    html.write(htmlText);
+                        html = parser.parseFromString(htmlText, "text/html");
+                    } else {
+                        //DOMImplementation.createHTMLDocument is widely supported by browsers but I'm unsure how exploitable it is.
+                        html = document.implementation.createHTMLDocument();
+
+                        html.write(htmlText);
+                    }
+
+                    //Get data from table instead of searching for tr's because semantics.
+                    var tables = html.getElementsByTagName("table");
+                    //Use first table if there is more than one copied.
+                    table = tables.length > 0 ? tables[0] : null;
                 }
 
-                //Get data from table instead of searching for tr's because semantics.
-                var tables = html.getElementsByTagName("table");
-                //Use first table if there is more than one copied.
-                table = tables.length > 0 ? tables[0] : null;
-            }
+                if (table) {
+                    var rows = table.rows;
 
-            if (table) {
-                var rows = table.rows;
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = rows[i],
+                            cells = row.cells;
 
-                for (var i = 0; i < rows.length; i++) {
-                    var row = rows[i],
-                        cells = row.cells;
+                        data[i] = [];
 
-                    data[i] = [];
+                        for (var j = 0; j < cells.length; j++) {
+                            var cell = cells[j];
 
-                    for (var j = 0; j < cells.length; j++) {
-                        var cell = cells[j];
+                            data[i][j] = cell.innerText;
+                        }
+                    }
+                } else if (plainText) {
+                    //Parse text in the format of columns separated by tabs and rows separated by new lines.
+                    var rows = plainText.split("\n");
 
-                        data[i][j] = cell.innerText;
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = rows[i],
+                            cols = row.split("\t");
+
+                        data[i] = [];
+
+                        for (var j = 0; j < cols.length; j++) {
+                            var text = cols[j];
+
+                            data[i][j] = text;
+                        }
                     }
                 }
-            } else if (plainText) {
-                //Parse text in the format of columns separated by tabs and rows separated by new lines.
-                var rows = plainText.split("\n");
 
-                for (var i = 0; i < rows.length; i++) {
-                    var row = rows[i],
-                        cols = row.split("\t");
-
-                    data[i] = [];
-
-                    for (var j = 0; j < cols.length; j++) {
-                        var text = cols[j];
-
-                        data[i][j] = text;
-                    }
+                //If there is a selection
+                if (data.length > 0 && selectedRows.length > 0) {
+                    //Set the values
+                    var firstCellCoords = that.Selection.getCoords(selectedRows[0][0]);
+                    //TODO solve issue when pasting multiple cells of data "" (columns being removed because they are empty
+                    that.setRowValues(data, {rowStart: firstCellCoords[0], colStart: firstCellCoords[1]});
                 }
             }
+            // IS EDITING
+            else if (!that.options.pasteAsHTML) {
+                event.preventDefault();
+                // get text representation of clipboard
+                var text = event.clipboardData.getData("text/plain");
 
-            //If there is a selection
-            if (data.length > 0 && selectedRows.length > 0) {
-                //Set the values
-                var firstCellCoords = that.Selection.getCoords(selectedRows[0][0]);
-                //TODO solve issue when pasting multiple cells of data "" (columns being removed because they are empty
-                that.setRowValues(data, {rowStart: firstCellCoords[0], colStart: firstCellCoords[1]});
+                // insert text manually
+                document.execCommand("insertHTML", false, text);
             }
-
-            event.preventDefault();
         }
 
         this.lastClicked = null;
