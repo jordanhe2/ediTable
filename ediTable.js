@@ -546,7 +546,7 @@
                         var moveEditing = !singleCell && (tab || enter),
                             moveOrigin = !shift && !moveEditing,
                             moveTerminal = !moveEditing,
-                            jumpTerminal = !(shift || ctrl) && !moveEditing,
+                            jumpTerminal = !shift && !moveEditing,
                             originCoords = selection.getCoords(selection.originCell),
                             terminalCoords = selection.getCoords(selection.terminalCell);
 
@@ -602,13 +602,21 @@
                                     if (ctrl) deltaCoords.y = -moveCoords[0];
                                     break;
                                 // LEFT
-                                case 37: deltaCoords.x = -1; break;
+                                case 37:
+                                    deltaCoords.x = ctrl ? deltaCoords.x = -moveCoords[1] : -1;
+                                    break;
                                 // UP
-                                case 38: deltaCoords.y = -1; break;
+                                case 38:
+                                    deltaCoords.y = ctrl ? deltaCoords.y = -moveCoords[0] : -1;
+                                    break;
                                 // RIGHT
-                                case 39: deltaCoords.x = 1; break;
+                                case 39:
+                                    deltaCoords.x = ctrl ? that.getColCount() - moveCoords[1] - 1 : 1;
+                                    break;
                                 // DOWN
-                                case 40: deltaCoords.y = 1; break;
+                                case 40:
+                                    deltaCoords.y = ctrl ? that.getRowCount() - moveCoords[0] - 1 : 1;
+                                    break;
                             }
 
                             // Translate according to deltaCoords
