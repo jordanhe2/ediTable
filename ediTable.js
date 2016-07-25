@@ -585,11 +585,22 @@
                                 selection.setEditMode(cells[(index + (shift ? -1 : 1)).mod(cells.length)]);
                             }
                         }
-                        // ARROW KEYS
-                        else if ([37, 38, 39, 40].indexOf(e.keyCode) != -1){
+                        // ARROW KEYS, HOME / END
+                        else if ([35, 36, 37, 38, 39, 40].indexOf(e.keyCode) != -1){
                             // Assign deltaCoords
-                            var deltaCoords = {x: 0, y: 0};
+                            var deltaCoords = {x: 0, y: 0},
+                                moveCoords = moveTerminal && !jumpTerminal ? terminalCoords : originCoords;
                             switch (e.keyCode) {
+                                // END
+                                case 35:
+                                    deltaCoords.x = that.getColCount() - moveCoords[1] - 1;
+                                    if (ctrl) deltaCoords.y = that.getRowCount() - moveCoords[0] - 1;
+                                    break;
+                                // HOME
+                                case 36:
+                                    deltaCoords.x = -moveCoords[1];
+                                    if (ctrl) deltaCoords.y = -moveCoords[0];
+                                    break;
                                 // LEFT
                                 case 37: deltaCoords.x = -1; break;
                                 // UP
@@ -636,12 +647,20 @@
                     }
                     // NO SELECTION
                     else {
-                        if ([9, 13, 37, 38, 39, 40].indexOf(e.keyCode) != -1){
+                        if ([9, 13, 35, 36, 37, 38, 39, 40].indexOf(e.keyCode) != -1){
+                            var coords = [0, 0];
+
+                            // End / Ctrl-End
+                            if (e.keyCode == 35){
+                                coords[1] = that.getColCount() - 1;
+                                if (ctrl) coords[0] = that.getRowCount() - 1;
+                            }
+
                             that.select({
-                                rowStart: 0,
-                                rowEnd: 0,
-                                colStart: 0,
-                                colEnd: 0
+                                rowStart: coords[0],
+                                rowEnd: coords[0],
+                                colStart: coords[1],
+                                colEnd: coords[1]
                             });
                         }
                     }
@@ -738,16 +757,20 @@
         $(this.table)
             .addClass("ediTable")
             .focusin(function (e) {
-                var coords = that.Selection.getCoords(e.target);
+                if (!that.hasSelection()) {
+                    var coords = that.Selection.getCoords(e.target);
 
-                e.target.blur();
+                    e.target.blur();
+                    that.lastClicked = e.target;
+                    deselectText();
 
-                that.select({
-                    rowStart: coords[0],
-                    rowEnd: coords[0],
-                    colStart: coords[1],
-                    colEnd: coords[1]
-                });
+                    that.select({
+                        rowStart: coords[0],
+                        rowEnd: coords[0],
+                        colStart: coords[1],
+                        colEnd: coords[1]
+                    });
+                }
             });
 
 
