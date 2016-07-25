@@ -548,7 +548,7 @@
                         e.preventDefault();
                         if (shift) that.deselect(); else that.select();
                     }
-                    // Move selection
+                    // Alter selection
                     else if (hasSelection){
                         var moveEditing = !singleCell && (tab || enter),
                             moveOrigin = !shift && !moveEditing,
@@ -638,25 +638,23 @@
                                 }
 
                                 if (moveOrigin) {
-                                    originCoords[1] += deltaCoords.x;
-                                    originCoords[0] += deltaCoords.y;
+                                    var newCoords = [originCoords[0] + deltaCoords.y, originCoords[1] + deltaCoords.x];
+                                    if (testCoords(newCoords)) originCoords = newCoords;
                                 }
 
                                 if (jumpTerminal) {
                                     terminalCoords = originCoords;
                                 } else if (moveTerminal){
-                                    terminalCoords[1] += deltaCoords.x;
-                                    terminalCoords[0] += deltaCoords.y;
+                                    var newCoords = [terminalCoords[0] + deltaCoords.y, terminalCoords[1] + deltaCoords.x];
+                                    if (testCoords(newCoords)) terminalCoords = newCoords;
                                 }
 
-                                if (testCoords(originCoords) && testCoords(terminalCoords)) {
-                                    that.select({
-                                        rowStart: originCoords[0],
-                                        rowEnd: terminalCoords[0],
-                                        colStart: originCoords[1],
-                                        colEnd: terminalCoords[1]
-                                    });
-                                }
+                                that.select({
+                                    rowStart: originCoords[0],
+                                    rowEnd: terminalCoords[0],
+                                    colStart: originCoords[1],
+                                    colEnd: terminalCoords[1]
+                                });
                             }
                         }
                     }
