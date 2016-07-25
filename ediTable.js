@@ -424,10 +424,27 @@
                 table = $(that.table),
                 startCoords = [];
 
+            // Keeps track of double touch
+            var lastTap;
+            var ifDoubleTap = function() {
+                var now = new Date().getTime(),
+                    timeSince = now - lastTap;
+
+                lastTap = new Date().getTime();
+
+                return timeSince < 600 && timeSince > 0;
+            }
+
             var handleMouseDown = function (e) {
                 var targetCoords = selection.getCoords(e.target);
 
                 that.lastClicked = e.target;
+
+                // Check for double touch
+                if (e.type == "touchstart" && ifDoubleTap()) {
+                    handleDoubleClick(e);
+                    return;
+                }
 
                 if (targetCoords) {
                     startCoords = targetCoords;
@@ -446,7 +463,8 @@
                     }
 
                     $(document)
-                        .on("mousemove", handleMouseMove);
+                        .on("mousemove", handleMouseMove)
+                        .on("touchmove", handleMouseMove)
                 } else {
                     that.deselect();
                     selection.exitEditMode();
@@ -463,10 +481,26 @@
             };
             var handleMouseUp = function (e) {
                 $(document)
-                    .unbind("mousemove", handleMouseMove);
+                    .unbind("mousemove", handleMouseMove)
+                    .unbind("touchmove", handleMouseMove)
             };
             var handleMouseMove = function (e) {
                 var targetCoords = selection.getCoords(e.target);
+
+                if (e.changedTouches) {
+                    var changedTouches = e.changedTouches,
+                        clientX,
+                        clientY;
+
+                    if (changedTouches.length > 0) {
+                        var touch = changedTouches.item(0);
+
+                        clientX = touch.clientX;
+                        clientY = touch.clientY;
+
+                        targetCoords = selection.getCoords(document.elementFromPoint(clientX, clientY));
+                    }
+                }
 
                 if (!selection.isEditing() && targetCoords) {
                     that.select({
@@ -631,8 +665,10 @@
 
             $(document)
                 .on("mousedown", handleMouseDown)
+                .on("touchstart", handleMouseDown)
                 .on("dblclick", handleDoubleClick)
                 .on("mouseup", handleMouseUp)
+                .on("touchend", handleMouseUp)
                 .on("keydown", handleKeyDown)
                 .on("keypress", handleKeyPress);
 
