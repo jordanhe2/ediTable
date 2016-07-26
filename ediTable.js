@@ -281,6 +281,22 @@
             }
         }
 
+    function elementIsInViewport (el) {
+        if (typeof jQuery === "function" && el instanceof jQuery) el = el[0];
+
+        var rect = el.getBoundingClientRect();
+
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= $(window).height() &&
+            rect.right <= $(window).width()
+        );
+    }
+    function scrollIntoViewIfNecessary (el){
+        if (!elementIsInViewport(el)) el.scrollIntoView();
+    }
+
     /**
      * Represents a table by wrapping around an HTML table.
      *
@@ -303,6 +319,7 @@
             if (typeof ops.colsAllowMiddleShrink == "undefined") ops.colsAllowMiddleShrink = false;
             if (typeof ops.copyAsHTML == "undefined") ops.copyAsHTML = false;
             if (typeof ops.pasteAsHTML == "undefined") ops.pasteAsHTML = false;
+            if (typeof ops.scrollSelectionIntoView == "undefined") ops.scrollSelectionIntoView = true;
 
             // Correct logical errors
             if (ops.minRows < 0) ops.minRows = 0;
@@ -444,7 +461,6 @@
 
             var handleMouseDown = function (e) {
                 var targetCoords = selection.getCoords(e.target);
-
                 that.lastClicked = e.target;
 
                 // Check for double touch
@@ -452,6 +468,9 @@
                     handleDoubleClick(e);
                     return;
                 }
+                // Check for right click
+                var right = false;
+                if (e.which == 3) right = true;
 
                 if (targetCoords) {
                     startCoords = targetCoords;
@@ -459,19 +478,21 @@
                     if (e.target != selection.editingCell) {
                         selection.exitEditMode();
 
-                        that.select({
-                            rowStart: startCoords[0],
-                            rowEnd: targetCoords[0],
-                            colStart: startCoords[1],
-                            colEnd: targetCoords[1]
-                        });
+                        if (!right || (right && !that.hasSelection())){
+                            that.select({
+                                rowStart: startCoords[0],
+                                rowEnd: targetCoords[0],
+                                colStart: startCoords[1],
+                                colEnd: targetCoords[1]
+                            });
+                        }
 
                         e.preventDefault();
                     }
 
                     $(document)
                         .on("mousemove", handleMouseMove)
-                        .on("touchmove", handleMouseMove)
+                        .on("touchmove", handleMouseMove);
                 } else {
                     that.deselect();
                     selection.exitEditMode();
@@ -483,7 +504,7 @@
                 if (targetCoords) {
                     selection.setEditMode(e.target);
 
-                    e.preventDefault();
+                    //e.preventDefault();
                 }
             };
             var handleMouseUp = function (e) {
@@ -772,6 +793,7 @@
             .focusin(function (e) {
                 if (!that.hasSelection()) {
                     var coords = that.Selection.getCoords(e.target);
+                    if (!coords) return;
 
                     e.target.blur();
                     that.lastClicked = e.target;
@@ -960,20 +982,6 @@
 
             return $(activeElement).closest(this.table).length == 1 || $(lastClicked).closest(this.table).length == 1;
         },
-        setRenderEnabled: function () {
-            var lastStyle,
-                enabled = true;
-            var setRenderEnabled = function(enable){
-                if (enable != enabled){
-                    if (!enable) lastStyle = this.table.style.display;
-                    this.table.style.display = enable ? lastStyle : "none";
-
-                    enabled = enable;
-                }
-            }
-
-            return setRenderEnabled;
-        }(),
         getRowCount: function () {
             return this.table.rows.length;
         },
@@ -1022,9 +1030,6 @@
             return editable;
         },
         select: function (ops) {
-            this.setRenderEnabled(false);
-
-
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
@@ -1076,8 +1081,17 @@
                 }
             })();
 
+            // Scroll selection into view
+            if (this.options.scrollSelectionIntoView){
+                var orig = this.Selection.originCell,
+                    term = this.Selection.terminalCell;
 
-            this.setRenderEnabled(true);
+                if (orig != term){
+                    scrollIntoViewIfNecessary(term);
+                } else {
+                    scrollIntoViewIfNecessary(orig);
+                }
+            }
         },
         deselect: function (ops) {
             // Normalize parameters
@@ -1145,10 +1159,6 @@
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
             if (typeof ops.colStart == "undefined") ops.colStart = 0;
 
-            // Flip flop parameters
-            var temp = ops.rowStart;
-            ops.rowStart = ops.colStart;
-            ops.colStart = temp;
             values = arrayTranspose(values);
 
             if (values.length == 0) values[0] = [];
