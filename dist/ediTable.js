@@ -503,8 +503,6 @@
 
                 if (targetCoords) {
                     selection.setEditMode(e.target);
-
-                    //e.preventDefault();
                 }
             };
             var handleMouseUp = function (e) {
