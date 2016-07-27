@@ -27,6 +27,7 @@
         }
     </style>
     <link rel="stylesheet" type="text/css" href="ediTable.css">
+    <link rel="stylesheet" type="text/css" href="lib/jQuery-contextMenu/jquery.contextMenu.min.css">
 </head>
 <body>
     <table id="table" style="font-size: 18pt;">
@@ -76,6 +77,7 @@
         </tbody>
     </table>
     <script type="text/javascript" src="lib/jQuery/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript" src="lib/jQuery-contextMenu/jquery.contextMenu.min.js"></script>
     <script type="text/javascript" src="ediTable.js"></script>
     <script>
         var editable = new EdiTable(document.getElementById("table"), {
@@ -88,6 +90,32 @@
         });
         editable.setEditable();
         editable.addEventListener("change", function(){console.info("You've changed, Frank..")});
+    </script>
+    <script>
+        $(function() {
+            $.contextMenu({
+                selector: 'td',
+                callback: function(key, options) {
+                    var m = "clicked: " + key;
+                    window.console && console.log(m) || alert(m);
+                },
+                items: {
+                    "edit": {name: "Edit", icon: "edit"},
+                    "cut": {name: "Cut", icon: "cut"},
+                    "copy": {name: "Copy", icon: "copy"},
+                    "paste": {name: "Paste", icon: "paste"},
+                    "delete": {name: "Delete", icon: "delete"},
+                    "sep1": "---------",
+                    "quit": {name: "Quit", icon: function(){
+                        return 'context-menu-icon context-menu-icon-quit';
+                    }}
+                }
+            });
+
+            $('.context-menu-one').on('click', function(e){
+                console.log('clicked', this);
+            })
+        });
     </script>
 </body>
 </html>
