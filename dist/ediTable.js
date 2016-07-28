@@ -956,6 +956,50 @@
         document.addEventListener("copy", onCopy)
         document.addEventListener("cut", onCut)
         document.addEventListener("paste", onPaste);
+
+        // Initialize context menu
+        $(function() {
+            $.contextMenu({
+                selector: 'td, th',
+                items: {
+                    "edit": {
+                        name: "Edit",
+                        icon: "edit",
+                        callback: function() {
+                            //...
+                        }
+                    },
+                    "cut": {
+                        name: "Cut",
+                        icon: "cut",
+                        callback: function() {
+                            //...
+                        }
+                    },
+                    "copy": {
+                        name: "Copy",
+                        icon: "copy",
+                        callback: function() {
+                            // onCopy
+                        }
+                    },
+                    "paste": {
+                        name: "Paste",
+                        icon: "paste",
+                        callback: function() {
+                            // onPaste
+                        }
+                    },
+                    "delete": {
+                        name: "Delete",
+                        icon: "delete",
+                        callback: function() {
+                            that.clearSelection();
+                        }
+                    }
+                }
+            });
+        });
     };
     EdiTable.prototype = {
         addEventListener: function(type, func){
