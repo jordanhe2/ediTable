@@ -736,6 +736,9 @@
                     // Clear editing cell
                     this.exitEditMode();
 
+                    // Quit if not editable
+                    if (!that.CellManager.isEditable(cell)) return;
+
                     // Set edit mode
                     cell.focus();
                     selectText(cell);
