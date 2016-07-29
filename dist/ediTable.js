@@ -485,9 +485,17 @@
 
             var handleMouseDown = function (e) {
                 that.lastClicked = e.target;
-                if (!that.hasFocus()) return;
+                var targetCoords = selection.getCoords(e.target),
+                    hasFocus = that.hasFocus();
 
-                var targetCoords = selection.getCoords(e.target);
+                // Clicked outside
+                if (!targetCoords || !hasFocus){
+                    that.deselect();
+                    selection.exitEditMode();
+                }
+
+                // Don't interfere
+                if (!hasFocus) return;
 
                 // Check for double touch
                 if (e.type == "touchstart" && ifDoubleTap()) {
@@ -519,9 +527,6 @@
                     $(document)
                         .on("mousemove", handleMouseMove)
                         .on("touchmove", handleMouseMove);
-                } else {
-                    that.deselect();
-                    selection.exitEditMode();
                 }
             };
             var handleDoubleClick = function (e) {
