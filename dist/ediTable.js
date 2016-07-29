@@ -145,6 +145,7 @@
 
         return true;
     }
+
     function selectText(element) {
         if (document.body.createTextRange) {
             var range = document.body.createTextRange();
@@ -157,6 +158,29 @@
             selection.removeAllRanges();
             selection.addRange(range);
         }
+    }
+    function getCaretPosition(editableDiv) {
+        var caretPos = 0, containerEl = null, sel, range;
+        if (window.getSelection) {
+            sel = window.getSelection();
+            if (sel.rangeCount) {
+                range = sel.getRangeAt(0);
+                if (range.commonAncestorContainer.parentNode == editableDiv) {
+                    caretPos = range.endOffset;
+                }
+            }
+        } else if (document.selection && document.selection.createRange) {
+            range = document.selection.createRange();
+            if (range.parentElement() == editableDiv) {
+                var tempEl = document.createElement("span");
+                editableDiv.insertBefore(tempEl, editableDiv.firstChild);
+                var tempRange = range.duplicate();
+                tempRange.moveToElementText(tempEl);
+                tempRange.setEndPoint("EndToEnd", range);
+                caretPos = tempRange.text.length;
+            }
+        }
+        return caretPos;
     }
     function deselectText() {
         if (document.selection) {
@@ -559,8 +583,13 @@
                 // Save editing coords since tab/enter clears editng mode
                 var editingCell = selection.editingCell;
 
-                // Special keys
-                if (tab || enter || esc) {
+                // Ways to exit edit mode
+                if (tab || enter || esc ||
+                    e.keyCode == 38 ||
+                    e.keyCode == 40 ||
+                    (e.keyCode == 37 && (editingCell && getCaretPosition(editingCell) == 0)) ||
+                    (e.keyCode == 39 && (editingCell && getCaretPosition(editingCell) == editingCell.innerText.length))) {
+
                     e.preventDefault();
                     selection.exitEditMode();
                 }
@@ -964,6 +993,7 @@
         document.addEventListener("cut", onCut)
         document.addEventListener("paste", onPaste);
 
+        // Initialize context menu
         function makeMenuItem(text, shortcut) {
             var wrapper = $("<span></span>"),
                 textDom = wrapper.clone(),
@@ -985,8 +1015,6 @@
 
             return wrapper.html();
         }
-
-        // Initialize context menu
         context.attach(this.table, [
             {
                 text: "Edit",
@@ -996,9 +1024,7 @@
             },
             {
                 text: makeMenuItem("Cut", "Ctrl + X"),
-                action: function(){
-
-                }
+                action: function(){}
             },
             {
                 text: makeMenuItem("Copy", "Ctrl + C"),
