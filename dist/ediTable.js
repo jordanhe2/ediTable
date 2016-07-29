@@ -4,6 +4,8 @@
  *
  * DEPENDENCIES:
  *     jQuery - https://jquery.com
+ *     context.js (modified) - https://github.com/jordanhe2/ediTable/tree/master/dist/lib/context
+ *                (original) - http://lab.jakiestfu.com/contextjs/
  */
 (function(){
     "use strict";
