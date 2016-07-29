@@ -1032,37 +1032,31 @@
 
             return wrapper.html();
         }
-        context.attach(this.table, [
-            {
-                text: "Edit",
-                action: function(){
-                    that.Selection.setEditMode(that.Selection.originCell);
-                }
-            },
-            {
-                text: makeMenuItem("Cut", "Ctrl + X"),
-                action: function(){}
-            },
-            {
-                text: makeMenuItem("Copy", "Ctrl + C"),
-                action: function(){}
-            },
-            {
-                text: makeMenuItem("Paste", "Ctrl + V"),
-                action: function(){
-                    $(document).trigger($.Event("keydown", {
-                        ctrlKey: true,
-                        keyCode: 86
-                    }));
-                }
-            },
-            {
-                text: makeMenuItem("Delete", "Del / \u232B"),
-                action: function(){
-                    that.clearSelection()
-                }
+        context.attach(this.table, [{
+            text: "Edit",
+            action: function(){
+                that.Selection.setEditMode(that.Selection.originCell);
             }
-        ]);
+        },{
+            text: makeMenuItem("Cut", "Ctrl + X"),
+            action: function(){}
+        },{
+            text: makeMenuItem("Copy", "Ctrl + C"),
+            action: function(){}
+        },{
+            text: makeMenuItem("Paste", "Ctrl + V"),
+            action: function(){
+                $(document).trigger($.Event("keydown", {
+                    ctrlKey: true,
+                    keyCode: 86
+                }));
+            }
+        },{
+            text: makeMenuItem("Delete", "Del / \u232B"),
+            action: function(){
+                that.clearSelection()
+            }
+        }]);
     };
     EdiTable.prototype = {
         addEventListener: function(type, func){
