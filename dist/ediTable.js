@@ -460,8 +460,10 @@
             }
 
             var handleMouseDown = function (e) {
-                var targetCoords = selection.getCoords(e.target);
                 that.lastClicked = e.target;
+                if (!that.hasFocus()) return;
+
+                var targetCoords = selection.getCoords(e.target);
 
                 // Check for double touch
                 if (e.type == "touchstart" && ifDoubleTap()) {
@@ -499,6 +501,8 @@
                 }
             };
             var handleDoubleClick = function (e) {
+                if (!that.hasFocus()) return;
+
                 var targetCoords = selection.getCoords(e.target);
 
                 if (targetCoords) {
@@ -960,49 +964,62 @@
         document.addEventListener("cut", onCut)
         document.addEventListener("paste", onPaste);
 
+        function makeMenuItem(text, shortcut) {
+            var wrapper = $("<span></span>"),
+                textDom = wrapper.clone(),
+                shortCutDom = wrapper.clone();
+
+            wrapper
+                .css("width", "100%")
+                .append([
+                    textDom,
+                    shortCutDom
+                ]);
+            textDom
+                .text(text);
+            shortCutDom
+                .css("font-size", "0.9em")
+                .css("float", "right")
+                .css("opacity", "0.7")
+                .text(shortcut);
+
+            return wrapper.html();
+        }
+
         // Initialize context menu
-        $(function() {
-            $.contextMenu({
-                selector: 'td, th',
-                items: {
-                    "edit": {
-                        name: "Edit",
-                        icon: "edit",
-                        callback: function() {
-                            //...
-                        }
-                    },
-                    "cut": {
-                        name: "Cut",
-                        icon: "cut",
-                        callback: function() {
-                            //...
-                        }
-                    },
-                    "copy": {
-                        name: "Copy",
-                        icon: "copy",
-                        callback: function() {
-                            // onCopy
-                        }
-                    },
-                    "paste": {
-                        name: "Paste",
-                        icon: "paste",
-                        callback: function() {
-                            // onPaste
-                        }
-                    },
-                    "delete": {
-                        name: "Delete",
-                        icon: "delete",
-                        callback: function() {
-                            that.clearSelection();
-                        }
-                    }
+        context.attach(this.table, [
+            {
+                text: "Edit",
+                action: function(){
+                    that.Selection.setEditMode(that.Selection.originCell);
                 }
-            });
-        });
+            },
+            {
+                text: makeMenuItem("Cut", "Ctrl + X"),
+                action: function(){
+
+                }
+            },
+            {
+                text: makeMenuItem("Copy", "Ctrl + C"),
+                action: function(){}
+            },
+            {
+                text: makeMenuItem("Paste", "Ctrl + V"),
+                action: function(){
+                    $(document).trigger($.Event("keydown", {
+                        ctrlKey: true,
+                        keyCode: 86
+                    }));
+                }
+            },
+            {
+                text: makeMenuItem("Delete", "Del / \u232B"),
+                action: function(){
+                    that.clearSelection()
+                }
+            }
+        ]);
     };
     EdiTable.prototype = {
         addEventListener: function(type, func){
@@ -1403,10 +1420,12 @@
                 isHeader = (prevCol ? this.VectorManager.isHeader(prevCol) : true) &&
                     (nextCol ? this.VectorManager.isHeader(nextCol) : true);
 
+            // Add cells
             for (var i = 0; i < this.getRowCount(); i ++){
                 var cell = this.table.rows[i].insertCell(index);
 
                 this.CellManager.setEditable(cell, isEditable);
+                // Call set header last to not lose cell reference
                 this.CellManager.setHeader(cell, isHeader);
             }
         },
@@ -1424,5 +1443,14 @@
         }
     };
     window.EdiTable = EdiTable;
+
+    // Init context menu library
+    context.init({
+        fadeSpeed: 100,
+        filter: function ($obj){},
+        above: 'auto',
+        preventDoubleContext: true,
+        compress: false
+    });
 })();
 

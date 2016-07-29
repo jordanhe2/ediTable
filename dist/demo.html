@@ -26,8 +26,8 @@
             background-color: #ffffff;
         }
     </style>
+    <link rel="stylesheet" type="text/css" href="lib/context/context.min.css">
     <link rel="stylesheet" type="text/css" href="ediTable.css">
-    <link rel="stylesheet" type="text/css" href="lib/jQuery-contextMenu/jquery.contextMenu.min.css">
 </head>
 <body>
     <table id="table" style="font-size: 18pt;">
@@ -76,9 +76,54 @@
             </tr>
         </tbody>
     </table>
+    <table id="table2" style="font-size: 18pt;">
+        <tbody>
+            <tr>
+                <th><span>1</span></th>
+                <th>2</th>
+                <th>3</th>
+                <th>4</th>
+                <th>8</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+            </tr>
+        </tbody>
+    </table>
     <script type="text/javascript" src="lib/jQuery/jquery-3.0.0.min.js"></script>
-    <script type="text/javascript" src="lib/jQuery-contextMenu/jquery.ui.position.min.js"></script>
-    <script type="text/javascript" src="lib/jQuery-contextMenu/jquery.contextMenu.min.js"></script>
+    <script type="text/javascript" src="lib/context/context.min.js"></script>
     <script type="text/javascript" src="ediTable.js"></script>
     <script>
         var editable = new EdiTable(document.getElementById("table"), {
@@ -91,6 +136,18 @@
         });
         editable.setEditable();
         editable.addEventListener("change", function(){console.info("You've changed, Frank..")});
+    </script>
+    <script>
+        var editable2 = new EdiTable(document.getElementById("table2"), {
+            growRows: true,
+            growCols: true,
+            shrinkRows: true,
+            shrinkCols: true,
+            rowsAllowMiddleShrink: true,
+            colsAllowMiddleShrink: true,
+        });
+        editable2.setEditable();
+        editable2.addEventListener("change", function(){console.info("You've changed, Frank..")});
     </script>
 </body>
 </html>
