@@ -1124,6 +1124,40 @@
             forEachTableCell(ops);
             return editable;
         },
+        setHeader: function(optHeader, ops){
+            // Normalize parameters
+            if (typeof optHeader == "undefined") optHeader = true;
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart == "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+
+            // Set editable
+            var that = this;
+            ops.table = this.table;
+            ops.func = function(cell){
+                that.CellManager.setHeader(cell, optHeader);
+            };
+            forEachTableCell(ops);
+        },
+        isHeader: function(ops){
+            // Normalize parameters
+            if (typeof ops == "undefined") ops = {};
+            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart == "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+
+            var header = true,
+                that = this;
+            ops.table = this.table;
+            ops.func = function(cell){
+                if (!that.CellManager.isHeader(cell)) header = false;
+            };
+            forEachTableCell(ops);
+            return header;
+        },
         select: function (ops) {
             // Normalize parameters
             if (typeof ops == "undefined") ops = {};
@@ -1424,42 +1458,54 @@
         insertRow: function (index) {
             if (!this.canInsertRow()) return;
 
+            var vm = this.VectorManager,
+                preInsertCols = this.getCols();
+
             // Insert row
             var newRow = this.table.insertRow(index),
                 prevRow = index > 0 ? this.getRow(index - 1) : null,
                 nextRow = index < this.getRowCount() - 1 ? this.getRow(index + 1) : null,
-                isEditable = (prevRow ? this.VectorManager.isEditable(prevRow) : true) &&
-                    (nextRow ? this.VectorManager.isEditable(nextRow) : true),
-                isHeader = (prevRow ? this.VectorManager.isHeader(prevRow) : true) &&
-                    (nextRow ? this.VectorManager.isHeader(nextRow) : true);
+                rowIsEditable = (prevRow ? vm.isEditable(prevRow) : true) &&
+                    (nextRow ? vm.isEditable(nextRow) : true),
+                rowIsHeader = (prevRow ? vm.isHeader(prevRow) : true) &&
+                    (nextRow ? vm.isHeader(nextRow) : true);
 
             // Add cells
             for (var i = 0; i < this.getColCount(); i++) {
-                var cell = newRow.insertCell(i);
+                var cell = newRow.insertCell(i),
+                    col = preInsertCols[i],
+                    colIsEditable = vm.isEditable(col),
+                    colIsHeader = vm.isHeader(col);
 
-                this.CellManager.setEditable(cell, isEditable);
+                this.CellManager.setEditable(cell, rowIsEditable || colIsEditable);
                 // Call set header last to not lose cell reference
-                this.CellManager.setHeader(cell, isHeader);
+                this.CellManager.setHeader(cell, rowIsHeader || colIsHeader);
             }
         },
         insertCol: function (index) {
             if (!this.canInsertCol()) return;
 
+            var vm = this.VectorManager,
+                preInsertRows = this.getRows();
+
             // Insert col
             var prevCol = index > 0 ? this.getCol(index - 1) : null,
                 nextCol = index < this.getColCount() - 1 ? this.getCol(index + 1) : null,
-                isEditable = (prevCol ? this.VectorManager.isEditable(prevCol) : true) &&
-                    (nextCol ? this.VectorManager.isEditable(nextCol) : true),
-                isHeader = (prevCol ? this.VectorManager.isHeader(prevCol) : true) &&
-                    (nextCol ? this.VectorManager.isHeader(nextCol) : true);
+                colIsEditable = (prevCol ? vm.isEditable(prevCol) : true) &&
+                    (nextCol ? vm.isEditable(nextCol) : true),
+                colIsHeader = (prevCol ? vm.isHeader(prevCol) : true) &&
+                    (nextCol ? vm.isHeader(nextCol) : true);
 
             // Add cells
             for (var i = 0; i < this.getRowCount(); i ++){
-                var cell = this.table.rows[i].insertCell(index);
+                var cell = this.table.rows[i].insertCell(index),
+                    row = preInsertRows[i],
+                    rowIsEditable = vm.isEditable(row),
+                    rowIsHeader = vm.isHeader(row);
 
-                this.CellManager.setEditable(cell, isEditable);
+                this.CellManager.setEditable(cell, colIsEditable || rowIsEditable);
                 // Call set header last to not lose cell reference
-                this.CellManager.setHeader(cell, isHeader);
+                this.CellManager.setHeader(cell, colIsHeader || rowIsHeader);
             }
         },
         removeRow: function (index) {
