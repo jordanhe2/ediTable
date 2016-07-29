@@ -581,21 +581,29 @@
 
                 var hasSelection = that.hasSelection(),
                     singleCell = selection.originCell == selection.terminalCell,
+                    code = e.keyCode,
                     ctrl = e.ctrlKey,
                     shift = e.shiftKey,
-                    tab = e.keyCode == 9,
-                    enter = e.keyCode == 13,
-                    esc = e.keyCode == 27;
+                    tab = code == 9,
+                    enter = code == 13,
+                    esc = code == 27,
+                    del = code == 46,
+                    backspace = code == 8,
+                    left = code == 37,
+                    up = code == 38,
+                    right = code == 39,
+                    down = code == 40,
+                    home = code == 36,
+                    end = code == 35;
 
-                // Save editing coords since tab/enter clears editng mode
-                var editingCell = selection.editingCell;
+                // Save editingCell since certain keys exit editing mode
+                var editingCell = selection.editingCell,
+                    wasEditing = selection.isEditing();
 
                 // Ways to exit edit mode
-                if (tab || enter || esc ||
-                    e.keyCode == 38 ||
-                    e.keyCode == 40 ||
-                    (e.keyCode == 37 && (editingCell && getCaretPosition(editingCell) == 0)) ||
-                    (e.keyCode == 39 && (editingCell && getCaretPosition(editingCell) == editingCell.innerText.length))) {
+                if (tab || enter || esc || up || down ||
+                    (left && (editingCell && getCaretPosition(editingCell) == 0)) ||
+                    (right && (editingCell && getCaretPosition(editingCell) == editingCell.innerText.length))) {
 
                     e.preventDefault();
                     selection.exitEditMode();
@@ -603,7 +611,7 @@
 
                 if (!selection.isEditing()) {
                     // Special case: select all
-                    if (ctrl && e.keyCode == 65) {
+                    if (ctrl && code == 65) {
                         e.preventDefault();
                         if (shift) that.deselect(); else that.select();
                     }
@@ -616,22 +624,24 @@
                             originCoords = selection.getCoords(selection.originCell),
                             terminalCoords = selection.getCoords(selection.terminalCell);
 
+                        // ESCAPE
+                        if (esc && !wasEditing){
+                            that.deselect();
+                        }
                         // DELETE / BACKSPACE
-                        if (e.keyCode == 46 || e.keyCode == 8){
+                        else if (del || backspace){
                             e.preventDefault();
                             if (that.hasSelection()){
                                 that.clearSelection();
                             }
                         }
                         // ENTER / TAB
-                        else if ([9, 13].indexOf(e.keyCode) != -1) {
+                        else if (enter || tab) {
                             var cells;
-                            // TAB
-                            if (e.keyCode == 9){
+                            if (tab){
                                 cells = flatten(singleCell ? that.getRows() : that.getSelectedRows());
                             }
-                            // ENTER
-                            else if (e.keyCode == 13){
+                            else if (enter){
                                 cells = flatten(singleCell ? that.getCols() : that.getSelectedCols())
                             }
 
@@ -652,11 +662,11 @@
                             }
                         }
                         // ARROW KEYS, HOME / END
-                        else if ([35, 36, 37, 38, 39, 40].indexOf(e.keyCode) != -1){
+                        else if (left || up || right || down || home || end){
                             // Assign deltaCoords
                             var deltaCoords = {x: 0, y: 0},
                                 moveCoords = moveTerminal && !jumpTerminal ? terminalCoords : originCoords;
-                            switch (e.keyCode) {
+                            switch (code) {
                                 // END
                                 case 35:
                                     deltaCoords.x = that.getColCount() - moveCoords[1] - 1;
@@ -719,11 +729,11 @@
                     }
                     // NO SELECTION
                     else {
-                        if ([9, 13, 35, 36, 37, 38, 39, 40].indexOf(e.keyCode) != -1){
+                        if (tab || enter || home || end || left || up || right || down){
                             var coords = [0, 0];
 
                             // End / Ctrl-End
-                            if (e.keyCode == 35){
+                            if (end){
                                 coords[1] = that.getColCount() - 1;
                                 if (ctrl) coords[0] = that.getRowCount() - 1;
                             }
