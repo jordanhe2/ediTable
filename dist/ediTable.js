@@ -509,7 +509,7 @@
                 if (e.which == 3) right = true;
 
                 if (targetCoords) {
-                    startCoords = targetCoords;
+                    if (!that.hasSelection() || !e.shiftKey && that.hasSelection()) startCoords = targetCoords;
 
                     if (e.target != selection.editingCell) {
                         selection.exitEditMode();
