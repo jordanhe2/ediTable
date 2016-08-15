@@ -4,8 +4,6 @@
  *
  * DEPENDENCIES:
  *     jQuery - https://jquery.com
- *     context.js (modified) - https://github.com/jordanhe2/ediTable/tree/master/dist/lib/context
- *                (original) - http://lab.jakiestfu.com/contextjs/
  */
 (function(){
     "use strict";
@@ -580,6 +578,9 @@
             };
 
             var handleKeyDown = function (e) {
+                //PREVENT SNEAKY MANIPULATION OF HIDDEN INPUT
+                hiddenInput.blur();
+
                 var hasFocus = that.hasFocus();
                 if (!hasFocus) return;
 
