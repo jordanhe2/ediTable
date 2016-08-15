@@ -13,7 +13,7 @@
     // FIX STUPID STUFF
     Number.prototype.mod = function(n) {
         return ((this % n) + n) % n;
-    }
+    };
 
     // UTILITIES
     function arrayTranspose(array) {
@@ -483,7 +483,7 @@
                 lastTap = new Date().getTime();
 
                 return timeSince < 600 && timeSince > 0;
-            }
+            };
 
             var handleMouseDown = function (e) {
                 that.lastClicked = e.target;
@@ -507,6 +507,10 @@
                 // Check for right click
                 var right = false;
                 if (e.which == 3) right = true;
+
+                if (right) {
+                    hiddenInput.select();
+                }
 
                 if (targetCoords) {
                     if (!that.hasSelection() || !e.shiftKey && that.hasSelection()) startCoords = targetCoords;
@@ -1009,54 +1013,6 @@
         document.addEventListener("copy", onCopy)
         document.addEventListener("cut", onCut)
         document.addEventListener("paste", onPaste);
-
-        // Initialize context menu
-        function makeMenuItem(text, shortcut) {
-            var wrapper = $("<span></span>"),
-                textDom = wrapper.clone(),
-                shortCutDom = wrapper.clone();
-
-            wrapper
-                .css("width", "100%")
-                .append([
-                    textDom,
-                    shortCutDom
-                ]);
-            textDom
-                .text(text);
-            shortCutDom
-                .css("font-size", "0.9em")
-                .css("float", "right")
-                .css("opacity", "0.7")
-                .text(shortcut);
-
-            return wrapper.html();
-        }
-        context.attach(this.table, [{
-            text: "Edit",
-            action: function(){
-                that.Selection.setEditMode(that.Selection.originCell);
-            }
-        },{
-            text: makeMenuItem("Cut", "Ctrl + X"),
-            action: function(){}
-        },{
-            text: makeMenuItem("Copy", "Ctrl + C"),
-            action: function(){}
-        },{
-            text: makeMenuItem("Paste", "Ctrl + V"),
-            action: function(){
-                $(document).trigger($.Event("keydown", {
-                    ctrlKey: true,
-                    keyCode: 86
-                }));
-            }
-        },{
-            text: makeMenuItem("Delete", "Del / \u232B"),
-            action: function(){
-                that.clearSelection()
-            }
-        }]);
     };
     EdiTable.prototype = {
         addEventListener: function(type, func){
@@ -1527,13 +1483,14 @@
     };
     window.EdiTable = EdiTable;
 
-    // Init context menu library
-    context.init({
-        fadeSpeed: 100,
-        filter: function ($obj){},
-        above: 'auto',
-        preventDoubleContext: true,
-        compress: false
-    });
+    // HIDDEN INPUT FOR DEFAULT CONTEXT MENU FUNCTIONALITY
+    var hiddenInput = document.createElement("input");
+    hiddenInput.defaultValue = "ediTable";
+    $(hiddenInput)
+        .prop("type", "text")
+        .css({
+            "position": "fixed",
+            "opacity": "0"
+        });
+    document.body.appendChild(hiddenInput);
 })();
-
