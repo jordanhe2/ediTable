@@ -1208,23 +1208,29 @@
 
             //Add rows
             var rowEnd = ops.rowStart + values.length,
-                maxRows = this.options.maxRows;
-            do {
-                var rowCount = this.getRowCount(),
-                    rowDiff = rowEnd - rowCount - 1;
+                maxRows = this.options.maxRows,
+                rowCount = this.getRowCount(),
+                rowDiff = rowEnd - rowCount;
+
+            while ((maxRows == -1 || rowCount < maxRows) && rowDiff > 0) {
+                rowCount = this.getRowCount();
+                rowDiff = rowEnd - rowCount;
 
                 this.insertRow(rowCount);
-            } while ((maxRows == -1 || rowCount < maxRows) && rowDiff > 0);
+            }
 
             //Add cols
             var colEnd = ops.colStart + values[0].length,
-                maxCols = this.options.maxCols;
-            do {
-                var colCount = this.getColCount(),
-                    colDiff = colEnd - colCount - 1;
+                maxCols = this.options.maxCols,
+                colCount = this.getColCount(),
+                colDiff = colEnd - colCount;
+
+            while ((maxCols == -1 || colCount < maxCols) && colDiff > 0) {
+                colCount = this.getColCount();
+                colDiff = colEnd - colCount;
 
                 this.insertCol(colCount);
-            } while ((maxCols == -1 || colCount < maxCols) && colDiff > 0);
+            }
 
             // Set values
             var rows = this.table.rows;
