@@ -778,7 +778,14 @@
                 // Call updates
                 shrinkTable(that);
                 growTable(that);
-                that.fireEvent("change");
+
+                var coords = that.Selection.getCoords(e.target);
+                that.fireEvent("change", {
+                    rowStart: coords[0],
+                    rowEnd: coords[0],
+                    colStart: coords[1],
+                    colEnd: coords[1]
+                });
             };
 
             $(document)
@@ -1043,12 +1050,11 @@
             var index = this.events[type].indexOf(func);
             if (index != -1) this.events[type].splice(index, 1);
         },
-        fireEvent: function (type) {
-            var event = this.events[type],
-                e = {};
+        fireEvent: function (type, eventObj) {
+            var event = this.events[type];
             if (event) {
                 for (var i = 0; i < event.length; i++) {
-                    event[i](e);
+                    event[i](eventObj);
                 }
             }
         },
@@ -1233,7 +1239,7 @@
                 rowCount = this.getRowCount(),
                 rowDiff = rowEnd - rowCount;
 
-            while ((maxRows == -1 || rowCount < maxRows) && rowDiff > 0) {
+            while ((maxRows == -1 || rowCount < maxRows) && rowDiff > 0 && this.options.growRows) {
                 rowCount = this.getRowCount();
                 rowDiff = rowEnd - rowCount;
 
@@ -1246,7 +1252,7 @@
                 colCount = this.getColCount(),
                 colDiff = colEnd - colCount;
 
-            while ((maxCols == -1 || colCount < maxCols) && colDiff > 0) {
+            while ((maxCols == -1 || colCount < maxCols) && colDiff > 0 && this.options.growCols) {
                 colCount = this.getColCount();
                 colDiff = colEnd - colCount;
 
@@ -1254,20 +1260,32 @@
             }
 
             // Set values
-            var rows = this.table.rows;
+            var rows = this.table.rows,
+                rowEnd = 0, colEnd = 0;
             for (var i = 0; i < values.length && i < rows.length - ops.rowStart; i++) {
-                var row = rows[i + ops.rowStart];
+                var rowIndex = i + ops.rowStart,
+                    row = rows[rowIndex];
 
                 for (var j = 0; j < values[i].length && j < row.cells.length - ops.colStart; j++) {
-                    var cell = row.cells[j + ops.colStart];
+                    var colIndex = j + ops.colStart,
+                        cell = row.cells[colIndex];
                     this.CellManager.setValue(cell, values[i][j]);
+
+                    colEnd = Math.max(colEnd, colIndex);
                 }
+
+                rowEnd = Math.max(rowEnd, rowIndex);
             }
 
             // Call updates
             shrinkTable(this);
             growTable(this);
-            if (!ops.silent) this.fireEvent("change");
+            if (!ops.silent) this.fireEvent("change", {
+                rowStart: ops.rowStart,
+                rowEnd: rowEnd,
+                colStart: ops.colStart,
+                colEnd: colEnd
+            });
         },
         setColValues: function (values, ops) {
             // Normalize paramters
@@ -1304,7 +1322,12 @@
             // Call updates
             shrinkTable(this);
 
-            if (!ops.silent) this.fireEvent("change");
+            if (!ops.silent) this.fireEvent("change", {
+                rowStart: ops.rowStart,
+                rowEnd: ops.rowEnd,
+                colStart: ops.colStart,
+                colEnd: ops.colEnd
+            });
         },
         clearSelection: function () {
             var s = this.Selection,
