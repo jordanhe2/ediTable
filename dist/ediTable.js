@@ -1225,6 +1225,7 @@
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
             if (typeof ops.colStart == "undefined") ops.colStart = 0;
+            if (typeof ops.silent == "undefined") ops.silent = false;
 
             //Add rows
             var rowEnd = ops.rowStart + values.length,
@@ -1266,7 +1267,7 @@
             // Call updates
             shrinkTable(this);
             growTable(this);
-            this.fireEvent("change");
+            if (!ops.silent) this.fireEvent("change");
         },
         setColValues: function (values, ops) {
             // Normalize paramters
@@ -1274,6 +1275,7 @@
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
             if (typeof ops.colStart == "undefined") ops.colStart = 0;
+            if (typeof ops.silent == "undefined") ops.silent = false;
 
             values = arrayTranspose(values);
 
@@ -1289,18 +1291,20 @@
             if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
             if (typeof ops.colStart == "undefined") ops.colStart = 0;
             if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops.silent == "undefined") ops.silent = false;
 
             // Clear
             var that = this;
             ops.table = this.table;
             ops.func = function (cell) {
                 that.CellManager.clear(cell);
-            }
+            };
             forEachTableCell(ops);
 
             // Call updates
             shrinkTable(this);
-            this.fireEvent("change");
+
+            if (!ops.silent) this.fireEvent("change");
         },
         clearSelection: function () {
             var s = this.Selection,
@@ -1328,7 +1332,7 @@
             ops.table = this.table;
             ops.func = function (cell) {
                 if (!ctx.CellManager.isClear(cell)) clear = false;
-            }
+            };
             forEachTableCell(ops);
 
             return clear;
