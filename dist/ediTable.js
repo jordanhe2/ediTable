@@ -386,7 +386,9 @@
                 cell.contentEditable = optEdit;
             },
             isEditable: function (cell) {
-                return cell.isContentEditable;
+                //contentEditable is either "true", "false", or "inherit".
+                //may need to check cell's parents to determine whether "inherit" is "true" or "false"
+                return cell.contentEditable == "true";
             },
             setHeader: function (cell, optHeader) {
                 if (typeof optHeader == "undefined") optHeader = true;
@@ -430,6 +432,7 @@
             },
             setValue: function (cell, value) {
                 // Only set value if editable
+                console.log("isContentEditable: " + cell.isContentEditable, "contentEditable: " + cell.contentEditable, cell);
                 if (!this.isEditable(cell)) return;
 
                 // Set value
@@ -1255,6 +1258,7 @@
 
             // Set values
             var rows = this.table.rows;
+            console.log(this.table, this.table.rows);
             for (var i = 0; i < values.length && i < rows.length - ops.rowStart; i++) {
                 var row = rows[i + ops.rowStart];
 
