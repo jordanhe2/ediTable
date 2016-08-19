@@ -386,9 +386,8 @@
                 cell.contentEditable = optEdit;
             },
             isEditable: function (cell) {
-                //contentEditable is either "true", "false", or "inherit".
-                //may need to check cell's parents to determine whether "inherit" is "true" or "false"
-                return cell.contentEditable == "true";
+                //Checks both isContentEditable and contentEditable to prevent cell being un-modifiable when display is none
+                return cell.isContentEditable || cell.contentEditable == "true";
             },
             setHeader: function (cell, optHeader) {
                 if (typeof optHeader == "undefined") optHeader = true;
