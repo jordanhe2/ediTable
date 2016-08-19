@@ -432,7 +432,6 @@
             },
             setValue: function (cell, value) {
                 // Only set value if editable
-                console.log("isContentEditable: " + cell.isContentEditable, "contentEditable: " + cell.contentEditable, cell);
                 if (!this.isEditable(cell)) return;
 
                 // Set value
@@ -526,12 +525,14 @@
                 }
 
                 if (targetCoords) {
+                    var makeSelection = !right || (right && !that.hasSelection());
+
                     if (!that.hasSelection() || !e.shiftKey && that.hasSelection()) startCoords = targetCoords;
 
                     if (e.target != selection.editingCell) {
                         selection.exitEditMode();
 
-                        if (!right || (right && !that.hasSelection())) {
+                        if (makeSelection) {
                             that.select({
                                 rowStart: startCoords[0],
                                 rowEnd: targetCoords[0],
@@ -543,9 +544,11 @@
                         e.preventDefault();
                     }
 
-                    $(document)
-                        .on("mousemove", handleMouseMove)
-                        .on("touchmove", handleMouseMove);
+                    if (makeSelection) {
+                        $(document)
+                            .on("mousemove", handleMouseMove)
+                            .on("touchmove", handleMouseMove);
+                    }
                 }
             };
             var handleDoubleClick = function (e) {
@@ -1258,7 +1261,6 @@
 
             // Set values
             var rows = this.table.rows;
-            console.log(this.table, this.table.rows);
             for (var i = 0; i < values.length && i < rows.length - ops.rowStart; i++) {
                 var row = rows[i + ops.rowStart];
 
