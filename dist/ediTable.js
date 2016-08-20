@@ -600,6 +600,7 @@
 
                 var hasFocus = that.hasFocus();
                 if (!hasFocus) return;
+                console.log("here?")
 
                 var hasSelection = that.hasSelection(),
                     singleCell = selection.originCell == selection.terminalCell,
@@ -1064,10 +1065,12 @@
             }
         },
         hasFocus: function () {
-            var activeElement = document.activeElement;
-            var lastClicked = this.lastClicked;
+            var activeElement = document.activeElement,
+                lastClicked = this.lastClicked;
 
-            return $(activeElement).closest(this.table).length == 1 || $(lastClicked).closest(this.table).length == 1;
+            //TODO determine if having a selection is proof of ediTable having focus
+            return $(activeElement).closest(this.table).length == 1 || $(lastClicked).closest(this.table).length == 1
+                || this.hasSelection();
         },
         getRowCount: function () {
             return this.table.rows.length;
@@ -1369,6 +1372,17 @@
             return $(this.table).find(".ediTable-cell-selected").length > 0;
             // return this.getSelectedRows().length > 0;
         },
+        getSelectionBounds: function () {
+            var selection = this.Selection;
+
+            var originCoords = selection.getCoords(selection.originCell),
+                terminalCoords = selection.getCoords(selection.terminalCell);
+
+            return {
+                origin: originCoords,
+                terminal: terminalCoords
+            };
+        },
         getRow: function (index, ops) {
             if (typeof ops == "undefined") ops = {};
             if (typeof ops.colStart == "undefined") ops.colStart = 0;
@@ -1529,19 +1543,90 @@
             }
         },
         removeRow: function (index) {
-            function adjustSelection() {
-
-            }
+            var selectionBounds = this.getSelectionBounds();
 
             this.table.deleteRow(index);
+
+            if (selectionBounds) {
+                var originCoords = selectionBounds.origin,
+                    terminalCoords = selectionBounds.terminal;
+
+                if (originCoords && terminalCoords) {
+                    var originCol = originCoords[1],
+                        originRow = originCoords[0],
+                        terminalCol = terminalCoords[1],
+                        terminalRow = terminalCoords[0];
+
+                    var topRow = Math.min(originRow, terminalRow),
+                        botRow = Math.max(originRow, terminalRow);
+
+                    //Determine if deleted row is within selection
+                    if (index <= botRow && index >= topRow) {
+                        //Keep selection at same coords unless coords do not exist
+                        var rowCount = this.getRowCount(),
+                            botClipped = botRow >= rowCount,
+                            newSelectionBounds = {
+                                colStart: originCol,
+                                colEnd: terminalCol
+                            };
+
+                        if (botClipped) {
+                            newSelectionBounds.rowStart = originRow - 1 >= 0 ? originRow - 1 : 0;
+                            newSelectionBounds.rowEnd = terminalRow - 1 >= 0 ? terminalRow - 1 : 0;
+                        } else {
+                            newSelectionBounds.rowStart = originRow;
+                            newSelectionBounds.rowEnd = terminalRow;
+                        }
+
+                        this.select(newSelectionBounds);
+                    }
+                }
+            }
         },
         removeCol: function (index) {
+            var selectionBounds = this.getSelectionBounds();
             var rows = this.table.rows;
 
             for (var i = 0; i < rows.length; i++) {
                 var row = rows[i];
 
                 row.deleteCell(index);
+            }
+
+            if (selectionBounds) {
+                var originCoords = selectionBounds.origin,
+                    terminalCoords = selectionBounds.terminal;
+
+                if (originCoords && terminalCoords) {
+                    var originCol = originCoords[1],
+                        originRow = originCoords[0],
+                        terminalCol = terminalCoords[1],
+                        terminalRow = terminalCoords[0];
+
+                    var leftCol = Math.min(originCol, terminalCol),
+                        rightCol = Math.max(originCol, terminalCol);
+
+                    //Determine if deleted row is within selection
+                    if (index <= rightCol && index >= leftCol) {
+                        //Keep selection at same coords unless coords do not exist
+                        var colCount = this.getColCount(),
+                            rightClipped = rightCol >= colCount,
+                            newSelectionBounds = {
+                                rowStart: originRow,
+                                rowEnd: terminalRow
+                            };
+
+                        if (rightClipped) {
+                            newSelectionBounds.colStart = originCol - 1 >= 0 ? originCol - 1 : 0;
+                            newSelectionBounds.colEnd = terminalCol - 1 >= 0 ? terminalCol - 1 : 0;
+                        } else {
+                            newSelectionBounds.colStart = originCol;
+                            newSelectionBounds.colEnd = terminalCol;
+                        }
+
+                        this.select(newSelectionBounds);
+                    }
+                }
             }
         }
     };
