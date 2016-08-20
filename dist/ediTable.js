@@ -857,7 +857,7 @@
 
                     return coords;
                 }
-            }
+            };
 
             return selection;
         }();
@@ -1366,7 +1366,8 @@
             return clear;
         },
         hasSelection: function () {
-            return this.getSelectedRows().length > 0;
+            return $(this.table).find(".ediTable-cell-selected").length > 0;
+            // return this.getSelectedRows().length > 0;
         },
         getRow: function (index, ops) {
             if (typeof ops == "undefined") ops = {};
@@ -1528,6 +1529,10 @@
             }
         },
         removeRow: function (index) {
+            function adjustSelection() {
+
+            }
+
             this.table.deleteRow(index);
         },
         removeCol: function (index) {
