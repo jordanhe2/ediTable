@@ -600,7 +600,6 @@
 
                 var hasFocus = that.hasFocus();
                 if (!hasFocus) return;
-                console.log("here?")
 
                 var hasSelection = that.hasSelection(),
                     singleCell = selection.originCell == selection.terminalCell,
