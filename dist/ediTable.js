@@ -364,6 +364,17 @@
             if (ops.maxCols != -1 && ops.minCols > ops.maxCols) ops.maxCols = ops.minCols;
         }
 
+        function getTarget(e) {
+            var target,
+                wasHidden = cover.is(":hidden");
+
+            cover.hide();
+            target = document.elementFromPoint(e.clientX, e.clientY);
+            if (!wasHidden) cover.show();
+
+            return target;
+        }
+
         // Context variable
         var that = this;
 
@@ -376,6 +387,21 @@
 
         normalizeTable(this.table);
         normalizeOptions(this.options);
+
+        var cover = $("<div contenteditable></div>")
+            .css({
+                "cursor": "default",
+                "display": "table-row-group",
+                "opacity": "0",
+                "position": "absolute",
+                "top": "0",
+                "bottom": "0",
+                "width": "100%"
+            });
+
+        $(this.table)
+            .css("position", "relative")
+            .append(cover);
 
         this.CellManager = {
             setEditable: function (cell, optEdit) {
@@ -497,9 +523,12 @@
             };
 
             var handleMouseDown = function (e) {
-                that.lastClicked = e.target;
-                var targetCoords = selection.getCoords(e.target),
-                    hasFocus = that.hasFocus();
+                var target = getTarget(e),
+                    targetCoords = selection.getCoords(target);
+
+                that.lastClicked = target;
+
+                var hasFocus = that.hasFocus();
 
                 // Clicked outside
                 if (!targetCoords || !hasFocus) {
@@ -516,19 +545,14 @@
                     return;
                 }
                 // Check for right click
-                var right = false;
-                if (e.which == 3) right = true;
-
-                if (right) {
-                    hiddenInput.select();
-                }
+                var right = e.which == 3;
 
                 if (targetCoords) {
                     var makeSelection = !right || (right && !that.hasSelection());
 
                     if (!that.hasSelection() || !e.shiftKey && that.hasSelection()) startCoords = targetCoords;
 
-                    if (e.target != selection.editingCell) {
+                    if (target != selection.editingCell) {
                         selection.exitEditMode();
 
                         if (makeSelection) {
@@ -550,13 +574,17 @@
                     }
                 }
             };
+            var handleContextMenu = function (e) {
+                if (!selection.isEditing()) hiddenInput.select();
+            };
             var handleDoubleClick = function (e) {
                 if (!that.hasFocus()) return;
 
-                var targetCoords = selection.getCoords(e.target);
+                var target = getTarget(e),
+                    targetCoords = selection.getCoords(target);
 
                 if (targetCoords) {
-                    selection.setEditMode(e.target);
+                    selection.setEditMode(target);
                 }
             };
             var handleMouseUp = function (e) {
@@ -565,7 +593,7 @@
                     .unbind("touchmove", handleMouseMove)
             };
             var handleMouseMove = function (e) {
-                var targetCoords = selection.getCoords(e.target);
+                var targetCoords = selection.getCoords(getTarget(e));
 
                 if (e.changedTouches) {
                     var changedTouches = e.changedTouches,
@@ -639,6 +667,10 @@
                     }
                     // Alter selection
                     else if (hasSelection) {
+                        if (e.keyCode == 93) {
+                            selection.originCell.focus();
+                            return;
+                        }
                         var moveEditing = !singleCell && (tab || enter),
                             moveOrigin = !shift && !moveEditing,
                             moveTerminal = !moveEditing,
@@ -796,6 +828,7 @@
             $(document)
                 .on("mousedown", handleMouseDown)
                 .on("touchstart", handleMouseDown)
+                .on("contextmenu", handleContextMenu)
                 .on("dblclick", handleDoubleClick)
                 .on("mouseup", handleMouseUp)
                 .on("touchend", handleMouseUp)
@@ -819,6 +852,7 @@
                     if (!that.CellManager.isEditable(cell)) return;
 
                     // Set edit mode
+                    cover.hide();
                     cell.focus();
                     selectText(cell);
                     jCell.addClass("ediTable-cell-editing");
@@ -843,6 +877,7 @@
 
                         // Reset editing cell
                         this.editingCell = null;
+                        cover.show();
                     }
                 },
                 getCoords: function (element) {
