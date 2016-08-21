@@ -531,8 +531,6 @@
 
                 that.lastClicked = target;
 
-                console.log(target == e.target);
-
                 var hasFocus = that.hasFocus();
 
                 // Clicked outside
