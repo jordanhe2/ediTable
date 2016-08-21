@@ -5,6 +5,9 @@
 .ediTable td, .editable th {
     outline: none;
 }
+.ediTable thead th {
+    position: relative; z-index: 2;
+}
 .ediTable-cell-selected {
     position: relative;
 }
@@ -30,9 +33,6 @@
 .ediTable-cell-selected-bottom:before {
     border-bottom-style: solid;
 }
-
-
-
 /* ====================================================== */
 /* ================= USER CUSTOMIZATIONS ================ */
 /* ====================================================== */

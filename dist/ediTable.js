@@ -391,16 +391,19 @@
         var cover = $("<div contenteditable></div>")
             .css({
                 "cursor": "default",
-                "display": "table-row-group",
+                "display": "table-row",
                 "opacity": "0",
                 "position": "absolute",
+                "z-index": "1",
                 "top": "0",
                 "bottom": "0",
                 "width": "100%"
             });
 
         $(this.table)
-            .css("position", "relative")
+            .css({
+                "position": "relative"
+            })
             .append(cover);
 
         this.CellManager = {
@@ -527,6 +530,8 @@
                     targetCoords = selection.getCoords(target);
 
                 that.lastClicked = target;
+
+                console.log(target == e.target);
 
                 var hasFocus = that.hasFocus();
 

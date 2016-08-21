@@ -30,6 +30,15 @@
 </head>
 <body>
     <table id="table" style="position: relative; font-size: 18pt;">
+        <thead>
+            <tr>
+                <th>A</th>
+                <th>B</th>
+                <th>C</th>
+                <th>D</th>
+                <th>E</th>
+            </tr>
+        </thead>
         <tbody>
             <tr>
                 <th><span>1</span></th>
@@ -135,7 +144,7 @@
         editable.setEditable();
         editable.addEventListener("change", function(){console.info("You've changed, Frank..")});
     </script>
-    <script>
+    <!--<script>
         var editable2 = new EdiTable(document.getElementById("table2"), {
             growRows: true,
             growCols: true,
@@ -146,6 +155,6 @@
         });
         editable2.setEditable();
         editable2.addEventListener("change", function(){console.info("You've changed, Frank..")});
-    </script>
+    </script>-->
 </body>
 </html>
