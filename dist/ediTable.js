@@ -398,7 +398,8 @@
                 "top": "0",
                 "bottom": "0",
                 "width": "100%"
-            });
+            })
+            .text("ediTable");
 
         $(this.table)
             .css({
@@ -540,7 +541,7 @@
                 }
 
                 // Don't interfere
-                if (!hasFocus) return;
+                if (!hasFocus || !$.contains(that.table, target)) return;
 
                 // Check for double touch
                 if (e.type == "touchstart" && ifDoubleTap()) {
@@ -578,7 +579,7 @@
                 }
             };
             var handleContextMenu = function (e) {
-                if (!selection.isEditing()) hiddenInput.select();
+                if (!selection.isEditing() && $.contains(that.table, e.target)) selectText(cover[0]);
             };
             var handleDoubleClick = function (e) {
                 if (!that.hasFocus()) return;
@@ -626,8 +627,7 @@
             };
 
             var handleKeyDown = function (e) {
-                //PREVENT SNEAKY MANIPULATION OF HIDDEN INPUT
-                hiddenInput.blur();
+                cover.blur();
 
                 var hasFocus = that.hasFocus();
                 if (!hasFocus) return;
@@ -815,11 +815,11 @@
                 }
             };
             var handleCellInput = function (e) {
+                var coords = that.Selection.getCoords(e.target);
                 // Call updates
                 shrinkTable(that);
                 growTable(that);
 
-                var coords = that.Selection.getCoords(e.target);
                 that.fireEvent("change", {
                     rowStart: coords[0],
                     rowEnd: coords[0],
@@ -884,6 +884,8 @@
                     }
                 },
                 getCoords: function (element) {
+                    if (!$.contains(that.table, element)) return null;
+
                     var el = $(element),
                         cell = el.closest("tr > td, tr > th")[0],
                         row = el.closest("tr")[0],
@@ -978,7 +980,7 @@
         }
 
         function onCut(event) {
-            if (that.hasFocus()) {
+            if (that.hasFocus() && !that.Selection.isEditing()) {
                 // Copy
                 onCopy(event);
 
@@ -1406,8 +1408,8 @@
             return clear;
         },
         hasSelection: function () {
-            return $(this.table).find(".ediTable-cell-selected").length > 0;
-            // return this.getSelectedRows().length > 0;
+            // return $(this.table).find(".ediTable-cell-selected").length > 0;
+            return this.getSelectedRows().length > 0;
         },
         getSelectionBounds: function () {
             var selection = this.Selection;
@@ -1668,15 +1670,4 @@
         }
     };
     window.EdiTable = EdiTable;
-
-    // HIDDEN INPUT FOR DEFAULT CONTEXT MENU FUNCTIONALITY
-    var hiddenInput = document.createElement("input");
-    hiddenInput.defaultValue = "ediTable";
-    $(hiddenInput)
-        .prop("type", "text")
-        .css({
-            "position": "fixed",
-            "opacity": "0"
-        });
-    document.body.appendChild(hiddenInput);
 })();
