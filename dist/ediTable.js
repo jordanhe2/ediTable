@@ -353,7 +353,7 @@
             if (typeof ops.shrinkCols == "undefined") ops.shrinkCols = false;
             if (typeof ops.rowsAllowMiddleShrink == "undefined") ops.rowsAllowMiddleShrink = false;
             if (typeof ops.colsAllowMiddleShrink == "undefined") ops.colsAllowMiddleShrink = false;
-            if (typeof ops.copyAsHTML == "undefined") ops.copyAsHTML = false;
+            if (typeof ops.copyAsHTML == "undefined") ops.copyAsHTML = true;
             if (typeof ops.pasteAsHTML == "undefined") ops.pasteAsHTML = false;
             if (typeof ops.scrollSelectionIntoView == "undefined") ops.scrollSelectionIntoView = true;
 
