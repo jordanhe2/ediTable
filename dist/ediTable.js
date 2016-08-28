@@ -366,7 +366,7 @@
 
         function getTarget(e) {
             var target,
-                wasHidden = cover.is(":hidden");
+                wasHidden = cover.css("display") == "none";
 
             cover.hide();
             target = document.elementFromPoint(e.clientX, e.clientY);
