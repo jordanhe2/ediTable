@@ -556,7 +556,17 @@
 
                     if (!that.hasSelection() || !e.shiftKey && that.hasSelection()) startCoords = targetCoords;
 
-                    if (target != selection.editingCell) {
+                    //IF NOT EDITTING
+                    if (!selection.isEditing()) {
+                        if (makeSelection) {
+                            that.select({
+                                rowStart: startCoords[0],
+                                rowEnd: targetCoords[0],
+                                colStart: startCoords[1],
+                                colEnd: targetCoords[1]
+                            });
+                        }
+                    } else if (target != selection.editingCell) {
                         selection.exitEditMode();
 
                         if (makeSelection) {
