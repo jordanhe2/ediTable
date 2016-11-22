@@ -5,6 +5,7 @@
  * DEPENDENCIES:
  *     jQuery - https://jquery.com
  */
+//TODO INVESTIGATE ISSUE WHERE TABLE HEADERS ENTER EDITTING WITHOUT GOING THROUGH EDITING MODE
 (function () {
     "use strict";
 
@@ -355,6 +356,7 @@
             if (typeof ops.colsAllowMiddleShrink == "undefined") ops.colsAllowMiddleShrink = false;
             if (typeof ops.copyAsHTML == "undefined") ops.copyAsHTML = true;
             if (typeof ops.pasteAsHTML == "undefined") ops.pasteAsHTML = false;
+            if (typeof ops.rotateWidePaste == "undefined") ops.rotateWidePaste = false;
             if (typeof ops.scrollSelectionIntoView == "undefined") ops.scrollSelectionIntoView = true;
 
             // Correct logical errors
@@ -1008,7 +1010,8 @@
 
                 var html,
                     table,
-                    data = [];
+                    data = [],
+                    dataWidth = 0;
                 var htmlText = event.clipboardData.getData("text/html"),
                     plainText = event.clipboardData.getData("text/plain");
 
@@ -1040,6 +1043,8 @@
                         var row = rows[i],
                             cells = row.cells;
 
+                        if (cells.length > dataWidth) dataWidth = cells.length;
+
                         data[i] = [];
 
                         for (var j = 0; j < cells.length; j++) {
@@ -1056,6 +1061,8 @@
                         var row = rows[i],
                             cols = row.split("\t");
 
+                        if (cols.length > dataWidth) dataWidth = cols.length;
+
                         data[i] = [];
 
                         for (var j = 0; j < cols.length; j++) {
@@ -1071,6 +1078,16 @@
                     //Set the values
                     var firstCellCoords = that.Selection.getCoords(selectedRows[0][0]);
                     //TODO solve issue when pasting multiple cells of data "" (columns being removed because they are empty
+                    if (that.options.rotateWidePaste) {
+                        var exceedsMax = that.options.maxCols == -1 && dataWidth + firstCellCoords[0] > that.getColCount()
+                                || that.options.maxCols > -1 && dataWidth + firstCellCoords[0] > that.options.maxCols,
+                            dataIsWide = dataWidth > data.length && data.length >= 2,
+                            canGrow = that.colsCanGrow();
+
+                        if (!canGrow && dataIsWide && exceedsMax) {
+                            data = arrayTranspose(data);
+                        }
+                    }
                     that.setRowValues(data, {rowStart: firstCellCoords[0], colStart: firstCellCoords[1]});
                 }
             }
