@@ -1081,7 +1081,7 @@
                     if (that.options.rotateWidePaste) {
                         var exceedsMax = that.options.maxCols == -1 && dataWidth + firstCellCoords[0] > that.getColCount()
                                 || that.options.maxCols > -1 && dataWidth + firstCellCoords[0] > that.options.maxCols,
-                            dataIsWide = dataWidth > data.length && data.length >= 2,
+                            dataIsWide = dataWidth > data.length,
                             canGrow = that.colsCanGrow();
 
                         if (!canGrow && dataIsWide && exceedsMax) {
