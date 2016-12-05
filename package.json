@@ -1,0 +1,22 @@
+{
+  "name": "editablejs",
+  "version": "0.9.0",
+  "description": "An MS Excel-like table editor for HTML5.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jordanhe2/ediTable.git"
+  },
+  "keywords": [
+    "table",
+    "editor"
+  ],
+  "author": "Tanner Nielsen, Jordan Hendrickson",
+  "license": "MIT",
+  "homepage": "https://github.com/jordanhe2/ediTable#readme",
+  "dependencies": {
+    "jquery": "^3.1.1"
+  }
+}
