@@ -18,7 +18,7 @@
   "license": "MIT",
   "homepage": "https://github.com/jordanhe2/ediTable#readme",
   "dependencies": {
-    "jquery": "^3.1.1"
+    "jquery": "3.1.1"
   },
   "devDependencies": {
     "buildify": "^0.4.0"
