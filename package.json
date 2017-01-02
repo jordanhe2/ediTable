@@ -1,6 +1,6 @@
 {
   "name": "editablejs",
-  "version": "0.9.3",
+  "version": "0.9.6",
   "description": "An MS Excel-like table editor for HTML5.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
