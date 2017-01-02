@@ -251,9 +251,14 @@
                 if (range.commonAncestorContainer.parentNode == editableDiv) {
                     caretPos = range.endOffset;
                 }
+                //FIX FOR FIREFOX OR ANY BROWSER THAT DOESN'T RECOGNIZE TEXT NODES AS COMMON ANCESTOR CONTAINER
+                else if (range.commonAncestorContainer == editableDiv) {
+                    caretPos = range.endOffset;
+                }
             }
         } else if (document.selection && document.selection.createRange) {
             range = document.selection.createRange();
+
             if (range.parentElement() == editableDiv) {
                 var tempEl = document.createElement("span");
                 editableDiv.insertBefore(tempEl, editableDiv.firstChild);
@@ -263,6 +268,7 @@
                 caretPos = tempRange.text.length;
             }
         }
+
         return caretPos;
     }
 
