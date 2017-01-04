@@ -5,7 +5,7 @@
 .ediTable td, .editable th {
     outline: none;
 }
-.ediTable thead th {
+.ediTable th {
     position: relative; z-index: 2;
 }
 .ediTable-cell-selected {
@@ -13,13 +13,11 @@
 }
 .ediTable-cell-selected:before {
     content: "";
-    display: block;
     position: absolute;
-    box-sizing: border-box;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
 }
 .ediTable-cell-selected-left:before {
     border-left-style: solid;
@@ -33,11 +31,12 @@
 .ediTable-cell-selected-bottom:before {
     border-bottom-style: solid;
 }
+
 /* ====================================================== */
 /* ================= USER CUSTOMIZATIONS ================ */
 /* ====================================================== */
 
-/* Table-wide Style */
+/* Table Style */
 .ediTable {
 }
 
