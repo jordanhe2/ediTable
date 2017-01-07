@@ -913,6 +913,11 @@
                 }
             };
             var handleKeyPress = function (e) {
+                // KeyPress incorrectly fires on ctrl+C, ctrl+V, etc. on Firefox.
+                // This fixed that problem
+                var arrows = [37, 38, 39, 40];
+                if (e.ctrlKey || arrows.indexOf(e.keyCode) != -1) return;
+
                 var hasFocus = that.hasFocus(),
                     editing = selection.isEditing(),
                     hasSelection = that.hasSelection();
