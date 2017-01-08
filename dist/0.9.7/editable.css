@@ -1,0 +1,59 @@
+/* ====================================================== */
+/* ============= POSITIONING - DO NOT ALTER ============= */
+/* ====================================================== */
+
+.ediTable td, .editable th {
+    outline: none;
+}
+.ediTable th {
+    position: relative; z-index: 2;
+}
+.ediTable-cell-selected {
+    position: relative;
+}
+.ediTable-cell-selected:before {
+    content: "";
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+}
+.ediTable-cell-selected-left:before {
+    border-left-style: solid;
+}
+.ediTable-cell-selected-right:before {
+    border-right-style: solid;
+}
+.ediTable-cell-selected-top:before {
+    border-top-style: solid;
+}
+.ediTable-cell-selected-bottom:before {
+    border-bottom-style: solid;
+}
+
+/* ====================================================== */
+/* ================= USER CUSTOMIZATIONS ================ */
+/* ====================================================== */
+
+/* Table Style */
+.ediTable {
+}
+
+/* Editable Cell */
+.ediTable *[contenteditable="true"] {
+}
+
+/* Non-editable Cell */
+.ediTable *[contenteditable="false"] {
+}
+
+/* Selection Box Overlay */
+.ediTable-cell-selected:before {
+    border-width: 3px;
+    border-color: #2e69d9;
+    background-color: rgba(120, 161, 237, 0.3);
+}
+.ediTable-cell-editing:before {
+    background: none;
+}
