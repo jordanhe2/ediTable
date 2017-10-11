@@ -115,14 +115,14 @@
 
     function forEach(ops) {
         // Normalize ops
-        if (typeof ops == "undefined" ||
-            typeof ops.func == "undefined" ||
-            typeof ops.arr == "undefined" ||
-            ops.arr.length == 0) return;
-        if (typeof ops.start == "undefined") ops.start = 0;
-        if (typeof ops.end == "undefined") ops.end = ops.arr.length - 1;
-        if (typeof ops.dir == "undefined") ops.dir = (ops.end > ops.start) ? 1 : -1;
-        if (typeof ops.funcContext == "undefined") ops.funcContext = null;
+        if (typeof ops === "undefined" ||
+            typeof ops.func === "undefined" ||
+            typeof ops.arr === "undefined" ||
+            ops.arr.length === 0) return;
+        if (typeof ops.start === "undefined") ops.start = 0;
+        if (typeof ops.end === "undefined") ops.end = ops.arr.length - 1;
+        if (typeof ops.dir === "undefined") ops.dir = (ops.end > ops.start) ? 1 : -1;
+        if (typeof ops.funcContext === "undefined") ops.funcContext = null;
 
         // Loop through and run ops.func for each item in ops.arr
         var min = Math.min(ops.start, ops.end),
@@ -136,17 +136,17 @@
 
     function forEach2D(ops) {
         // Normalize parameters
-        if (typeof ops == "undefined" ||
-            typeof ops.func == "undefined" ||
-            typeof ops.arr == "undefined" ||
-            ops.arr.length == 0 || !is2DArray(ops.arr)) return;
-        if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-        if (typeof ops.colStart == "undefined") ops.colStart = 0;
-        if (typeof ops.rowEnd == "undefined") ops.rowEnd = ops.arr.length - 1;
-        if (typeof ops.colEnd == "undefined") ops.colEnd = ops.arr[0].length - 1;
-        if (typeof ops.rowDir == "undefined") ops.rowDir = (ops.rowEnd > ops.rowStart) ? 1 : -1;
-        if (typeof ops.colDir == "undefined") ops.colDir = (ops.colEnd > ops.colStart) ? 1 : -1;
-        if (typeof ops.funcContext == "undefined") ops.funcContext = null;
+        if (typeof ops === "undefined" ||
+            typeof ops.func === "undefined" ||
+            typeof ops.arr === "undefined" ||
+            ops.arr.length === 0 || !is2DArray(ops.arr)) return;
+        if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+        if (typeof ops.colStart === "undefined") ops.colStart = 0;
+        if (typeof ops.rowEnd === "undefined") ops.rowEnd = ops.arr.length - 1;
+        if (typeof ops.colEnd === "undefined") ops.colEnd = ops.arr[0].length - 1;
+        if (typeof ops.rowDir === "undefined") ops.rowDir = (ops.rowEnd > ops.rowStart) ? 1 : -1;
+        if (typeof ops.colDir === "undefined") ops.colDir = (ops.colEnd > ops.colStart) ? 1 : -1;
+        if (typeof ops.funcContext === "undefined") ops.funcContext = null;
 
         forEach({
             arr: ops.arr,
@@ -294,7 +294,7 @@
                 diff = max - (tds.length + ths.length);
 
             if (diff > 0) {
-                var type = (tds.length == 0 ? "th" : "td"),
+                var type = (tds.length === 0 ? "th" : "td"),
                     cells = new Array(diff);
                 for (var j = 0; j < diff; j++) {
                     cells[j] = document.createElement(type);
@@ -357,7 +357,7 @@
                         i++;
                     }
 
-                    if (rowIndex == 0) break;
+                    if (rowIndex === 0) break;
                 }
             } else {
                 while (ctx.getRowCount() > ops.minRows) {
@@ -383,7 +383,7 @@
                         i++;
                     }
 
-                    if (colIndex == 0) break;
+                    if (colIndex === 0) break;
                 }
             } else {
                 while (ctx.getColCount() > ops.minCols) {
@@ -425,20 +425,20 @@
         // Utitilites
         function normalizeOptions(ops) {
             // Define the undefined
-            if (typeof ops.minRows == "undefined") ops.minRows = 1;
-            if (typeof ops.minCols == "undefined") ops.minCols = 1;
-            if (typeof ops.maxRows == "undefined") ops.maxRows = -1;
-            if (typeof ops.maxCols == "undefined") ops.maxCols = -1;
-            if (typeof ops.growRows == "undefined") ops.growRows = false;
-            if (typeof ops.growCols == "undefined") ops.growCols = false;
-            if (typeof ops.shrinkRows == "undefined") ops.shrinkRows = false;
-            if (typeof ops.shrinkCols == "undefined") ops.shrinkCols = false;
-            if (typeof ops.rowsAllowMiddleShrink == "undefined") ops.rowsAllowMiddleShrink = false;
-            if (typeof ops.colsAllowMiddleShrink == "undefined") ops.colsAllowMiddleShrink = false;
-            if (typeof ops.copyAsHTML == "undefined") ops.copyAsHTML = true;
-            if (typeof ops.pasteAsHTML == "undefined") ops.pasteAsHTML = false;
-            if (typeof ops.rotateWidePaste == "undefined") ops.rotateWidePaste = false;
-            if (typeof ops.scrollSelectionIntoView == "undefined") ops.scrollSelectionIntoView = true;
+            if (typeof ops.minRows === "undefined") ops.minRows = 1;
+            if (typeof ops.minCols === "undefined") ops.minCols = 1;
+            if (typeof ops.maxRows === "undefined") ops.maxRows = -1;
+            if (typeof ops.maxCols === "undefined") ops.maxCols = -1;
+            if (typeof ops.growRows === "undefined") ops.growRows = false;
+            if (typeof ops.growCols === "undefined") ops.growCols = false;
+            if (typeof ops.shrinkRows === "undefined") ops.shrinkRows = false;
+            if (typeof ops.shrinkCols === "undefined") ops.shrinkCols = false;
+            if (typeof ops.rowsAllowMiddleShrink === "undefined") ops.rowsAllowMiddleShrink = false;
+            if (typeof ops.colsAllowMiddleShrink === "undefined") ops.colsAllowMiddleShrink = false;
+            if (typeof ops.copyAsHTML === "undefined") ops.copyAsHTML = true;
+            if (typeof ops.pasteAsHTML === "undefined") ops.pasteAsHTML = false;
+            if (typeof ops.rotateWidePaste === "undefined") ops.rotateWidePaste = false;
+            if (typeof ops.scrollSelectionIntoView === "undefined") ops.scrollSelectionIntoView = true;
 
             // Correct logical errors
             if (ops.minRows < 0) ops.minRows = 0;
@@ -449,7 +449,7 @@
 
         function getTarget(e) {
             var target,
-                wasHidden = cover.css("display") == "none";
+                wasHidden = cover.css("display") === "none";
 
             cover.hide();
             target = document.elementFromPoint(e.clientX, e.clientY);
@@ -493,17 +493,17 @@
         this.CellManager = {
             setEditable: function (cell, optEdit) {
                 // Normalize parameters
-                if (typeof optEdit == "undefined") optEdit = true;
+                if (typeof optEdit === "undefined") optEdit = true;
 
                 // Set editable
                 cell.contentEditable = optEdit;
             },
             isEditable: function (cell) {
                 //Checks both isContentEditable and contentEditable to prevent cell being un-modifiable when display is none
-                return cell.isContentEditable || cell.contentEditable == "true";
+                return cell.isContentEditable || cell.contentEditable === "true";
             },
             setHeader: function (cell, optHeader) {
-                if (typeof optHeader == "undefined") optHeader = true;
+                if (typeof optHeader === "undefined") optHeader = true;
 
                 // Return if element already is/isn't header
                 if (optHeader == this.isHeader(cell)) return;
@@ -523,7 +523,7 @@
                 $(oldDom).replaceWith(newDom);
             },
             isHeader: function (cell) {
-                return cell.tagName.toLowerCase() == "th";
+                return cell.tagName.toLowerCase() === "th";
             },
             select: function (cell) {
                 $(cell).addClass("ediTable-cell-selected");
@@ -557,7 +557,7 @@
                 this.setValue(cell, "");
             },
             isClear: function (cell) {
-                return cell.innerHTML == "";
+                return cell.innerHTML === "";
             }
         };
         this.VectorManager = {
@@ -641,12 +641,12 @@
                 if (!hasFocus || !$.contains(that.table, target)) return;
 
                 // Check for double touch
-                if (e.type == "touchstart" && ifDoubleTap()) {
+                if (e.type === "touchstart" && ifDoubleTap()) {
                     handleDoubleClick(e);
                     return;
                 }
                 // Check for right click
-                var right = e.which == 3;
+                var right = e.which === 3;
 
                 if (targetCoords) {
                     var makeSelection = !right || (right && !that.hasSelection());
@@ -744,17 +744,17 @@
                     code = e.keyCode,
                     ctrl = controlDown(e),
                     shift = e.shiftKey,
-                    tab = code == 9,
-                    enter = code == 13,
-                    esc = code == 27,
-                    del = code == 46,
-                    backspace = code == 8,
-                    left = code == 37,
-                    up = code == 38,
-                    right = code == 39,
-                    down = code == 40,
-                    home = code == 36,
-                    end = code == 35;
+                    tab = code === 9,
+                    enter = code === 13,
+                    esc = code === 27,
+                    del = code === 46,
+                    backspace = code === 8,
+                    left = code === 37,
+                    up = code === 38,
+                    right = code === 39,
+                    down = code === 40,
+                    home = code === 36,
+                    end = code === 35;
 
                 // Save editingCell since certain keys exit editing mode
                 var editingCell = selection.editingCell,
@@ -762,8 +762,8 @@
 
                 // Ways to exit edit mode
                 if (tab || enter || esc || up || down ||
-                    (left && (editingCell && getCaretPosition(editingCell) == 0)) ||
-                    (right && (editingCell && getCaretPosition(editingCell) == editingCell.innerText.length))) {
+                    (left && (editingCell && getCaretPosition(editingCell) === 0)) ||
+                    (right && (editingCell && getCaretPosition(editingCell) === editingCell.innerText.length))) {
 
                     e.preventDefault();
                     selection.exitEditMode();
@@ -771,13 +771,13 @@
 
                 if (!selection.isEditing()) {
                     // Special case: select all
-                    if (ctrl && code == 65) {
+                    if (ctrl && code === 65) {
                         e.preventDefault();
                         if (shift) that.deselect(); else that.select();
                     }
                     // Alter selection
                     else if (hasSelection) {
-                        if (e.keyCode == 93) {
+                        if (e.keyCode === 93) {
                             selection.originCell.focus();
                             return;
                         }
@@ -1179,7 +1179,7 @@
                     var firstCellCoords = that.Selection.getCoords(selectedRows[0][0]);
                     //TODO solve issue when pasting multiple cells of data "" (columns being removed because they are empty
                     if (that.options.rotateWidePaste) {
-                        var exceedsMax = that.options.maxCols == -1 && dataWidth + firstCellCoords[0] > that.getColCount()
+                        var exceedsMax = that.options.maxCols === -1 && dataWidth + firstCellCoords[0] > that.getColCount()
                                 || that.options.maxCols > -1 && dataWidth + firstCellCoords[0] > that.options.maxCols,
                             dataIsWide = dataWidth > data.length,
                             canGrow = that.colsCanGrow();
@@ -1220,7 +1220,7 @@
         },
         removeEventListener: function (type, func) {
             var index = this.events[type].indexOf(func);
-            if (index != -1) this.events[type].splice(index, 1);
+            if (index !== -1) this.events[type].splice(index, 1);
         },
         fireEvent: function (type, eventObj) {
             var event = this.events[type];
@@ -1235,7 +1235,7 @@
                 lastClicked = this.lastClicked;
 
             //TODO determine if having a selection is proof of ediTable having focus
-            return $(activeElement).closest(this.table).length == 1 || $(lastClicked).closest(this.table).length == 1
+            return $(activeElement).closest(this.table).length === 1 || $(lastClicked).closest(this.table).length === 1
                 || this.hasSelection();
         },
         getRowCount: function () {
@@ -1253,12 +1253,12 @@
         },
         setEditable: function (optEdit, ops) {
             // Normalize parameters
-            if (typeof optEdit == "undefined") optEdit = true;
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof optEdit === "undefined") optEdit = true;
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Set editable
             var that = this;
@@ -1270,11 +1270,11 @@
         },
         isEditable: function (ops) {
             // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             var editable = true,
                 that = this;
@@ -1287,12 +1287,12 @@
         },
         setHeader: function (optHeader, ops) {
             // Normalize parameters
-            if (typeof optHeader == "undefined") optHeader = true;
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof optHeader === "undefined") optHeader = true;
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Set editable
             var that = this;
@@ -1304,11 +1304,11 @@
         },
         isHeader: function (ops) {
             // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             var header = true,
                 that = this;
@@ -1321,11 +1321,11 @@
         },
         select: function (ops) {
             // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Do selection
             var that = this;
@@ -1357,16 +1357,16 @@
 
                         // Top border
                         jqCell.toggleClass("ediTable-cell-selected-top",
-                            (i == 0 || !cm.isSelected(rows[i - 1].cells[j])));
+                            (i === 0 || !cm.isSelected(rows[i - 1].cells[j])));
                         // Bottom border
                         jqCell.toggleClass("ediTable-cell-selected-bottom",
-                            (i == (rowCount - 1) || !cm.isSelected(rows[i + 1].cells[j])));
+                            (i === (rowCount - 1) || !cm.isSelected(rows[i + 1].cells[j])));
                         // Left border
                         jqCell.toggleClass("ediTable-cell-selected-left",
-                            (j == 0 || !cm.isSelected(row.cells[j - 1])));
+                            (j === 0 || !cm.isSelected(row.cells[j - 1])));
                         // Right border
                         jqCell.toggleClass("ediTable-cell-selected-right",
-                            (j == (colCount - 1) || !cm.isSelected(row.cells[j + 1])));
+                            (j === (colCount - 1) || !cm.isSelected(row.cells[j + 1])));
                     }
                 }
             })();
@@ -1385,11 +1385,11 @@
         },
         deselect: function (ops) {
             // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Do deselection
             var that = this;
@@ -1402,10 +1402,10 @@
         setRowValues: function (values, ops) {
             // Normalize paramters
             if (!is2DArray(values)) throw new TypeError("values parameter must be 2D Array");
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.silent == "undefined") ops.silent = false;
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.silent === "undefined") ops.silent = false;
 
             //Add rows
             var rowEnd = ops.rowStart + values.length,
@@ -1413,7 +1413,7 @@
                 rowCount = this.getRowCount(),
                 rowDiff = rowEnd - rowCount;
 
-            while ((maxRows == -1 || rowCount < maxRows) && rowDiff > 0 && this.options.growRows) {
+            while ((maxRows === -1 || rowCount < maxRows) && rowDiff > 0 && this.options.growRows) {
                 rowCount = this.getRowCount();
                 rowDiff = rowEnd - rowCount;
 
@@ -1426,7 +1426,7 @@
                 colCount = this.getColCount(),
                 colDiff = colEnd - colCount;
 
-            while ((maxCols == -1 || colCount < maxCols) && colDiff > 0 && this.options.growCols) {
+            while ((maxCols === -1 || colCount < maxCols) && colDiff > 0 && this.options.growCols) {
                 colCount = this.getColCount();
                 colDiff = colEnd - colCount;
 
@@ -1464,26 +1464,26 @@
         setColValues: function (values, ops) {
             // Normalize paramters
             if (!is2DArray(values)) throw new TypeError("values parameter must be 2D Array");
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.silent == "undefined") ops.silent = false;
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.silent === "undefined") ops.silent = false;
 
             values = arrayTranspose(values);
 
-            if (values.length == 0) values[0] = [];
+            if (values.length === 0) values[0] = [];
 
             // Feed to setRowValues
             this.setRowValues(values, ops);
         },
         clear: function (ops) {
             // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
-            if (typeof ops.silent == "undefined") ops.silent = false;
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops.silent === "undefined") ops.silent = false;
 
             // Clear
             var that = this;
@@ -1518,11 +1518,11 @@
         },
         isClear: function (ops) {
             // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Check rows
             var clear = true;
@@ -1550,9 +1550,9 @@
             };
         },
         getRow: function (index, ops) {
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             var cells = [],
                 row = this.table.rows[index];
@@ -1570,11 +1570,11 @@
         },
         getRows: function (ops) {
             // Normalize parameters
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
-            if (typeof ops.colStart == "undefined") ops.colStart = 0;
-            if (typeof ops.colEnd == "undefined") ops.colEnd = (this.getColCount() - 1);
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops.colStart === "undefined") ops.colStart = 0;
+            if (typeof ops.colEnd === "undefined") ops.colEnd = (this.getColCount() - 1);
 
             // Get values
             var rows = this.table.rows,
@@ -1614,9 +1614,9 @@
             });
         },
         getCol: function (index, ops) {
-            if (typeof ops == "undefined") ops = {};
-            if (typeof ops.rowStart == "undefined") ops.rowStart = 0;
-            if (typeof ops.rowEnd == "undefined") ops.rowEnd = (this.getRowCount() - 1);
+            if (typeof ops === "undefined") ops = {};
+            if (typeof ops.rowStart === "undefined") ops.rowStart = 0;
+            if (typeof ops.rowEnd === "undefined") ops.rowEnd = (this.getRowCount() - 1);
 
             var cells = [];
 
@@ -1643,10 +1643,10 @@
             return arrayTranspose(this.getSelectedRowValues());
         },
         canInsertRow: function () {
-            return (this.options.maxRows == -1 || this.table.rows.length < this.options.maxRows);
+            return (this.options.maxRows === -1 || this.table.rows.length < this.options.maxRows);
         },
         canInsertCol: function () {
-            return (this.options.maxCols == -1 || this.table.rows[0].cells.length < this.options.maxCols)
+            return (this.options.maxCols === -1 || this.table.rows[0].cells.length < this.options.maxCols)
         },
         rowsCanGrow: function () {
             return this.options.growRows && this.canInsertRow();
