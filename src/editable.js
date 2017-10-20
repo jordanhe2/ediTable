@@ -890,6 +890,12 @@
                                 });
                             }
                         }
+                        else {
+                            // TODO determine if this causes any issues
+							if (hasFocus && !selection.isEditing()) {
+								selection.setEditMode(selection.originCell);
+							}
+                        }
                     }
                     // NO SELECTION
                     else {
@@ -918,13 +924,14 @@
                 var arrows = [37, 38, 39, 40];
                 if (e.ctrlKey || arrows.indexOf(e.keyCode) != -1) return;
 
-                var hasFocus = that.hasFocus(),
-                    editing = selection.isEditing(),
-                    hasSelection = that.hasSelection();
+                // TODO determine handling setEditMode on keydown causes any issues
+                // var hasFocus = that.hasFocus(),
+                //     editing = selection.isEditing(),
+                //     hasSelection = that.hasSelection();
 
-                if (hasFocus && hasSelection && !editing) {
-                    selection.setEditMode(selection.originCell);
-                }
+                // if (hasFocus && hasSelection && !editing) {
+                //     selection.setEditMode(selection.originCell);
+                // }
             };
             var handleCellInput = function (e) {
                 var coords = that.Selection.getCoords(e.target);
