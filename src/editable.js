@@ -764,6 +764,7 @@
                 if (tab || enter || esc || up || down ||
                     (left && (editingCell && getCaretPosition(editingCell) === 0)) ||
                     (right && (editingCell && getCaretPosition(editingCell) === editingCell.innerText.length))) {
+					console.log('exiting!')
 
                     e.preventDefault();
                     selection.exitEditMode();
@@ -835,11 +836,13 @@
                                 case 35:
                                     deltaCoords.x = that.getColCount() - moveCoords[1] - 1;
                                     if (ctrl) deltaCoords.y = that.getRowCount() - moveCoords[0] - 1;
+                                    e.preventDefault();
                                     break;
                                 // HOME
                                 case 36:
                                     deltaCoords.x = -moveCoords[1];
                                     if (ctrl) deltaCoords.y = -moveCoords[0];
+                                    e.preventDefault();
                                     break;
                                 // LEFT
                                 case 37:
@@ -891,10 +894,15 @@
                             }
                         }
                         else {
-                            // TODO determine if this causes any issues
-							if (hasFocus && !selection.isEditing()) {
-								selection.setEditMode(selection.originCell);
-							}
+							// KeyPress incorrectly fires on ctrl+C, ctrl+V, etc. on Firefox.
+							// This fixed that problem
+							// var arrows = [37, 38, 39, 40];
+							// if (e.ctrlKey || arrows.indexOf(e.keyCode) != -1) return;
+							//
+							// // TODO determine if this causes any issues
+							// if (hasFocus && !selection.isEditing() && !wasEditing) {
+							// 	selection.setEditMode(selection.originCell);
+							// }
                         }
                     }
                     // NO SELECTION
@@ -922,16 +930,18 @@
                 // KeyPress incorrectly fires on ctrl+C, ctrl+V, etc. on Firefox.
                 // This fixed that problem
                 var arrows = [37, 38, 39, 40];
-                if (e.ctrlKey || arrows.indexOf(e.keyCode) != -1) return;
+                if (e.ctrlKey || arrows.indexOf(e.keyCode) !== -1) return;
+
+                console.log(e.keyCode)
 
                 // TODO determine handling setEditMode on keydown causes any issues
-                // var hasFocus = that.hasFocus(),
-                //     editing = selection.isEditing(),
-                //     hasSelection = that.hasSelection();
+                var hasFocus = that.hasFocus(),
+                    editing = selection.isEditing(),
+                    hasSelection = that.hasSelection();
 
-                // if (hasFocus && hasSelection && !editing) {
-                //     selection.setEditMode(selection.originCell);
-                // }
+                if (hasFocus && hasSelection && !editing) {
+                    selection.setEditMode(selection.originCell);
+                }
             };
             var handleCellInput = function (e) {
                 var coords = that.Selection.getCoords(e.target);
