@@ -743,6 +743,7 @@
                     singleCell = selection.originCell == selection.terminalCell,
                     code = e.keyCode,
                     ctrl = controlDown(e),
+                    alt = e.altKey,
                     shift = e.shiftKey,
                     tab = code === 9,
                     enter = code === 13,
@@ -893,10 +894,9 @@
                             }
                         }
                         else {
-							// KeyPress incorrectly fires on ctrl+C, ctrl+V, etc. on Firefox.
-							// This fixed that problem
+							// ignores arrow keys, ctrl, shift, and alt
 							var arrows = [37, 38, 39, 40];
-							if (e.ctrlKey || arrows.indexOf(e.keyCode) !== -1) return;
+							if (ctrl || shift || alt || arrows.indexOf(e.keyCode) !== -1) return;
 
 							if (hasFocus && !selection.isEditing() && !wasEditing) {
 								selection.setEditMode(selection.originCell);
