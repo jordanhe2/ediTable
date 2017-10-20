@@ -764,7 +764,6 @@
                 if (tab || enter || esc || up || down ||
                     (left && (editingCell && getCaretPosition(editingCell) === 0)) ||
                     (right && (editingCell && getCaretPosition(editingCell) === editingCell.innerText.length))) {
-					console.log('exiting!')
 
                     e.preventDefault();
                     selection.exitEditMode();
@@ -896,13 +895,12 @@
                         else {
 							// KeyPress incorrectly fires on ctrl+C, ctrl+V, etc. on Firefox.
 							// This fixed that problem
-							// var arrows = [37, 38, 39, 40];
-							// if (e.ctrlKey || arrows.indexOf(e.keyCode) != -1) return;
-							//
-							// // TODO determine if this causes any issues
-							// if (hasFocus && !selection.isEditing() && !wasEditing) {
-							// 	selection.setEditMode(selection.originCell);
-							// }
+							var arrows = [37, 38, 39, 40];
+							if (e.ctrlKey || arrows.indexOf(e.keyCode) !== -1) return;
+
+							if (hasFocus && !selection.isEditing() && !wasEditing) {
+								selection.setEditMode(selection.originCell);
+							}
                         }
                     }
                     // NO SELECTION
@@ -926,23 +924,6 @@
                     }
                 }
             };
-            var handleKeyPress = function (e) {
-                // KeyPress incorrectly fires on ctrl+C, ctrl+V, etc. on Firefox.
-                // This fixed that problem
-                var arrows = [37, 38, 39, 40];
-                if (e.ctrlKey || arrows.indexOf(e.keyCode) !== -1) return;
-
-                console.log(e.keyCode)
-
-                // TODO determine handling setEditMode on keydown causes any issues
-                var hasFocus = that.hasFocus(),
-                    editing = selection.isEditing(),
-                    hasSelection = that.hasSelection();
-
-                if (hasFocus && hasSelection && !editing) {
-                    selection.setEditMode(selection.originCell);
-                }
-            };
             var handleCellInput = function (e) {
                 var coords = that.Selection.getCoords(e.target);
                 // Call updates
@@ -964,8 +945,7 @@
                 .on("dblclick", handleDoubleClick)
                 .on("mouseup", handleMouseUp)
                 .on("touchend", handleMouseUp)
-                .on("keydown", handleKeyDown)
-                .on("keypress", handleKeyPress);
+                .on("keydown", handleKeyDown);
 
             selection = {
                 originCell: null,
